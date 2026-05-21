@@ -790,31 +790,39 @@
     </script>
 </body>
 </html>
-// កូដថ្មីសម្រាប់ដាក់ក្នុង <script> នៃ index.html របស់លោកគ្រូ
-// កូដនេះនឹងដោះស្រាយបញ្ហានៅលើ Vercel Deployment
+// --- កែសម្រួលមុខងារហៅ API ឱ្យកាន់តែរឹងមាំ ---
+async function callGeminiApiWithRetry(payload) {
+    if (!userApiKey || userApiKey.trim() === "") {
+        openSettingsModal();
+        throw new Error("មិនទាន់បានកំណត់ API Key។");
+    }
 
-function initAppCredentials() {
-    // ប្រើ setTimeout ដើម្បីឱ្យប្រព័ន្ធអានទិន្នន័យពី Browser បានគ្រប់ជ្រុងជ្រោយសិន
-    setTimeout(() => {
-        const storedKey = localStorage.getItem('google_ai_studio_key');
-        const storedModel = localStorage.getItem('google_ai_selected_model');
-        
-        if (storedKey && storedKey.trim() !== "") {
-            userApiKey = storedKey.trim();
-            console.log("Key ត្រូវបានអានដោយជោគជ័យពី Vercel Browser");
-            checkApiKeyStatus(); // បិទ banner ភ្លាម
-        } else {
-            console.log("មិនទាន់រកឃើញ Key, កំពុងរង់ចាំការបំពេញ...");
-            checkApiKeyStatus();
+    // ប្រើ v1 ជំនួសឱ្យ v1beta ដើម្បីឱ្យមានស្ថិរភាពជាងមុន
+    // ម៉ូដែល gemini-1.5-flash គឺជារឿងសំខាន់
+    const url = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${userApiKey}`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            // បើកំហុសកើតឡើងដោយសារម៉ូដែល សូមឱ្យវាដូរទៅប្រើ gemini-pro ដោយស្វ័យប្រវត្ត
+            if (data.error?.message.includes("not found")) {
+                console.warn("ម៉ូដែលមិនត្រូវគ្នា កំពុងសាកល្បងជាមួយ gemini-pro...");
+                selectedModel = "gemini-pro"; 
+                localStorage.setItem('google_ai_selected_model', "gemini-pro");
+                return await callGeminiApiWithRetry(payload); // ហៅម្តងទៀតដោយប្រើម៉ូដែលថ្មី
+            }
+            throw new Error(data.error?.message || "មានបញ្ហាក្នុងការតភ្ជាប់");
         }
 
-        if (storedModel) {
-            selectedModel = storedModel;
-        }
-    }, 500); // រង់ចាំ 0.5 វិនាទីដើម្បីធានាថា Browser ដំណើរការរួចរាល់
+        return data;
+    } catch (error) {
+        throw error;
+    }
 }
-
-// ហៅមុខងារនេះពេលទំព័រផ្ទុកចប់
-window.onload = function() {
-    initAppCredentials();
-};
