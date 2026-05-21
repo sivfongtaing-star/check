@@ -790,17 +790,19 @@
     </script>
 </body>
 </html>
-// --- កែសម្រួលមុខងារហៅ API ឱ្យកាន់តែរឹងមាំ ---
+// --- កូដពេញលេញសម្រាប់ធានាស្ថិរភាពលើ Vercel ---
 async function callGeminiApiWithRetry(payload) {
-    if (!userApiKey || userApiKey.trim() === "") {
+    const key = localStorage.getItem('google_ai_studio_key');
+    const model = localStorage.getItem('google_ai_selected_model') || "gemini-pro";
+
+    if (!key || key.trim() === "") {
         openSettingsModal();
-        throw new Error("មិនទាន់បានកំណត់ API Key។");
+        throw new Error("សូមបញ្ចូល API Key ក្នុងប្រអប់កំណត់!");
     }
 
-    // ប្រើ v1 ជំនួសឱ្យ v1beta ដើម្បីឱ្យមានស្ថិរភាពជាងមុន
-    // ម៉ូដែល gemini-1.5-flash គឺជារឿងសំខាន់
-    const url = `https://generativelanguage.googleapis.com/v1/models/${selectedModel}:generateContent?key=${userApiKey}`;
-    
+    // URL ស្តង់ដារ (v1beta ជួនកាលមានបញ្ហាជាមួយគណនីខ្លះ ប្រើ v1 គឺមានស្ថិរភាពជាង)
+    const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
+
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -810,19 +812,22 @@ async function callGeminiApiWithRetry(payload) {
 
         const data = await response.json();
 
+        // ត្រួតពិនិត្យកំហុស
         if (!response.ok) {
-            // បើកំហុសកើតឡើងដោយសារម៉ូដែល សូមឱ្យវាដូរទៅប្រើ gemini-pro ដោយស្វ័យប្រវត្ត
-            if (data.error?.message.includes("not found")) {
-                console.warn("ម៉ូដែលមិនត្រូវគ្នា កំពុងសាកល្បងជាមួយ gemini-pro...");
-                selectedModel = "gemini-pro"; 
+            const errorMsg = data.error?.message || "មានកំហុសមិនស្គាល់";
+            
+            // បើម៉ូដែលមិនស្គាល់ សូមសាកប្តូរទៅ gemini-pro ដោយស្វ័យប្រវត្ត
+            if (errorMsg.includes("not found")) {
                 localStorage.setItem('google_ai_selected_model', "gemini-pro");
-                return await callGeminiApiWithRetry(payload); // ហៅម្តងទៀតដោយប្រើម៉ូដែលថ្មី
+                console.warn("ម៉ូដែលនេះមិនដំណើរការទេ កំពុងប្តូរទៅ gemini-pro...");
+                return await callGeminiApiWithRetry(payload);
             }
-            throw new Error(data.error?.message || "មានបញ្ហាក្នុងការតភ្ជាប់");
+            throw new Error(errorMsg);
         }
 
         return data;
     } catch (error) {
+        console.error("API Call Error:", error);
         throw error;
     }
 }
