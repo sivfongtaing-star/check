@@ -5,181 +5,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព (Fake News & AI Image Detector)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700&family=Noto+Serif+Khmer:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
+        /* Typography Rules specified by the User */
+        .font-muol {
+            font-family: 'Khmer OS Muol Light', 'Noto Serif Khmer', 'Inter', serif;
+            font-weight: 700;
+        }
+        .font-siemreap {
+            font-family: 'Khmer OS Siemreap', 'Noto Sans Khmer', 'Inter', sans-serif;
+        }
+        
         body {
-            font-family: 'Hanuman', 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            font-family: 'Khmer OS Siemreap', 'Noto Sans Khmer', 'Inter', sans-serif;
+            background-color: #f8fafc;
         }
+
+        /* Smooth animation effects */
+        .transition-all-300 {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .drag-active {
-            border-color: #3b82f6 !important;
+            border-color: #2563eb !important;
             background-color: #eff6ff !important;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.1) inset;
         }
+
         .loader {
-            border-top-color: #3b82f6;
-            -webkit-animation: spinner 1.5s linear infinite;
-            animation: spinner 1.5s linear infinite;
+            border-top-color: #2563eb;
+            -webkit-animation: spinner 1.2s linear infinite;
+            animation: spinner 1.2s linear infinite;
         }
+
         @keyframes spinner {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .markdown-body h3 { font-size: 1.25em; font-weight: bold; margin-top: 1.2em; margin-bottom: 0.6em; color: #1e3a8a; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.3em;}
-        .markdown-body p { margin-bottom: 0.8em; line-height: 1.7; text-align: justify; }
-        .markdown-body ul { list-style-type: disc; margin-left: 1.5em; margin-bottom: 1em; }
-        .markdown-body li { margin-bottom: 0.4em; }
-        .markdown-body strong { font-weight: bold; color: #111827; }
-        .markdown-body blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; margin: 1rem 0; color: #4b5563; font-style: italic; }
+
+        /* Advanced Custom Styling for MD Content Output */
+        .markdown-body h2 {
+            font-family: 'Khmer OS Muol Light', 'Noto Serif Khmer', serif;
+            font-size: 1.35em;
+            color: #1e3a8a;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.4em;
+        }
+        .markdown-body h3 { 
+            font-family: 'Khmer OS Muol Light', 'Noto Serif Khmer', serif;
+            font-size: 1.15em; 
+            margin-top: 1.2em; 
+            margin-bottom: 0.6em; 
+            color: #1e40af; 
+        }
+        .markdown-body p { 
+            margin-bottom: 0.9em; 
+            line-height: 1.8; 
+            text-align: justify; 
+            font-size: 0.95rem;
+        }
+        .markdown-body ul { 
+            list-style-type: disc; 
+            margin-left: 1.8em; 
+            margin-bottom: 1.2em; 
+            space-y: 0.5em;
+        }
+        .markdown-body li { 
+            margin-bottom: 0.5em; 
+            line-height: 1.7;
+        }
+        .markdown-body strong { 
+            font-weight: 700; 
+            color: #0f172a; 
+        }
+        .markdown-body blockquote { 
+            border-left: 4px solid #3b82f6; 
+            padding: 0.75rem 1.25rem; 
+            margin: 1.25rem 0; 
+            color: #334155; 
+            background-color: #f1f5f9;
+            border-radius: 0 8px 8px 0;
+            font-style: italic; 
+        }
     </style>
 </head>
-<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col bg-slate-50 font-siemreap">
 
-    <!-- Header Section -->
-    <header class="bg-blue-600 text-white shadow-md py-4">
+    <!-- Premium Navigation Bar -->
+    <header class="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white shadow-xl py-5 sticky top-0 z-40">
         <div class="container mx-auto px-4 flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-shield-alt text-3xl"></i>
+            <div class="flex items-center space-x-3.5">
+                <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20">
+                    <i class="fas fa-shield-halved text-3xl text-emerald-400"></i>
+                </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold font-hanuman">ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព</h1>
-                    <p class="text-xs text-blue-100 font-sans">AI-Powered Fact & Image Verifier</p>
+                    <h1 class="text-xl md:text-2xl font-muol tracking-wide">ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព</h1>
+                    <p class="text-[11px] text-blue-200 uppercase tracking-widest font-semibold mt-0.5">AI-Powered Fact & Image Forensic Center</p>
                 </div>
             </div>
             <div class="flex items-center space-x-3">
-                <button onclick="openSettingsModal()" class="bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg flex items-center transition-all text-sm shadow-inner">
-                    <i class="fas fa-cog mr-2"></i> កំណត់ API Key
+                <button onclick="openSettingsModal()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold py-2.5 px-5 rounded-xl flex items-center transition-all-300 text-sm shadow-lg shadow-emerald-500/20">
+                    <i class="fas fa-key mr-2"></i> កំណត់ API Key
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
+    <!-- Main Content Area -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         
-        <!-- API Key Missing Alert Banner -->
-        <div id="api-key-banner" class="hidden mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm">
+        <!-- Interactive Banner for Missing API Key -->
+        <div id="api-key-banner" class="hidden mb-6 bg-amber-50 border-l-4 border-amber-500 p-5 rounded-2xl shadow-md transition-all-300 animate-pulse">
             <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-amber-500 text-lg"></i>
+                <div class="flex-shrink-0 bg-amber-100 p-2 rounded-lg text-amber-600">
+                    <i class="fas fa-triangle-exclamation text-xl"></i>
                 </div>
-                <div class="ml-3">
-                    <p class="text-sm text-amber-800 font-semibold">មិនទាន់បានកំណត់ Google AI API Key នៅឡើយទេ!</p>
-                    <p class="text-xs text-amber-700 mt-1">សូមចុចលើប៊ូតុងខាងស្តាំដៃ "កំណត់ API Key" ឬ <button onclick="openSettingsModal()" class="underline font-bold hover:text-amber-900">ចុចត្រង់នេះ</button> ដើម្បីបញ្ចូល API Key ឥតគិតថ្លៃសម្រាប់ដំណើរការប្រព័ន្ធ AI។</p>
+                <div class="ml-4">
+                    <h4 class="text-sm font-bold text-amber-900 font-muol mb-1">មិនទាន់មានកូនសោរ API Key នៅក្នុងប្រព័ន្ធ</h4>
+                    <p class="text-xs text-amber-800 leading-relaxed">ដើម្បីអាចដំណើរការវិភាគព័ត៌មាន និងរូបភាពជាមួយបញ្ញាសិប្បនិម្មិត AI បាន លោកគ្រូត្រូវការបំពេញ API Key ជាមុនសិន។</p>
+                    <div class="mt-3 flex gap-3 flex-wrap">
+                        <button onclick="openSettingsModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-1.5 px-3.5 rounded-lg transition-colors">
+                            <i class="fas fa-plug mr-1"></i> បញ្ចូលកូនសោរឥឡូវនេះ
+                        </button>
+                        <a href="https://aistudio.google.com/" target="_blank" class="bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold py-1.5 px-3.5 rounded-lg transition-colors inline-flex items-center">
+                            <i class="fas fa-gift mr-1 text-emerald-500"></i> យកដោយឥតគិតថ្លៃនៅទីនេះ <i class="fas fa-external-link-alt ml-1.5 text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+        <!-- Main Workspace Card -->
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
             
-            <!-- Tab Switchers -->
-            <div class="flex border-b border-gray-200 bg-gray-50">
-                <button id="tab-text" class="flex-grow md:flex-initial py-4 px-6 text-center font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors" onclick="switchTab('text')">
-                    <i class="fas fa-file-alt mr-2"></i> ពិនិត្យអត្ថបទ / ឯកសារ
+            <!-- Beautiful Workspace Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1.5">
+                <button id="tab-text" class="flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-blue-600 bg-white shadow-sm border border-slate-200/50 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2" onclick="switchTab('text')">
+                    <i class="fas fa-file-signature text-base text-blue-500"></i> ពិនិត្យអត្ថបទ / ព័ត៌មាន
                 </button>
-                <button id="tab-image" class="flex-grow md:flex-initial py-4 px-6 text-center font-semibold text-gray-500 hover:text-blue-500 hover:bg-gray-100 focus:outline-none transition-colors border-b-2 border-transparent" onclick="switchTab('image')">
-                    <i class="fas fa-image mr-2"></i> ពិនិត្យរូបភាព AI
+                <button id="tab-image" class="flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-slate-500 hover:text-blue-600 hover:bg-white/60 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2" onclick="switchTab('image')">
+                    <i class="fas fa-images text-base text-slate-400"></i> ពិនិត្យរូបភាព AI
                 </button>
             </div>
 
-            <div class="p-6">
-                <!-- Tab 1: Text Analysis -->
-                <div id="section-text" class="block space-y-5">
+            <div class="p-6 md:p-8">
+                <!-- Tab 1: Text Analysis Area -->
+                <div id="section-text" class="block space-y-6">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center mb-1">
-                            <span class="bg-blue-100 text-blue-600 rounded-full w-6 h-6 inline-flex items-center justify-center text-sm mr-2">1</span>
-                            បញ្ចូលអត្ថបទព័ត៌មានដែលសង្ស័យ
+                        <h2 class="text-base font-muol text-slate-800 flex items-center mb-1.5">
+                            <span class="bg-blue-100 text-blue-600 rounded-xl w-7 h-7 inline-flex items-center justify-center text-sm mr-2.5 font-bold">១</span>
+                            បញ្ចូលអត្ថបទព័ត៌មានដែលចង់ផ្ទៀងផ្ទាត់
                         </h2>
-                        <p class="text-xs text-gray-500 ml-8 mb-3">លោកគ្រូអាចវាយបញ្ចូល ឬ Copy អត្ថបទព័ត៌មានពីបណ្តាញសង្គមមកដាក់ក្នុងប្រអប់ខាងក្រោម</p>
-                        <textarea id="text-input" rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm text-sm" placeholder="ឧទាហរណ៍៖ ក្តៅៗ! មានការរកឃើញថ្នាំព្យាបាលជំងឺកូវីដថ្មីដោយគ្រាន់តែញ៉ាំផ្លែឈើ..."></textarea>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center my-2">
-                            <hr class="flex-grow border-gray-300">
-                            <span class="px-3 text-gray-400 text-xs font-semibold uppercase tracking-wider">ឬ បញ្ចូលឯកសារ</span>
-                            <hr class="flex-grow border-gray-300">
-                        </div>
-                        
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                                <h3 class="text-sm font-semibold text-gray-700">បញ្ចូលឯកសារសង្ស័យ (PDF ឬ TXT)</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">ប្រព័ន្ធនឹងអានអត្ថបទចេញពីឯកសារដោយស្វ័យប្រវត្តដាក់ក្នុងប្រអប់ខាងលើ</p>
-                            </div>
-                            <div class="flex items-center space-x-3 self-start md:self-auto">
-                                <input type="file" id="document-upload" accept=".pdf, .txt" class="hidden" onchange="handleDocumentUpload(event)">
-                                <button onclick="document.getElementById('document-upload').click()" class="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm flex items-center transition-colors text-xs">
-                                    <i class="fas fa-file-upload text-blue-500 mr-2"></i> ជ្រើសរើសឯកសារ
-                                </button>
-                                <span id="document-name" class="text-xs text-gray-500 truncate max-w-[150px] md:max-w-xs font-mono">មិនទាន់មានឯកសារ</span>
-                            </div>
-                        </div>
+                        <p class="text-xs text-slate-500 ml-9 mb-3.5">លោកគ្រូអាចវាយបញ្ចូល ឬ ចម្លង (Copy) អត្ថបទព័ត៌មានដែលទទួលបានពីបណ្តាញសង្គមផ្សេងៗមកដាក់នៅទីនេះ</p>
+                        <textarea id="text-input" rows="8" class="w-full px-4 py-3.5 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all-300 text-sm leading-relaxed shadow-inner placeholder-slate-400" placeholder="ឧទាហរណ៍៖ ក្តៅៗ! រដ្ឋាភិបាលប្រកាសចែកថេប្លេតឥតគិតថ្លៃជូនសិស្សានុសិស្សទាំងអស់ក្នុងសប្តាហ៍ក្រោយ..."></textarea>
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button onclick="analyzeText()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-md flex items-center transition-all transform hover:-translate-y-0.5">
-                            <i class="fas fa-search mr-2"></i> ចាប់ផ្តើមវិភាគព័ត៌មាន
+                        <button onclick="analyzeText()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center transition-all-300 transform hover:-translate-y-0.5 active:scale-95">
+                            <i class="fas fa-magnifying-glass mr-2.5"></i> ចាប់ផ្តើមវិភាគព័ត៌មាន
                         </button>
                     </div>
                 </div>
 
-                <!-- Tab 2: Image Analysis -->
-                <div id="section-image" class="hidden space-y-5">
+                <!-- Tab 2: Image Analysis Area -->
+                <div id="section-image" class="hidden space-y-6">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center mb-1">
-                            <span class="bg-blue-100 text-blue-600 rounded-full w-6 h-6 inline-flex items-center justify-center text-sm mr-2">1</span>
-                            បញ្ចូលរូបភាពដែលចង់ពិនិត្យ
+                        <h2 class="text-base font-muol text-slate-800 flex items-center mb-1.5">
+                            <span class="bg-blue-100 text-blue-600 rounded-xl w-7 h-7 inline-flex items-center justify-center text-sm mr-2.5 font-bold">១</span>
+                            បញ្ចូលរូបភាពដែលលោកគ្រូសង្ស័យ (JPG, PNG, WebP)
                         </h2>
-                        <p class="text-xs text-gray-500 ml-8 mb-4">ប្រព័ន្ធនឹងពិនិត្យមើលភាពមិនប្រក្រតី កម្រិតពន្លឺ ស្រមោល និងទ្រង់ទ្រាយ ដើម្បីវាយតម្លៃថាជារូបភាពថតពិត ឬបង្កើតដោយ AI</p>
+                        <p class="text-xs text-slate-500 ml-9 mb-4">ប្រព័ន្ធនឹងពិនិត្យមើលរចនាសម្ព័ន្ធភីកសែល ទម្រង់កាយវិការ និងកម្រិតពន្លឺ ដើម្បីវាយតម្លៃថាតើជារូបថតពិត ឬបង្កើតដោយ AI</p>
                     </div>
                     
-                    <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center cursor-pointer hover:bg-blue-50/50 hover:border-blue-400 transition-all relative group" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('image-upload').click()">
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-3xl p-10 text-center cursor-pointer hover:bg-blue-50/30 hover:border-blue-500 transition-all-300 relative group" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('image-upload').click()">
                         <input type="file" id="image-upload" accept="image/jpeg, image/png, image/webp" class="hidden" onchange="handleImageUpload(event)">
                         
-                        <div id="upload-prompt" class="space-y-3">
-                            <div class="bg-blue-50 text-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
-                                <i class="fas fa-cloud-upload-alt text-3xl"></i>
+                        <div id="upload-prompt" class="space-y-4">
+                            <div class="bg-blue-50 text-blue-600 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-inner">
+                                <i class="fas fa-file-image text-3xl"></i>
                             </div>
                             <div>
-                                <p class="text-gray-700 font-bold text-sm md:text-base">ចុចទីនេះ ដើម្បីជ្រើសរើសរូបភាព (JPG, PNG, WebP)</p>
-                                <p class="text-xs text-gray-400 mt-1">ឬ ទាញទម្លាក់រូបភាពដាក់ចូលក្នុងប្រអប់នេះ</p>
+                                <p class="text-slate-700 font-bold text-sm md:text-base">ចុចទីនេះ ដើម្បីជ្រើសរើសរូបភាព</p>
+                                <p class="text-xs text-slate-400 mt-1">ឬ ទាញទម្លាក់រូបភាពរបស់លោកគ្រូដាក់ចូលក្នុងប្រអប់នេះ</p>
                             </div>
                         </div>
                         
                         <div id="image-preview-container" class="hidden mt-2 relative">
-                            <img id="image-preview" src="" alt="Preview" class="max-h-72 mx-auto rounded-xl shadow-md object-contain border border-gray-200">
-                            <button onclick="clearImage(event)" class="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-transform hover:scale-110" title="លុបរូបភាព">
-                                <i class="fas fa-times w-4 h-4 flex items-center justify-center"></i>
+                            <img id="image-preview" src="" alt="Preview" class="max-h-80 mx-auto rounded-2xl shadow-lg object-contain border border-slate-200">
+                            <button onclick="clearImage(event)" class="absolute -top-3.5 -right-3.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-2.5 shadow-xl transition-transform hover:scale-110 active:scale-95" title="លុបរូបភាព">
+                                <i class="fas fa-trash-alt w-4 h-4 flex items-center justify-center"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button id="analyze-btn" onclick="analyzeImage()" class="bg-gray-400 text-white font-bold py-3 px-8 rounded-xl shadow-md flex items-center transition-all cursor-not-allowed" disabled>
-                            <i class="fas fa-magic mr-2"></i> ចាប់ផ្តើមវិភាគរូបភាព
+                        <button id="analyze-btn" onclick="analyzeImage()" class="bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-2xl shadow-md flex items-center transition-all-300 cursor-not-allowed" disabled>
+                            <i class="fas fa-brain mr-2.5"></i> ចាប់ផ្តើមវិភាគរូបភាព
                         </button>
                     </div>
                 </div>
 
-                <!-- Loading Indicator -->
-                <div id="loading" class="hidden flex flex-col items-center justify-center py-12">
-                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-14 w-14 mb-4"></div>
-                    <p class="text-blue-600 font-bold text-base" id="loading-text">កំពុងវិភាគទិន្នន័យ សូមរង់ចាំបន្តិច...</p>
-                    <p class="text-xs text-gray-400 mt-2">បច្ចេកវិទ្យា AI កំពុងដំណើរការស្វែងរក និងផ្ទៀងផ្ទាត់ការពិតយ៉ាងយកចិត្តទុកដាក់</p>
+                <!-- Circular Loading Screen -->
+                <div id="loading" class="hidden flex flex-col items-center justify-center py-16 animate-fade-in">
+                    <div class="relative flex items-center justify-center">
+                        <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-16 w-16 mb-4"></div>
+                        <i class="fas fa-robot text-blue-600 absolute text-xl animate-pulse"></i>
+                    </div>
+                    <p class="text-blue-600 font-bold text-base mt-4" id="loading-text">កំពុងវិភាគទិន្នន័យ សូមរង់ចាំបន្តិច...</p>
+                    <p class="text-xs text-slate-400 mt-2 font-medium">បច្ចេកវិទ្យាបញ្ញាសិប្បនិម្មិត (AI) កំពុងផ្ទៀងផ្ទាត់ការពិតយ៉ាងយកចិត្តទុកដាក់</p>
                 </div>
 
-                <!-- Results Section -->
-                <div id="result-container" class="hidden mt-8 border-t border-gray-200 pt-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                            <i class="fas fa-clipboard-check text-green-500 mr-2 text-xl"></i> លទ្ធផលនៃការវិភាគ៖
+                <!-- Rich Results Layout -->
+                <div id="result-container" class="hidden mt-10 border-t border-slate-200/80 pt-8 transition-all-300">
+                    <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+                        <h3 class="text-base font-muol text-slate-800 flex items-center">
+                            <i class="fas fa-square-poll-horizontal text-emerald-500 mr-2.5 text-2xl"></i> លទ្ធផលនៃការវាយតម្លៃ៖
                         </h3>
-                        <span class="text-xs bg-green-50 text-green-700 font-semibold px-2.5 py-1 rounded-full border border-green-200 flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> វិភាគរួចរាល់
+                        <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-xl border border-emerald-200/60 flex items-center gap-1.5 shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> វិភាគរួចរាល់
                         </span>
                     </div>
-                    <div id="result-content" class="bg-blue-50/30 p-6 rounded-xl border border-blue-100 markdown-body text-gray-800 shadow-inner">
-                        <!-- Result will be populated here -->
+
+                    <!-- AI Output Box with Custom Styles -->
+                    <div id="result-content" class="bg-gradient-to-b from-slate-50 to-white p-6 md:p-8 rounded-2xl border border-slate-200/80 markdown-body text-slate-800 shadow-inner">
+                        <!-- Content injected via JS -->
                     </div>
                 </div>
 
@@ -187,102 +239,159 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-6 mt-12">
-        <div class="container mx-auto px-4 text-center text-gray-500 text-xs md:text-sm space-y-2">
-            <p class="font-medium text-gray-600">បង្កើតឡើងដោយក្តីស្រឡាញ់ សម្រាប់ជួយជាជំនួយគ្រូបង្រៀន និងសិស្សានុសិស្សនៅក្នុងប្រទេសកម្ពុជា។</p>
-            <p class="text-gray-400">ដំណើរការដោយ Google Gemini API 2.5 Flash</p>
-            <div class="inline-flex items-center bg-red-50 text-red-600 rounded-full px-4 py-1.5 text-[11px] md:text-xs font-medium border border-red-100 max-w-lg mt-2">
-                <i class="fas fa-exclamation-triangle mr-1.5"></i> សេចក្តីបញ្ជាក់៖ លទ្ធផលវិភាគពី AI សម្រាប់ជាជំនួយ និងការអប់រំតែប៉ុណ្ណោះ។ សូមប្រើប្រាស់ការពិចារណាផ្ទាល់ខ្លួនបន្ថែម។
+    <!-- Professional Footer -->
+    <footer class="bg-white border-t border-slate-200/80 py-8 mt-16">
+        <div class="container mx-auto px-4 text-center text-slate-500 text-xs md:text-sm space-y-3">
+            <p class="font-bold text-slate-600 font-muol text-xs tracking-wider">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងចំណេះដឹងឌីជីថល</p>
+            <p class="text-slate-400 font-medium">បង្កើតឡើងជាជំនួយដ៏មានតម្លៃសម្រាប់លោកគ្រូ អ្នកគ្រូ និងសិស្សានុសិស្សនៅក្នុងប្រទេសកម្ពុជា</p>
+            <p class="text-slate-400 font-mono text-[11px]">Powered by Google Gemini Engine</p>
+            <div class="inline-flex items-center bg-rose-50 text-rose-700 rounded-2xl px-5 py-2 text-[11px] md:text-xs font-bold border border-rose-100/60 max-w-2xl mt-3 shadow-sm">
+                <i class="fas fa-circle-exclamation mr-2 text-rose-500 text-sm"></i> 
+                សេចក្តីបញ្ជាក់៖ លទ្ធផលវិភាគពី AI សម្រាប់ជាព័ត៌មានពិគ្រោះ និងការសិក្សាប៉ុណ្ណោះ។ សូមប្រើប្រាស់ការវិភាគផ្ទាល់ខ្លួនបន្ថែម។
             </div>
         </div>
     </footer>
 
-    <!-- SETTINGS / API KEY MODAL -->
-    <div id="settings-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all border border-gray-100">
-            <div class="bg-blue-600 text-white px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <i class="fas fa-key text-lg"></i>
-                    <h3 class="font-bold text-lg">កំណត់ Google AI API Key</h3>
+    <!-- HIGHLY POLISHED API KEY SETTINGS MODAL -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm transition-all-300">
+        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all border border-slate-100 animate-fade-in">
+            <div class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white px-6 py-5 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white/10 p-2 rounded-lg">
+                        <i class="fas fa-shield-key text-xl text-emerald-300"></i>
+                    </div>
+                    <h3 class="font-bold text-lg font-muol">កំណត់ Google AI API Key</h3>
                 </div>
-                <button onclick="closeSettingsModal()" class="text-white hover:text-gray-200 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
+                <button onclick="closeSettingsModal()" class="text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-xl">
+                    <i class="fas fa-xmark text-lg"></i>
                 </button>
             </div>
-            <div class="p-6 space-y-4">
-                <p class="text-xs text-gray-600 leading-relaxed">
-                    ដើម្បីដំណើរការប្រព័ន្ធនេះ លោកគ្រូត្រូវការ **API Key** ឥតគិតថ្លៃមួយពី Google AI Studio។ កូនសោរនេះនឹងត្រូវបានរក្សាទុកតែនៅលើ Browser របស់លោកគ្រូប៉ុណ្ណោះ (គ្មានការចែករំលែកទៅអ្នកដទៃឡើយ)។
+            <div class="p-6 md:p-8 space-y-5">
+                <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                    ដើម្បីដំណើរការប្រព័ន្ធបញ្ញាសិប្បនិម្មិត (AI) នេះ លោកគ្រូត្រូវបំពេញ **Gemini API Key** មួយ។ កូនសោរនេះនឹងត្រូវបានរក្សាទុកដោយសុវត្ថិភាពខ្ពស់នៅលើ Browser ផ្ទាល់ខ្លួនរបស់លោកគ្រូ (គ្មានការចែករំលែកទៅខាងក្រៅឡើយ)។
                 </p>
                 
-                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <p class="text-[11px] text-gray-500 font-semibold mb-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i> របៀបបង្កើត API Key ឥតគិតថ្លៃ៖</p>
-                    <ol class="list-decimal list-inside text-[11px] text-gray-600 space-y-1">
-                        <li>ចូលទៅកាន់គេហទំព័រ <a href="https://aistudio.google.com/" target="_blank" class="text-blue-600 underline font-bold">Google AI Studio</a></li>
-                        <li>ចុះឈ្មោះចូលដោយប្រើប្រាស់គណនី Gmail</li>
-                        <li>ចុចយកប៊ូតុង <strong>"Get API key"</strong> ហើយបង្កើតកូនសោរថ្មី</li>
-                        <li>ចម្លង (Copy) កូដនោះមកផាស (Paste) ខាងក្រោមនេះ</li>
+                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/80 space-y-3">
+                    <p class="text-[11px] text-slate-700 font-bold flex items-center"><i class="fas fa-circle-info mr-2 text-blue-600 text-xs"></i> របៀបបង្កើត API Key ឥតគិតថ្លៃ៖</p>
+                    <ol class="list-decimal list-inside text-[11px] text-slate-600 space-y-2 leading-relaxed">
+                        <li>ចូលទៅកាន់គេហទំព័រ <a href="https://aistudio.google.com/" target="_blank" class="text-blue-600 underline font-extrabold hover:text-blue-800">Google AI Studio</a></li>
+                        <li>ចុះឈ្មោះចូលប្រើប្រាស់ដោយគណនី Gmail របស់លោកគ្រូ</li>
+                        <li>ចុចលើប៊ូតុង <strong class="text-indigo-700">"Create API Key"</strong> រួចចម្លងកូដនោះទុក</li>
                     </ol>
+                    <div class="pt-1.5">
+                        <a href="https://aistudio.google.com/" target="_blank" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center font-bold py-2 px-4 rounded-xl transition-all-300 text-xs flex items-center justify-center shadow-md shadow-indigo-600/10">
+                            <i class="fas fa-gift mr-2 text-yellow-300 animate-bounce"></i> យកកូនសោរ API Key ឥតគិតថ្លៃនៅទីនេះ <i class="fas fa-arrow-right ml-2 text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">បញ្ចូល API Key របស់លោកគ្រូ៖</label>
+                <!-- Model Selector Dropdown -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 font-muol">ជ្រើសរើសជំនាន់ AI (Gemini Model)៖</label>
+                    <select id="model-select" class="w-full px-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans transition-all-300 bg-white">
+                        <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (ល្បឿនលឿន និងមានស្ថិរភាពបំផុត - ណែនាំ)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (ជំនាន់ថ្មី ឆ្លាតវៃជាងមុន)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 font-muol">បញ្ចូល API Key របស់លោកគ្រូ៖</label>
                     <div class="relative">
-                        <input type="password" id="api-key-input" class="w-full pl-3 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="AIzaSy...">
-                        <button onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                            <i id="eye-icon" class="fas fa-eye text-sm"></i>
+                        <input type="password" id="api-key-input" class="w-full pl-4 pr-12 py-3 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono transition-all-300 shadow-inner" placeholder="AIzaSy...">
+                        <button onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                            <i id="eye-icon" class="fas fa-eye text-base"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-3 pt-2">
-                    <button onclick="closeSettingsModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors">
-                        បិទចោល
+                <div class="flex justify-end space-x-3 pt-3">
+                    <button onclick="closeSettingsModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors">
+                        បោះបង់
                     </button>
-                    <button onclick="saveApiKey()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
-                        រក្សាទុកកូនសោរ
+                    <button onclick="saveApiKey()" class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-bold rounded-xl transition-all-300 shadow-md shadow-emerald-500/10 active:scale-95">
+                        <i class="fas fa-save mr-1.5"></i> រក្សាទុកកូនសោរ
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CUSTOM ALERT MODAL -->
-    <div id="alert-modal" class="hidden fixed inset-0 bg-gray-950 bg-opacity-50 flex items-center justify-center p-4 z-[60]">
-        <div class="bg-white rounded-xl max-w-sm w-full p-6 text-center shadow-xl border border-gray-100">
-            <div class="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200 text-amber-500 text-xl">
-                <i class="fas fa-exclamation-triangle"></i>
+    <!-- EXQUISITE SUCCESS / ALERT MODAL -->
+    <div id="alert-modal" class="hidden fixed inset-0 bg-slate-950/70 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-scale-in">
+            <div id="alert-icon-bg" class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border text-2xl shadow-inner">
+                <i id="alert-icon" class="fas"></i>
             </div>
-            <h4 id="alert-title" class="font-bold text-gray-800 text-base mb-2">ការជូនដំណឹង</h4>
-            <p id="alert-msg" class="text-xs text-gray-500 leading-relaxed mb-6"></p>
-            <button onclick="closeAlert()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors">
+            <h4 id="alert-title" class="font-bold text-slate-800 text-lg mb-2 font-muol"></h4>
+            <p id="alert-msg" class="text-xs text-slate-500 leading-relaxed mb-6 font-medium"></p>
+            <button onclick="closeAlert()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md active:scale-95">
                 យល់ព្រម
             </button>
         </div>
     </div>
 
     <script>
-        // API Configuration
-        const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
-        
-        // Load stored API Key on startup
-        let userApiKey = localStorage.getItem('google_ai_studio_key') || "";
+        // Global state syncing variables
+        let userApiKey = "";
+        let selectedModel = "gemini-1.5-flash";
 
-        window.onload = function() {
+        // Initialization Logic ensuring local storage reads correctly upon document load
+        function initAppCredentials() {
+            const storedKey = localStorage.getItem('google_ai_studio_key');
+            const storedModel = localStorage.getItem('google_ai_selected_model');
+            
+            if (storedKey && storedKey.trim() !== "") {
+                userApiKey = storedKey.trim();
+            } else {
+                userApiKey = "";
+            }
+
+            if (storedModel && storedModel.trim() !== "" && !storedModel.includes("preview") && !storedModel.includes("09-2025")) {
+                selectedModel = storedModel;
+            } else {
+                selectedModel = "gemini-1.5-flash";
+                localStorage.setItem('google_ai_selected_model', "gemini-1.5-flash");
+            }
+
+            // Sync values to UI inputs
+            const keyInput = document.getElementById('api-key-input');
+            const modelSelect = document.getElementById('model-select');
+            
+            if (keyInput) keyInput.value = userApiKey;
+            if (modelSelect) modelSelect.value = selectedModel;
+
             checkApiKeyStatus();
-        };
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            initAppCredentials();
+        });
 
         function checkApiKeyStatus() {
             const banner = document.getElementById('api-key-banner');
-            if (!userApiKey) {
-                banner.classList.remove('hidden');
+            if (!userApiKey || userApiKey.trim() === "") {
+                if (banner) banner.classList.remove('hidden');
             } else {
-                banner.classList.add('hidden');
+                if (banner) banner.classList.add('hidden');
             }
         }
 
-        // --- Custom Alert System ---
-        function showAlert(message, title = "មានបញ្ហា") {
+        // --- Elegant Custom Alert System ---
+        function showAlert(message, title = "មានបញ្ហា", type = "error") {
+            const iconBg = document.getElementById('alert-icon-bg');
+            const icon = document.getElementById('alert-icon');
+            
+            if (type === "success") {
+                iconBg.className = "w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-200/60 text-emerald-500 text-2xl shadow-inner";
+                icon.className = "fas fa-circle-check";
+            } else if (type === "warning") {
+                iconBg.className = "w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-200/60 text-amber-500 text-2xl shadow-inner";
+                icon.className = "fas fa-triangle-exclamation";
+            } else {
+                iconBg.className = "w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-200/60 text-rose-500 text-2xl shadow-inner";
+                icon.className = "fas fa-circle-exclamation";
+            }
+            
             document.getElementById('alert-title').innerText = title;
             document.getElementById('alert-msg').innerText = message;
             document.getElementById('alert-modal').classList.remove('hidden');
@@ -295,6 +404,7 @@
         // --- Settings Modal ---
         function openSettingsModal() {
             document.getElementById('api-key-input').value = userApiKey;
+            document.getElementById('model-select').value = selectedModel;
             document.getElementById('settings-modal').classList.remove('hidden');
         }
 
@@ -314,13 +424,32 @@
             }
         }
 
+        // Save API Key with simplified validation ensuring it correctly saves forever
         function saveApiKey() {
             const keyVal = document.getElementById('api-key-input').value.trim();
+            const modelVal = document.getElementById('model-select').value;
+            
+            if (!keyVal || keyVal === "") {
+                showAlert("សូមបំពេញកូនសោរ API Key ជាមុនសិន!", "បញ្ជាក់ឡើងវិញ", "warning");
+                return;
+            }
+
+            // Remove rigid constraints so any valid Gemini API Key is successfully accepted and saved
+            if (keyVal.length < 20) {
+                showAlert("កូនសោរ API Key ខ្លីពេក សូមពិនិត្យមើល និងចម្លងឱ្យបានពេញលេញឡើងវិញ!", "កូនសោរមិនត្រឹមត្រូវ", "error");
+                return;
+            }
+
             userApiKey = keyVal;
+            selectedModel = modelVal;
+            
+            // Set directly into localStorage
             localStorage.setItem('google_ai_studio_key', keyVal);
+            localStorage.setItem('google_ai_selected_model', modelVal);
+            
             closeSettingsModal();
             checkApiKeyStatus();
-            showAlert("កូនសោរ API Key ត្រូវបានរក្សាទុកដោយជោគជ័យ!", "ជោគជ័យ");
+            showAlert("កូនសោរ API Key និងការជ្រើសរើសម៉ូដែលត្រូវបានរក្សាទុកដោយជោគជ័យ! លោកគ្រូអាចចាប់ផ្តើមប្រើប្រាស់មុខងារ AI បានហើយ។", "ការរក្សាទុកជោគជ័យ", "success");
         }
 
         // Global variables for image data
@@ -338,19 +467,19 @@
             resultContainer.classList.add('hidden');
 
             if (tab === 'text') {
-                tabText.className = "flex-grow md:flex-initial py-4 px-6 text-center font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors";
-                tabImage.className = "flex-grow md:flex-initial py-4 px-6 text-center font-semibold text-gray-500 hover:text-blue-500 hover:bg-gray-100 focus:outline-none transition-colors border-b-2 border-transparent";
+                tabText.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-blue-600 bg-white shadow-sm border border-slate-200/50 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2";
+                tabImage.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-slate-500 hover:text-blue-600 hover:bg-white/60 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2";
                 sectionText.classList.replace('hidden', 'block');
                 sectionImage.classList.replace('block', 'hidden');
             } else {
-                tabImage.className = "flex-grow md:flex-initial py-4 px-6 text-center font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none transition-colors";
-                tabText.className = "flex-grow md:flex-initial py-4 px-6 text-center font-semibold text-gray-500 hover:text-blue-500 hover:bg-gray-100 focus:outline-none transition-colors border-b-2 border-transparent";
+                tabImage.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-blue-600 bg-white shadow-sm border border-slate-200/50 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2";
+                tabText.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-slate-500 hover:text-blue-600 hover:bg-white/60 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2";
                 sectionImage.classList.replace('hidden', 'block');
                 sectionText.classList.replace('block', 'hidden');
             }
         }
 
-        function showLoading(show, text = "កំពុងវិភាគទិន្នន័យ សូមរង់ចាំបន្តិច...") {
+        function showLoading(show, text = "កំពុងវិភាគទិន្នន័យ សូមរង់ចាំបិច...") {
             const loading = document.getElementById('loading');
             const loadingText = document.getElementById('loading-text');
             const resultContainer = document.getElementById('result-container');
@@ -368,23 +497,24 @@
             const resultContent = document.getElementById('result-content');
             const resultContainer = document.getElementById('result-container');
             
-            resultContent.innerHTML = `<div class="p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 text-xs md:text-sm">
-                <div class="flex items-center mb-1 font-bold">
-                    <i class="fas fa-exclamation-circle mr-2 text-lg"></i> ការវិភាគមិនជោគជ័យ
+            resultContent.innerHTML = `<div class="p-5 bg-rose-50 text-rose-700 rounded-2xl border border-rose-100/80 text-xs md:text-sm shadow-inner">
+                <div class="flex items-center mb-1.5 font-bold font-muol text-rose-800">
+                    <i class="fas fa-circle-exclamation mr-2.5 text-lg"></i> ការវិភាគមិនជោគជ័យ
                 </div>
-                <p class="mt-1">${message}</p>
+                <p class="mt-1 leading-relaxed">${message}</p>
             </div>`;
             resultContainer.classList.remove('hidden');
         }
 
-        // Simple Markdown Parser to preserve layout beauty in Khmer
+        // Robust Simple Markdown Parser optimized for Khmer fonts layout
         function formatMarkdown(text) {
             let formattedText = text;
+            formattedText = formattedText.replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>');
             formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             formattedText = formattedText.replace(/### (.*?)(\n|$)/g, '<h3>$1</h3>');
-            formattedText = formattedText.replace(/## (.*?)(\n|$)/g, '<h3>$1</h3>');
+            formattedText = formattedText.replace(/## (.*?)(\n|$)/g, '<h2>$1</h2>');
             formattedText = formattedText.replace(/^\* (.*?)(\n|$)/gm, '<li>$1</li>');
-            formattedText = formattedText.replace(/((?:<li>.*<\/li>)+)/g, '<ul>$1</ul>');
+            formattedText = formattedText.replace(/((?:<li>.*<\/li>)+)/g, '<ul class="space-y-1.5 my-2">$1</ul>');
             formattedText = formattedText.replace(/> (.*?)(\n|$)/g, '<blockquote>$1</blockquote>');
             formattedText = formattedText.replace(/^(?!<h|<u|<l|<b|<s|<p).+$/gm, function(match) {
                 return '<p>' + match + '</p>';
@@ -402,46 +532,6 @@
             resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // --- Document Text Extractor (pdf.js) ---
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-        async function handleDocumentUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            document.getElementById('document-name').innerText = file.name;
-            showLoading(true, `កំពុងស្រង់អត្ថបទចេញពីឯកសារ "${file.name}"...`);
-            
-            const textarea = document.getElementById('text-input');
-
-            try {
-                if (file.type === 'text/plain') {
-                    const text = await file.text();
-                    textarea.value = text;
-                } else if (file.type === 'application/pdf') {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                    let fullText = '';
-                    
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        const pageText = textContent.items.map(item => item.str).join(' ');
-                        fullText += pageText + '\n\n';
-                    }
-                    textarea.value = fullText.trim();
-                } else {
-                    showAlert("សូមជ្រើសរើសឯកសារជាទម្រង់ PDF (.pdf) ឬ ឯកសារអត្ថបទ (.txt) ប៉ុណ្ណោះ!", "ប្រភេទឯកសារមិនគាំទ្រ");
-                }
-            } catch (error) {
-                console.error("Error reading document:", error);
-                showAlert("មិនអាចទាញយកអត្ថបទចេញពីឯកសារនេះបានឡើយ។ សូមធានាថាវាគ្មានលេខសម្ងាត់ការពារ។");
-            } finally {
-                showLoading(false);
-                event.target.value = ''; // Reset input
-            }
-        }
-
         // --- Image Upload & Drag-Drop Handling ---
         function handleDragOver(event) {
             event.preventDefault();
@@ -453,6 +543,7 @@
             document.getElementById('drop-zone').classList.remove('drag-active');
         }
 
+        // Process image files dragged and dropped
         function handleDrop(event) {
             event.preventDefault();
             document.getElementById('drop-zone').classList.remove('drag-active');
@@ -472,7 +563,7 @@
 
         function processImageFile(file) {
             if (!file.type.match('image.*')) {
-                showAlert("សូមជ្រើសរើសតែឯកសាររូបភាព (JPG, PNG, WEBP) ប៉ុណ្ណោះ!", "ឯកសារខុសទម្រង់");
+                showAlert("សូមជ្រើសរើសរូបភាពតែមួយសន្លឹកដែលមានទម្រង់ JPG, PNG ឬ WEBP!", "ប្រភេទឯកសារខុសទម្រង់", "warning");
                 return;
             }
 
@@ -487,10 +578,10 @@
                 document.getElementById('upload-prompt').classList.add('hidden');
                 document.getElementById('image-preview-container').classList.remove('hidden');
                 
-                // Activate Analyze Button
+                // Activate Analyze Button with premium styles
                 const btn = document.getElementById('analyze-btn');
                 btn.removeAttribute('disabled');
-                btn.className = "bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-md flex items-center transition-all transform hover:-translate-y-0.5 cursor-pointer";
+                btn.className = "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center transition-all transform hover:-translate-y-0.5 active:scale-95 cursor-pointer";
             }
             
             reader.readAsDataURL(file);
@@ -507,25 +598,25 @@
             document.getElementById('image-preview-container').classList.add('hidden');
             document.getElementById('image-upload').value = '';
             
-            // Deactivate Button
+            // Deactivate Analyze Button
             const btn = document.getElementById('analyze-btn');
             btn.setAttribute('disabled', 'true');
-            btn.className = "bg-gray-400 text-white font-bold py-3 px-8 rounded-xl shadow-md flex items-center transition-all cursor-not-allowed";
+            btn.className = "bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-2xl shadow-md flex items-center transition-all-300 cursor-not-allowed";
             
             document.getElementById('result-container').classList.add('hidden');
         }
 
         // --- Backoff Retry API Engine ---
         async function callGeminiApiWithRetry(payload) {
-            if (!userApiKey) {
+            if (!userApiKey || userApiKey.trim() === "") {
                 openSettingsModal();
-                throw new Error("មិនទាន់បានកំណត់ API Key។ សូមបញ្ចូល API Key ឥតគិតថ្លៃដើម្បីប្រើប្រាស់ប្រព័ន្ធ។");
+                throw new Error("មិនទាន់បានកំណត់ API Key។ សូមចុច 'កំណត់ API Key' រួចបញ្ចូល API Key ដើម្បីដំណើរការប្រព័ន្ធ AI។");
             }
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${userApiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${userApiKey}`;
             
             const maxRetries = 5;
-            let currentDelay = 1000; // start with 1 second
+            let currentDelay = 1000;
 
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
@@ -544,36 +635,38 @@
                     return await response.json();
                 } catch (error) {
                     if (attempt === maxRetries) {
-                        throw error; // Let outer scope handle final failure
+                        throw error;
                     }
-                    // Wait for exponential delay (1s, 2s, 4s, 8s, 16s)
                     await new Promise(resolve => setTimeout(resolve, currentDelay));
                     currentDelay *= 2;
                 }
             }
         }
 
-        // --- Core Fact-Checking Function ---
+        // --- Fact-Checking Logic ---
         async function analyzeText() {
             const text = document.getElementById('text-input').value.trim();
             if (!text) {
-                showAlert("សូមបញ្ចូល ឬចម្លងអត្ថបទព័ត៌មានដែលលោកគ្រូចង់ពិនិត្យ!", "បញ្ជាក់");
+                showAlert("សូមបញ្ចូលព័ត៌មាន ឬចម្លងអត្ថបទមុននឹងចាប់ផ្តើមវិភាគ!", "បញ្ជាក់ឡើងវិញ", "warning");
                 return;
             }
 
-            showLoading(true, "AI កំពុងវិភាគទ្រង់ទ្រាយអត្ថបទ និងស្វែងរកការពិតនៅលើបណ្តាញអ៊ីនធឺណិត (Google Search)...");
+            showLoading(true, "AI កំពុងវិភាគរចនាសម្ព័ន្ធអត្ថបទ និងកំពុងស្រាវជ្រាវប្រភពពី Google Search...");
 
-            const systemPrompt = `អ្នកគឺជាអ្នកវិភាគព័ត៌មាន និងផ្ទៀងផ្ទាត់ការពិត (Fact-Checker) ដែលមានវិជ្ជាជីវៈខ្ពស់នៅកម្ពុជា។
-            ភារកិច្ចចម្បង៖
-            ១. វិភាគអត្ថបទដែលផ្តល់ឱ្យឱ្យបានល្អិតល្អន់បំផុត។
-            ២. វាយតម្លៃកម្រិតគួរឱ្យទុកចិត្ត៖ 'ព័ត៌មានពិតប្រាកដ', 'ព័ត៌មានក្លែងក្លាយ / បំផ្លើស', 'ព័ត៌មានបំភាន់ ឬគ្មានប្រភពច្បាស់លាស់' ឬ 'មិនមានទិន្នន័យគ្រប់គ្រាន់ដើម្បីសន្និដ្ឋាន'។
-            ៣. ប្រើប្រាស់ទិន្នន័យពីប្រព័ន្ធស្វែងរក Google (ដែលផ្តល់ជូនដោយប្រព័ន្ធ) ដើម្បីផ្ទៀងផ្ទាត់រឿងរ៉ាវថ្មីៗ។
-            ៤. ផ្តល់ជាសេចក្តីសន្និដ្ឋានខ្លីខ្លឹម បន្ទាប់មកផ្តល់ហេតុផលជាចំណុចៗងាយយល់ និងជាចុងក្រោយផ្តល់ជាដំបូន្មានការពារខ្លួនពីការជឿព័ត៌មានខុស។
-            ៥. ត្រូវតែឆ្លើយតបជា **ភាសាខ្មែរ** ដោយប្រើភាសាសមរម្យ គួរសម ងាយស្រួលយល់សម្រាប់គ្រូបង្រៀន និងសិស្សានុសិស្ស។`;
+            const systemPrompt = `អ្នកគឺជាអ្នកវិភាគព័ត៌មាន និងផ្ទៀងផ្ទាត់ការពិត (Fact-Checker) អាជីពឆ្នើមប្រចាំប្រទេសកម្ពុជា។
+            ភារកិច្ចរបស់លោកអ្នក៖
+            ១. វិភាគអត្ថបទដែលផ្តល់ជូនយ៉ាងល្អិតល្អន់។
+            ២. កំណត់កម្រិតជឿជាក់៖ 'ព័ត៌មានពិតប្រាកដ', 'ព័ត៌មានក្លែងក្លាយ ឬ បំផ្លើស', 'ព័ត៌មានសង្ស័យគ្មានប្រភពច្បាស់លាស់'។
+            ៣. ប្រើប្រាស់ Google Search ក្នុងប្រព័ន្ធដើម្បីផ្ទៀងផ្ទាត់រឿងរ៉ាវជាក់ស្តែង និងប្រភពផ្លូវការ។
+            ៤. ផ្តល់របាយការណ៍សង្ខេប៖
+               - **សេចក្តីសន្និដ្ឋានជាមុន៖** ប្រាប់ពីកម្រិតទុកចិត្តឱ្យច្បាស់ភ្លាមៗ។
+               - **ហេតុផលនៃការវាយតម្លៃ៖** ពន្យល់ជាចំណុចៗងាយយល់បំផុត។
+               - **ដំបូន្មានរបស់ AI៖** ផ្តល់វិធីសាស្ត្រការពារខ្លួនពីព័ត៌មាននេះ។
+            ៥. ឆ្លើយតបជា **ភាសាខ្មែរ** ដោយប្រើវាក្យសព្ទគួរសម ផ្លូវការ ងាយយល់បំផុតសម្រាប់លោកគ្រូ អ្នកគ្រូ និងសិស្សានុសិស្ស។`;
 
             const payload = {
-                contents: [{ parts: [{ text: `សូមជួយត្រួតពិនិត្យ និងវាយតម្លៃលើអត្ថបទព័ត៌មាននេះ៖\n\n"${text}"` }] }],
-                tools: [{ "google_search": {} }], // Google Search Grounding is enabled
+                contents: [{ parts: [{ text: `សូមជួយវិភាគ និងផ្ទៀងផ្ទាត់ការពិតលើអត្ថបទព័ត៌មានខាងក្រោមនេះ៖\n\n"${text}"` }] }],
+                tools: [{ "google_search": {} }],
                 systemInstruction: { parts: [{ text: systemPrompt }] },
             };
 
@@ -583,37 +676,37 @@
                     const reply = data.candidates[0].content.parts[0].text;
                     displayResult(reply);
                 } else {
-                    throw new Error("មិនទទួលបានចម្លើយឆ្លើយតបពីប្រព័ន្ធ AI ឡើយ។");
+                    throw new Error("មិនទទួលបានការឆ្លើយតបពីម៉ាស៊ីន AI ឡើយ។");
                 }
             } catch (error) {
-                console.error("Analysis Error:", error);
-                showError("ដំណើរការវិភាគមានបញ្ហា៖ " + error.message);
+                console.error("Text analysis failure:", error);
+                showError("ដំណើរការវិភាគព័ត៌មានបរាជ័យ៖ " + error.message);
             } finally {
                 showLoading(false);
             }
         }
 
-        // --- Core Image Verifier Function ---
+        // --- Image Analysis Logic ---
         async function analyzeImage() {
             if (!currentBase64Image) {
                 showAlert("សូមបញ្ចូលរូបភាពជាមុនសិន!");
                 return;
             }
 
-            showLoading(true, "AI កំពុងវិភាគកម្រិតភីកសែល ពន្លឺ ស្រមោល និងទម្រង់កាយវិភាគវិទ្យានៃរូបភាព...");
+            showLoading(true, "AI កំពុងដំណើរការស្កែនរចនាសម្ព័ន្ធរូបភាព និងភីកសែលស្វែងរកភាពមិនប្រក្រតី...");
 
             const promptText = `អ្នកគឺជាអ្នកជំនាញវិភាគភាពត្រឹមត្រូវនៃរូបភាពឌីជីថល (Digital Forensics Expert)។
-            សូមជួយវិភាគរូបភាពនេះឱ្យបានហ្មត់ចត់បំផុត ហើយប្រាប់ខ្ញុំថាតើវាជា៖
-            ១. រូបភាពថតពិត (Real Photo) 
-            ២. ឬជារូបភាពបង្កើតដោយបញ្ញាសិប្បនិម្មិត AI (AI-Generated Image)?
+            សូមជួយវាយតម្លៃយ៉ាងហ្មត់ចត់លើរូបភាពនេះ និងសន្និដ្ឋានថាតើវាជា៖
+            ១. រូបភាពថតពិតជាក់ស្តែង (Real Photograph)
+            ២. ឬជារូបភាពដែលត្រូវបានបង្កើតដោយបញ្ញាសិប្បនិម្មិត AI (AI-Generated Image)?
             
-            សូមពិនិត្យមើល និងបញ្ជាក់លើសញ្ញាសម្គាល់ខាងក្រោម៖
-            - ភាពខុសប្រក្រតីនៃម្រាមដៃ ចំនួនដៃជើង រាងកាយ ឬទម្រង់ភ្នែក ត្រចៀក និងធ្មេញ
-            - ភាពមិនស៊ីគ្នានៃទិសដៅពន្លឺ និងស្រមោលរបស់វត្ថុក្នុងរូបភាព
-            - ផ្ទៃខាងក្រោយដែលរលាយចូលគ្នា ព្រាលៗខុសពីធម្មជាតិ ឬវត្ថុពត់វៀចខុសពីធម្មតា
-            - ភាពរលោងពេក (Plastic skin texture) នៃស្បែក ឬសម្លៀកបំពាក់
+            សូមពិនិត្យមើលចំណុចទាំងនេះ៖
+            - ទម្រង់កាយវិការមិនប្រក្រតី៖ ចំនួនម្រាមដៃជើង ទម្រង់ភ្នែក ធ្មេញ ឬត្រចៀកខុសពីធម្មជាតិ
+            - ពន្លឺ និងស្រមោល៖ ការចាំងពន្លឺមិនស៊ីគ្នារវាងវត្ថុ និងផ្ទៃខាងក្រោយ
+            - សាច់រូបភាព៖ ស្បែក ឬវត្ថុរលោងពេកដូចប្លាស្ទិក (Plastic skin effect)
+            - ផ្ទៃខាងក្រោយ៖ ភាពស្រពិចស្រពិល រលាយខុសប្លែកពីលក្ខណៈ Lens ធម្មតា ឬវត្ថុវៀចវេរ
             
-            សូមផ្តល់ការសន្និដ្ឋានឱ្យបានច្បាស់លាស់នៅខាងដើម បន្ទាប់មកពន្យល់ពីចំណុចសង្ស័យដែលរកឃើញជាចំណុចៗ ជា **ភាសាខ្មែរ** ប្រកបដោយភាពរាក់ទាក់ និងងាយយល់បំផុត។`;
+            សូមផ្តល់របាយការណ៍សន្និដ្ឋានឱ្យបានច្បាស់លាស់នៅខាងដើម បន្ទាប់មកផ្តល់ហេតុផលលម្អិតជាចំណុចៗ ជា **ភាសាខ្មែរ** ដែលសមរម្យ និងងាយស្រួលយល់សម្រាប់គ្រូបង្រៀន និងសិស្សានុសិស្ស។`;
 
             const payload = {
                 contents: [
@@ -638,11 +731,11 @@
                     const reply = data.candidates[0].content.parts[0].text;
                     displayResult(reply);
                 } else {
-                    throw new Error("មិនទទួលបានចម្លើយវិភាគពីប្រព័ន្ធ AI ឡើយ។");
+                    throw new Error("មិនទទួលបានចម្លើយវិភាគពីរូបភាពឡើយ។");
                 }
             } catch (error) {
-                console.error("Image Analysis Error:", error);
-                showError("មិនអាចវិភាគរូបភាពនេះបានឡើយ៖ " + error.message);
+                console.error("Image analysis failure:", error);
+                showError("ដំណើរការវិភាគរូបភាពជួបបញ្ហា៖ " + error.message);
             } finally {
                 showLoading(false);
             }
