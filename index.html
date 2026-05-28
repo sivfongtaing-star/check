@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
+    <!-- 
+      =========================================================================
+      កន្លែងកំណត់ API KEY របស់លោកគ្រូ (AIzaSyCdS-sveuqN9gmlzWUrbdpfhnIcVp2QoQc)
+      សូមយក API Key ពិតប្រាកដដែលចាប់ផ្តើមដោយ "AIzaSy..." មកដាក់ក្នុងចន្លោះសញ្ញាធ្មេញកណ្តុរខាងក្រោម៖
+      =========================================================================
+    -->
+    <script>
+        const MY_GEMINI_API_KEY = "សូមជំនួសដោយ_API_KEY_ពិតប្រាកដរបស់លោកគ្រូនៅទីនេះ";
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព (Fact News & AI Image Detector)</title>
@@ -309,11 +319,8 @@
     </div>
 
     <script>
-        // =========================================================================
-        // ប្រព័ន្ធតភ្ជាប់ស្វ័យប្រវត្តទៅកាន់ម៉ាស៊ីនមេ Gemini (Automated Runtime Integration)
-        // លែងមានការបង្ហាញ ឬលាក់កូដ API Key នៅក្នុង HTML ទៀតហើយ ធានាសុវត្ថិភាពខ្ពស់បំផុត ១០០%
-        // =========================================================================
-        const apiKey = ""; 
+        // ទាញយក API Key ពីផ្នែកខាងលើនៃកូដ
+        const apiKey = typeof MY_GEMINI_API_KEY !== 'undefined' ? MY_GEMINI_API_KEY : ""; 
 
         // ម៉ូដែលដែលគាំទ្រផ្លូវការ និងមានស្ថិរភាពខ្ពស់បំផុត
         const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025"; 
@@ -477,8 +484,11 @@
 
         // --- Core Secure API Engine with Exponential Backoff Retry ---
         async function fetchGeminiAI(payload) {
-            // ទាញយក API Key ពីប្រព័ន្ធដំណើរការខ្នងបង្អែកដោយស្វ័យប្រវត្ត (Runtime Connection Injection)
-            const finalKey = apiKey; 
+            const finalKey = apiKey.trim(); 
+            
+            if (!finalKey || finalKey.includes("សូមជំនួសដោយ") || finalKey === "") {
+                throw new Error("លោកគ្រូមិនទាន់បានកំណត់ API Key ត្រឹមត្រូវនៅឡើយទេ។ សូមពិនិត្យមើល និងដាក់ API Key របស់លោកគ្រូនៅជួរទី ១២ នៃកូដ index.html។");
+            }
 
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${finalKey}`;
             
