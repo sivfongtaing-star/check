@@ -114,3 +114,123 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Noto Sans Khmer', sans-serif; background-color: #f8fafc; }
+        .loader { border-top-color: #2563eb; animation: spinner 1.2s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-blue-800 text-white shadow-lg py-5">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-2xl font-bold">ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព (AI Fact Checker)</h1>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-2xl">
+        <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+            <div class="flex gap-4 mb-6">
+                <button onclick="switchTab('text')" class="flex-1 py-3 bg-blue-100 text-blue-700 rounded-xl font-bold">ពិនិត្យអត្ថបទ</button>
+                <button onclick="switchTab('image')" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold">ពិនិត្យរូបភាព</button>
+            </div>
+
+            <div id="section-text">
+                <textarea id="text-input" rows="6" class="w-full p-4 border rounded-xl mb-4" placeholder="ដាក់អត្ថបទព័ត៌មានដែលចង់ពិនិត្យនៅទីនេះ..."></textarea>
+                <button onclick="analyzeText()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">ចាប់ផ្តើមវិភាគអត្ថបទ</button>
+            </div>
+
+            <div id="section-image" class="hidden">
+                <input type="file" id="image-upload" accept="image/*" class="w-full p-4 border rounded-xl mb-4">
+                <button onclick="analyzeImage()" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">ចាប់ផ្តើមវិភាគរូបភាព</button>
+            </div>
+
+            <div id="loading" class="hidden text-center py-10">
+                <div class="loader inline-block h-10 w-10 border-4 border-t-4 border-slate-200 rounded-full"></div>
+                <p class="mt-4 font-bold text-blue-600">កំពុងតភ្ជាប់ទៅ AI... សូមរង់ចាំ</p>
+            </div>
+
+            <div id="result-container" class="hidden mt-6 p-4 bg-slate-50 rounded-xl border">
+                <h3 class="font-bold mb-2">លទ្ធផលការវិភាគ៖</h3>
+                <div id="result-content" class="text-slate-700"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // លោកគ្រូត្រូវដាក់ API Key ពិតប្រាកដរបស់លោកគ្រូនៅកន្លែងនេះ (ជំនួសអក្សរខាងក្រោម)
+        const MY_GEMINI_API_KEY = "ជំនួស_API_KEY_ពិតប្រាកដនៅទីនេះ";
+        const GEMINI_MODEL = "gemini-1.5-flash";
+
+        function switchTab(tab) {
+            document.getElementById('section-text').classList.toggle('hidden', tab !== 'text');
+            document.getElementById('section-image').classList.toggle('hidden', tab !== 'image');
+        }
+
+        async function fetchGemini(payload) {
+            // ការត្រួតពិនិត្យថា API Key មិនមែនជាតម្លៃ placeholder
+            if (!MY_GEMINI_API_KEY || MY_GEMINI_API_KEY === "ជំនួស_API_KEY_ពិតប្រាកដនៅទីនេះ") {
+                throw new Error("សូមដាក់ API Key ឱ្យបានត្រឹមត្រូវនៅក្នុងកូដជួរទី ៧៤។");
+            }
+            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${MY_GEMINI_API_KEY}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                // កែសម្រួលការបង្ហាញកំហុសឱ្យបានច្បាស់លាស់
+                throw new Error(data.error?.message || "កំហុសក្នុងការតភ្ជាប់ទៅ Google API");
+            }
+            return data;
+        }
+
+        async function analyzeText() {
+            const text = document.getElementById('text-input').value;
+            if (!text) return alert("សូមបញ្ចូលអត្ថបទ");
+            showLoading(true);
+            try {
+                const data = await fetchGemini({ contents: [{ parts: [{ text: "ផ្ទៀងផ្ទាត់ព័ត៌មាននេះថាពិត ឬក្លែងក្លាយ៖ " + text }] }] });
+                displayResult(data.candidates[0].content.parts[0].text);
+            } catch (e) { alert("បរាជ័យ៖ " + e.message); } finally { showLoading(false); }
+        }
+
+        async function analyzeImage() {
+            const fileInput = document.getElementById('image-upload');
+            if (fileInput.files.length === 0) return alert("សូមជ្រើសរើសរូបភាព");
+            showLoading(true);
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
+                try {
+                    const data = await fetchGemini({
+                        contents: [{ parts: [
+                            { text: "តើរូបភាពនេះជាការកែច្នៃដោយ AI ឬរូបភាពពិត? ចូរពន្យល់។" },
+                            { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+                        ]}]
+                    });
+                    displayResult(data.candidates[0].content.parts[0].text);
+                } catch (e) { alert("បរាជ័យ៖ " + e.message); } finally { showLoading(false); }
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+
+        function showLoading(show) { document.getElementById('loading').classList.toggle('hidden', !show); }
+        function displayResult(text) {
+            document.getElementById('result-content').innerText = text;
+            document.getElementById('result-container').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
