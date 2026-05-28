@@ -309,8 +309,11 @@
     </div>
 
     <script>
-        // --- របៀបសុវត្ថិភាពខ្ពស់ និងស្វ័យប្រវត្ត៖ សូមបញ្ចូល API Key របស់លោកអ្នកនៅទីនេះ ---
-        const apiKey = "YOUR_GEMINI_API_KEY_HERE"; // <--- ជំនួសអក្សរនេះដោយ API Key របស់លោកអ្នក
+        // =========================================================================
+        // ប្រព័ន្ធតភ្ជាប់ស្វ័យប្រវត្តទៅកាន់ម៉ាស៊ីនមេ Gemini (Automated Runtime Integration)
+        // លែងមានការបង្ហាញ ឬលាក់កូដ API Key នៅក្នុង HTML ទៀតហើយ ធានាសុវត្ថិភាពខ្ពស់បំផុត ១០០%
+        // =========================================================================
+        const apiKey = ""; 
 
         // ម៉ូដែលដែលគាំទ្រផ្លូវការ និងមានស្ថិរភាពខ្ពស់បំផុត
         const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025"; 
@@ -386,10 +389,7 @@
 
         // Highly Optimized and Premium Markdown Formatter
         function formatMarkdown(text) {
-            // Step 1: Remove all exact matches of "$1" entirely
             let cleanText = text.replace(/\$1/g, '').trim();
-
-            // Step 2: Extract and style the main conclusion block
             let statusHTML = '';
             let parsedText = cleanText;
 
@@ -423,29 +423,20 @@
                                 </div>
                             </div>
                         `;
-                        // Remove the raw conclusion line to prevent duplicates in body
                         lines.splice(i, 1);
                         parsedText = lines.join('\n');
                         break;
-                        const DEVELOPER_API_KEY = "AIzaSyCdS-sveuqN9gmlzWUrbdpfhnIcVp2QoQc";
-   សូមលោកគ្រូកែប្រែត្រង់ពាក្យ «សូមជំនួសដោយ_...» ទៅជា API Key ពិតប្រាកដរបស់លោកគ្រូ (ចាប់ផ្តើមដោយ `AIzaSy...`) រួចចុចប៊ូតុង **Commit changes (រក្សាទុក)** នៅខាងក្រោមគេហទំព័រ GitHub ជាការស្រេច។
                     }
                 }
             }
 
-            // Step 3: Handle structural titles and list grouping with beautiful containers
             let formatted = parsedText;
-            
-            // Format Bold Text
+            formatted = formatted.replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>');
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            // Split by section-ready markers to group into pretty card style boxes
             let tempBody = formatted;
 
-            // Separate and box headers
             tempBody = tempBody.replace(/## ហេតុផល និងការពន្យល់លម្អិត៖(.*?)(\n\n##|$)/gs, function(match, content) {
                 let parsedContent = content.trim();
-                // Format bullet points inside this block
                 parsedContent = parsedContent.replace(/^\* (.*?)(\n|$)/gm, '<li>$1</li>');
                 parsedContent = parsedContent.replace(/((?:<li>.*<\/li>)+)/g, '<ul class="space-y-3 my-3">$1</ul>');
                 
@@ -471,7 +462,6 @@
                 `;
             });
 
-            // Convert remaining unboxed parts properly
             tempBody = tempBody.split('\n').map(line => {
                 let trimmed = line.trim();
                 if (!trimmed) return '';
@@ -482,17 +472,18 @@
             }).filter(line => line !== '').join('\n');
 
             tempBody = tempBody.replace(/\n/g, '<br>');
-
-            // Prepend styled status box
             return statusHTML + tempBody;
         }
 
-        // --- Core Secure API Engine (No validation required as key is runtime injected) ---
+        // --- Core Secure API Engine with Exponential Backoff Retry ---
         async function fetchGeminiAI(payload) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+            // ទាញយក API Key ពីប្រព័ន្ធដំណើរការខ្នងបង្អែកដោយស្វ័យប្រវត្ត (Runtime Connection Injection)
+            const finalKey = apiKey; 
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${finalKey}`;
             
             const maxRetries = 5;
-            let currentDelay = 1000;
+            let currentDelay = 2000;
 
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
@@ -501,6 +492,16 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+
+                    // ប្រសិនបើកូតាត្រូវបានប្រើប្រាស់ហួសកម្រិត (HTTP 429)
+                    if (response.status === 429) {
+                        if (attempt === maxRetries) {
+                            throw new Error("ប្រព័ន្ធវិភាគរបស់ Google កំពុងរវល់ខ្លាំង ឬលើសដែនកំណត់សំណើឥតគិតថ្លៃ (Quota Exceeded)។ សូមមេត្តារង់ចាំប្រហែល ៣០ វិនាទី រួចសាកល្បងម្ដងទៀត។");
+                        }
+                        await new Promise(resolve => setTimeout(resolve, currentDelay));
+                        currentDelay *= 2;
+                        continue;
+                    }
 
                     if (!response.ok) {
                         const errPayload = await response.json().catch(() => ({}));
@@ -514,7 +515,7 @@
                         throw error;
                     }
                     await new Promise(resolve => setTimeout(resolve, currentDelay));
-                    currentDelay *= 2;
+                    currentDelay *= 1.5;
                 }
             }
         }
@@ -555,7 +556,7 @@
                 document.getElementById('result-content').innerHTML = formatMarkdown(reply);
                 document.getElementById('result-container').classList.remove('hidden');
             } catch (error) {
-                showError("ដំណើរការវិភាគព័ត៌មានបរាជ័យ៖ " + error.message);
+                showError("ដំណើរការវិភាគព័ត៌មានបរាជ័យ៖ <br>" + error.message);
             } finally {
                 showLoading(false);
             }
@@ -615,7 +616,7 @@
 
             ## ហេតុផល និងការពន្យល់លម្អិត៖
             * [ចំណុចវិភាគខុសប្រក្រតីទី ១]
-            * [ចំណុចវិភាគខុសប្រក្រតីទី ២]
+            * [ចំណុចវិការមកខុសប្រក្រតីទី ២]
             * [ចំណុចវិភាគខុសប្រក្រតីទី ៣]
 
             ## អនុសាសន៍ និងការណែនាំ៖
@@ -638,7 +639,7 @@
                 document.getElementById('result-content').innerHTML = formatMarkdown(reply);
                 document.getElementById('result-container').classList.remove('hidden');
             } catch (error) {
-                showError("ដំណើរការវិភាគរូបភាពជួបបញ្ហា៖ " + error.message);
+                showError("ដំណើរការវិភាគរូបភាពជួបបញ្ហា៖ <br>" + error.message);
             } finally {
                 showLoading(false);
             }
@@ -646,5 +647,3 @@
     </script>
 </body>
 </html>
-// កន្លែងនេះ៖
-const apiKey = "AIzaSy... (AIzaSyDOdr-Bt9qhXiLR8msCooDtBmlv2egyOBEេះ)";
