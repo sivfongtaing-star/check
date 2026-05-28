@@ -51,7 +51,7 @@
     </main>
 
     <script>
-        // AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3Uះ
+        // លោកគ្រូត្រូវដាក់ API Key ពិតប្រាកដរបស់លោកគ្រូនៅកន្លែងនេះជំនួសឃ្លាខាងក្រោម
         const MY_GEMINI_API_KEY = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U";
         const GEMINI_MODEL = "gemini-1.5-flash";
 
@@ -62,8 +62,8 @@
 
         async function fetchGemini(payload) {
             const key = MY_GEMINI_API_KEY;
-            if (!key || key === "ដាក់_API_KEY_របស់លោកគ្រូនៅទីនេះ") {
-                throw new Error("មិនទាន់បានកំណត់ API Key នៅក្នុងកូដទេ។");
+            if (!key || key.includes("ជំនួស_API_KEY")) {
+                throw new Error("សូមដាក់ API Key ឱ្យបានត្រឹមត្រូវនៅក្នុងកូដជួរទី ៧៤។");
             }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
             const response = await fetch(url, {
