@@ -3,8 +3,7 @@
 <head>
     <!-- 
       =========================================================================
-      កន្លែងកំណត់ API KEY របស់លោកគ្រូ (AIzaSyCdS-sveuqN9gmlzWUrbdpfhnIcVp2QoQc)
-      សូមយក API Key ពិតប្រាកដដែលចាប់ផ្តើមដោយ "AIzaSy..." មកដាក់ក្នុងចន្លោះសញ្ញាធ្មេញកណ្តុរខាងក្រោម៖
+      ការណែនាំ៖ សូមជំនួសអក្សរនៅត្រង់ MY_GEMINI_API_KEY ដោយ API Key របស់លោកគ្រូ
       =========================================================================
     -->
     <script>
@@ -13,274 +12,111 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព (Fact News & AI Image Detector)</title>
+    <title>ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700&family=Noto+Serif+Khmer:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .font-muol {
-            font-family: 'Khmer OS Muol Light', 'Noto Serif Khmer', 'Inter', serif;
-            font-weight: 700;
-        }
-        .font-siemreap {
-            font-family: 'Khmer OS Siemreap', 'Noto Sans Khmer', 'Inter', sans-serif;
-        }
-        body {
-            font-family: 'Khmer OS Siemreap', 'Noto Sans Khmer', 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-        .transition-all-300 {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .drag-active {
-            border-color: #2563eb !important;
-            background-color: #eff6ff !important;
-        }
-        .loader {
-            border-top-color: #2563eb;
-            animation: spinner 1.2s linear infinite;
-        }
-        @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .result-card {
-            background-color: #ffffff;
-            border: 1px solid #f1f5f9;
-            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
-            border-radius: 24px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .section-box {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 18px;
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
-            transition: all 0.2s ease;
-        }
-        
-        .section-box:hover {
-            border-color: #cbd5e1;
-            background-color: #f1f5f9;
-        }
-        
-        .markdown-body h2 {
-            font-family: 'Khmer OS Muol Light', 'Noto Serif Khmer', serif;
-            font-size: 1.15rem;
-            color: #1e3a8a;
-            margin-bottom: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 0.5rem;
-        }
-        
-        .markdown-body h3 { 
-            font-family: 'Khmer OS Muol Light', 'Noto Serif Khmer', serif;
-            font-size: 1.05rem; 
-            margin-top: 1.25rem; 
-            margin-bottom: 0.5rem; 
-            color: #1e40af; 
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .markdown-body p { 
-            margin-bottom: 0.75rem; 
-            line-height: 1.8; 
-            text-align: justify; 
-            color: #334155;
-            font-size: 0.95rem;
-        }
-        
-        .markdown-body ul { 
-            list-style-type: none; 
-            margin-left: 0; 
-            margin-bottom: 0.5rem; 
-            padding-left: 0;
-        }
-        
-        .markdown-body li { 
-            margin-bottom: 0.65rem; 
-            position: relative;
-            padding-left: 1.75rem;
-            line-height: 1.7;
-            color: #475569;
-            font-size: 0.95rem;
-        }
-        
-        .markdown-body li::before {
-            content: "\f058";
-            font-family: "Font Awesome 6 Free";
-            font-weight: 900;
-            position: absolute;
-            left: 0;
-            top: 3px;
-            color: #10b981;
-            font-size: 0.95rem;
-        }
-        
-        .recommendation-section li::before {
-            content: "\f059";
-            color: #3b82f6;
-        }
-        
-        .markdown-body strong { 
-            font-weight: 700; 
-            color: #0f172a; 
-        }
-        
-        .status-box {
-            padding: 1.5rem;
-            border-radius: 20px;
-            border: 1px solid;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: start;
-            gap: 1rem;
-            box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.03);
-            transition: all 0.3s ease;
-        }
-        
-        .status-box-true {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border-color: #bbf7d0;
-            color: #14532d;
-        }
-        
-        .status-box-false {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border-color: #fecaca;
-            color: #7f1d1d;
-        }
-        
-        .status-box-misleading {
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-            border-color: #fde68a;
-            color: #78350f;
-        }
+        body { font-family: 'Noto Sans Khmer', sans-serif; background-color: #f8fafc; }
+        .loader { border-top-color: #2563eb; animation: spinner 1.2s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col bg-slate-50 font-siemreap">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-    <header class="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white shadow-xl py-5 sticky top-0 z-40">
-        <div class="container mx-auto px-4 flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center space-x-3.5">
-                <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20">
-                    <i class="fas fa-shield-halved text-3xl text-emerald-400"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl md:text-2xl font-muol tracking-wide">ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព</h1>
-                    <p class="text-[11px] text-blue-200 uppercase tracking-widest font-semibold mt-0.5">AI-Powered Fact & Image Forensic Center</p>
-                </div>
-            </div>
+    <header class="bg-blue-800 text-white shadow-lg py-5">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-2xl font-bold">ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព (AI Fact Checker)</h1>
         </div>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
-        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-            <div class="flex border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1.5">
-                <button id="tab-text" class="flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-blue-600 bg-white shadow-sm border border-slate-200/50 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2" onclick="switchTab('text')">
-                    <i class="fas fa-file-signature text-base text-blue-500"></i> ពិនិត្យអត្ថបទ / ព័ត៌មាន
-                </button>
-                <button id="tab-image" class="flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-slate-500 hover:text-blue-600 hover:bg-white/60 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2" onclick="switchTab('image')">
-                    <i class="fas fa-images text-base text-slate-400"></i> ពិនិត្យរូបភាព AI
-                </button>
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-2xl">
+        <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+            <div class="flex gap-4 mb-6">
+                <button onclick="switchTab('text')" class="flex-1 py-3 bg-blue-100 text-blue-700 rounded-xl font-bold">ពិនិត្យអត្ថបទ</button>
+                <button onclick="switchTab('image')" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold">ពិនិត្យរូបភាព</button>
             </div>
 
-            <div class="p-6 md:p-8">
-                <div id="section-text" class="block space-y-6">
-                    <div>
-                        <h2 class="text-base font-muol text-slate-800 flex items-center mb-1.5">
-                            <span class="bg-blue-100 text-blue-600 rounded-xl w-7 h-7 inline-flex items-center justify-center text-sm mr-2.5 font-bold">១</span>
-                            បញ្ចូលអត្ថបទព័ត៌មានដែលចង់ផ្ទៀងផ្ទាត់
-                        </h2>
-                        <textarea id="text-input" rows="8" class="w-full px-4 py-3.5 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all-300 text-sm leading-relaxed shadow-inner" placeholder="ឧទាហរណ៍៖ ក្តៅៗ! រដ្ឋាភិបាលប្រកាសចែកថេប្លេតឥតគិតថ្លៃ..."></textarea>
-                    </div>
-                    <div class="flex justify-end pt-2">
-                        <button onclick="analyzeText()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center transition-all-300">
-                            <i class="fas fa-magnifying-glass mr-2.5"></i> ចាប់ផ្តើមវិភាគព័ត៌មាន
-                        </button>
-                    </div>
-                </div>
+            <div id="section-text">
+                <textarea id="text-input" rows="6" class="w-full p-4 border rounded-xl mb-4" placeholder="ដាក់អត្ថបទព័ត៌មានដែលចង់ពិនិត្យនៅទីនេះ..."></textarea>
+                <button onclick="analyzeText()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700">ចាប់ផ្តើមវិភាគអត្ថបទ</button>
+            </div>
 
-                <div id="section-image" class="hidden space-y-6">
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-3xl p-10 text-center cursor-pointer hover:bg-blue-50/30 hover:border-blue-500 transition-all-300" onclick="document.getElementById('image-upload').click()">
-                        <input type="file" id="image-upload" accept="image/jpeg, image/png, image/webp" class="hidden" onchange="handleImageUpload(event)">
-                        <div id="upload-prompt" class="space-y-4">
-                            <i class="fas fa-cloud-arrow-up text-3xl text-blue-600"></i>
-                            <p class="text-slate-700 font-bold">ចុចទីនេះ ដើម្បីជ្រើសរើសរូបភាព</p>
-                        </div>
-                        <div id="image-preview-container" class="hidden mt-2 relative">
-                            <img id="image-preview" src="" alt="Preview" class="max-h-80 mx-auto rounded-2xl shadow-lg object-contain">
-                        </div>
-                    </div>
-                    <div class="flex justify-end pt-2">
-                        <button id="analyze-btn" onclick="analyzeImage()" class="bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-2xl shadow-md flex items-center transition-all-300 cursor-not-allowed" disabled>
-                            <i class="fas fa-brain mr-2.5"></i> ចាប់ផ្តើមវិភាគរូបភាព
-                        </button>
-                    </div>
-                </div>
+            <div id="section-image" class="hidden">
+                <input type="file" id="image-upload" accept="image/*" class="w-full p-4 border rounded-xl mb-4">
+                <button onclick="analyzeImage()" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700">ចាប់ផ្តើមវិភាគរូបភាព</button>
+            </div>
 
-                <div id="loading" class="hidden flex flex-col items-center justify-center py-16">
-                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-16 w-16 mb-4"></div>
-                    <p class="text-blue-600 font-bold" id="loading-text">កំពុងវិភាគ... សូមរង់ចាំ</p>
-                </div>
+            <div id="loading" class="hidden text-center py-10">
+                <div class="loader inline-block h-10 w-10 border-4 border-t-4 border-slate-200 rounded-full"></div>
+                <p class="mt-4 font-bold text-blue-600">កំពុងតភ្ជាប់ទៅ AI... សូមរង់ចាំ</p>
+            </div>
 
-                <div id="result-container" class="hidden mt-10 border-t border-slate-200/80 pt-8">
-                    <div id="result-content" class="markdown-body"></div>
-                </div>
+            <div id="result-container" class="hidden mt-6 p-4 bg-slate-50 rounded-xl border">
+                <h3 class="font-bold mb-2">លទ្ធផលការវិភាគ៖</h3>
+                <div id="result-content" class="text-slate-700"></div>
             </div>
         </div>
     </main>
 
     <script>
-        const apiKey = typeof MY_GEMINI_API_KEY !== 'undefined' ? MY_GEMINI_API_KEY : ""; 
-        const GEMINI_MODEL = "gemini-1.5-flash"; 
+        const apiKey = typeof MY_GEMINI_API_KEY !== 'undefined' ? MY_GEMINI_API_KEY : "";
+        const GEMINI_MODEL = "gemini-1.5-flash";
 
         function switchTab(tab) {
-            const sectionText = document.getElementById('section-text');
-            const sectionImage = document.getElementById('section-image');
-            if (tab === 'text') {
-                sectionText.classList.replace('hidden', 'block');
-                sectionImage.classList.replace('block', 'hidden');
-            } else {
-                sectionImage.classList.replace('hidden', 'block');
-                sectionText.classList.replace('block', 'hidden');
-            }
+            document.getElementById('section-text').classList.toggle('hidden', tab !== 'text');
+            document.getElementById('section-image').classList.toggle('hidden', tab !== 'image');
         }
 
-        async function fetchGeminiAI(payload) {
+        async function fetchGemini(payload) {
+            if (apiKey === "សូមជំនួសដោយ_API_KEY_ពិតប្រាកដរបស់លោកគ្រូនៅទីនេះ" || !apiKey) {
+                throw new Error("សូមពិនិត្យមើល API Key របស់លោកគ្រូឱ្យបានត្រឹមត្រូវ");
+            }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (!response.ok) throw new Error("កំហុសក្នុងការតភ្ជាប់ទៅ Google Gemini API");
-            return await response.json();
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error?.message || "កំហុសមិនស្គាល់");
+            return data;
         }
 
         async function analyzeText() {
-            const text = document.getElementById('text-input').value.trim();
+            const text = document.getElementById('text-input').value;
             if (!text) return alert("សូមបញ្ចូលអត្ថបទ");
-            document.getElementById('loading').classList.remove('hidden');
+            showLoading(true);
             try {
-                const payload = { contents: [{ parts: [{ text: `ផ្ទៀងផ្ទាត់ព័ត៌មាន៖ ${text}` }] }] };
-                const data = await fetchGeminiAI(payload);
-                document.getElementById('result-content').innerHTML = data.candidates[0].content.parts[0].text;
-                document.getElementById('result-container').classList.remove('hidden');
-            } catch (e) {
-                alert("បរាជ័យ៖ " + e.message);
-            } finally {
-                document.getElementById('loading').classList.add('hidden');
-            }
+                const data = await fetchGemini({ contents: [{ parts: [{ text: "ផ្ទៀងផ្ទាត់ព័ត៌មាននេះថាពិត ឬក្លែងក្លាយ៖ " + text }] }] });
+                displayResult(data.candidates[0].content.parts[0].text);
+            } catch (e) { alert("បរាជ័យ៖ " + e.message); } finally { showLoading(false); }
+        }
+
+        async function analyzeImage() {
+            const fileInput = document.getElementById('image-upload');
+            if (fileInput.files.length === 0) return alert("សូមជ្រើសរើសរូបភាព");
+            showLoading(true);
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
+                try {
+                    const data = await fetchGemini({
+                        contents: [{ parts: [
+                            { text: "តើរូបភាពនេះជាការកែច្នៃដោយ AI ឬរូបភាពពិត? ចូរពន្យល់។" },
+                            { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+                        ]}]
+                    });
+                    displayResult(data.candidates[0].content.parts[0].text);
+                } catch (e) { alert("បរាជ័យ៖ " + e.message); } finally { showLoading(false); }
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+
+        function showLoading(show) { document.getElementById('loading').classList.toggle('hidden', !show); }
+        function displayResult(text) {
+            document.getElementById('result-content').innerText = text;
+            document.getElementById('result-container').classList.remove('hidden');
         }
     </script>
 </body>
