@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-    <!-- 
-      =========================================================================
-      ការណែនាំ៖ សូមជំនួសអក្សរនៅត្រង់ MY_GEMINI_API_KEY ដោយ API Key របស់លោកគ្រូ
-      =========================================================================
-    -->
-    <script>
-        const MY_GEMINI_API_KEY = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U";
-    </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព</title>
@@ -60,7 +51,8 @@
     </main>
 
     <script>
-        const apiKey = typeof MY_GEMINI_API_KEY !== 'undefined' ? MY_GEMINI_API_KEY : "";
+        // AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3Uះ
+        const MY_GEMINI_API_KEY = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U";
         const GEMINI_MODEL = "gemini-1.5-flash";
 
         function switchTab(tab) {
@@ -69,17 +61,18 @@
         }
 
         async function fetchGemini(payload) {
-            if (apiKey === "សូមជំនួសដោយ_API_KEY_ពិតប្រាកដរបស់លោកគ្រូនៅទីនេះ" || !apiKey) {
-                throw new Error("សូមពិនិត្យមើល API Key របស់លោកគ្រូឱ្យបានត្រឹមត្រូវ");
+            const key = MY_GEMINI_API_KEY;
+            if (!key || key === "ដាក់_API_KEY_របស់លោកគ្រូនៅទីនេះ") {
+                throw new Error("មិនទាន់បានកំណត់ API Key នៅក្នុងកូដទេ។");
             }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error?.message || "កំហុសមិនស្គាល់");
+            if (!response.ok) throw new Error(data.error?.message || "កំហុសក្នុងការតភ្ជាប់");
             return data;
         }
 
