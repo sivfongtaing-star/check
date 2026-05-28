@@ -45,7 +45,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Premium Results Styling */
         .result-card {
             background-color: #ffffff;
             border: 1px solid #f1f5f9;
@@ -116,7 +115,6 @@
             font-size: 0.95rem;
         }
         
-        /* Success checkmark bullet list */
         .markdown-body li::before {
             content: "\f058";
             font-family: "Font Awesome 6 Free";
@@ -128,7 +126,6 @@
             font-size: 0.95rem;
         }
         
-        /* Guide warning list styling inside recommendation section */
         .recommendation-section li::before {
             content: "\f059";
             color: #3b82f6;
@@ -139,17 +136,6 @@
             color: #0f172a; 
         }
         
-        .markdown-body blockquote { 
-            border-left: 4px solid #3b82f6; 
-            padding: 0.75rem 1.25rem; 
-            margin: 1.25rem 0; 
-            color: #1e293b; 
-            background-color: #eff6ff;
-            border-radius: 0 12px 12px 0;
-            font-weight: 500;
-        }
-        
-        /* Premium Status Alert Box Design */
         .status-box {
             padding: 1.5rem;
             border-radius: 20px;
@@ -183,7 +169,6 @@
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col bg-slate-50 font-siemreap">
 
-    <!-- Premium Header -->
     <header class="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white shadow-xl py-5 sticky top-0 z-40">
         <div class="container mx-auto px-4 flex items-center justify-between flex-wrap gap-4">
             <div class="flex items-center space-x-3.5">
@@ -198,11 +183,8 @@
         </div>
     </header>
 
-    <!-- Main Workspace Container -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-            
-            <!-- Tab Navigation Switchers -->
             <div class="flex border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1.5">
                 <button id="tab-text" class="flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-blue-600 bg-white shadow-sm border border-slate-200/50 focus:outline-none transition-all-300 text-sm flex items-center justify-center gap-2" onclick="switchTab('text')">
                     <i class="fas fa-file-signature text-base text-blue-500"></i> ពិនិត្យអត្ថបទ / ព័ត៌មាន
@@ -213,55 +195,32 @@
             </div>
 
             <div class="p-6 md:p-8">
-                <!-- Tab 1: Text Analysis Section -->
                 <div id="section-text" class="block space-y-6">
                     <div>
                         <h2 class="text-base font-muol text-slate-800 flex items-center mb-1.5">
                             <span class="bg-blue-100 text-blue-600 rounded-xl w-7 h-7 inline-flex items-center justify-center text-sm mr-2.5 font-bold">១</span>
                             បញ្ចូលអត្ថបទព័ត៌មានដែលចង់ផ្ទៀងផ្ទាត់
                         </h2>
-                        <p class="text-xs text-slate-500 ml-9 mb-3.5">លោកអ្នកទាំងអស់គ្នាអាចវាយបញ្ចូល ឬ ចម្លង (Copy) អត្ថបទព័ត៌មានពីបណ្តាញសង្គមផ្សេងៗមកដាក់នៅទីនេះ</p>
-                        <textarea id="text-input" rows="8" class="w-full px-4 py-3.5 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all-300 text-sm leading-relaxed shadow-inner placeholder-slate-400" placeholder="ឧទាហរណ៍៖ ក្តៅៗ! រដ្ឋាភិបាលប្រកាសចែកថេប្លេតឥតគិតថ្លៃជូនសិស្សានុសិស្សទាំងអស់ក្នុងសប្តាហ៍ក្រោយ..."></textarea>
+                        <textarea id="text-input" rows="8" class="w-full px-4 py-3.5 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all-300 text-sm leading-relaxed shadow-inner" placeholder="ឧទាហរណ៍៖ ក្តៅៗ! រដ្ឋាភិបាលប្រកាសចែកថេប្លេតឥតគិតថ្លៃ..."></textarea>
                     </div>
-
                     <div class="flex justify-end pt-2">
-                        <button onclick="analyzeText()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center transition-all-300 transform hover:-translate-y-0.5 active:scale-95">
+                        <button onclick="analyzeText()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-blue-500/25 flex items-center transition-all-300">
                             <i class="fas fa-magnifying-glass mr-2.5"></i> ចាប់ផ្តើមវិភាគព័ត៌មាន
                         </button>
                     </div>
                 </div>
 
-                <!-- Tab 2: Image Analysis Section -->
                 <div id="section-image" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-base font-muol text-slate-800 flex items-center mb-1.5">
-                            <span class="bg-blue-100 text-blue-600 rounded-xl w-7 h-7 inline-flex items-center justify-center text-sm mr-2.5 font-bold">១</span>
-                            បញ្ចូលរូបភាពដែលចង់ពិនិត្យ
-                        </h2>
-                        <p class="text-xs text-slate-500 ml-9 mb-4">ប្រព័ន្ធនឹងពិនិត្យមើលរចនាសម្ព័ន្ធភីកសែល ទម្រង់កាយវិការ និងកម្រិតពន្លឺ ដើម្បីវាយតម្លៃថាតើជារូបថតពិត ឬបង្កើតដោយ AI</p>
-                    </div>
-                    
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-3xl p-10 text-center cursor-pointer hover:bg-blue-50/30 hover:border-blue-500 transition-all-300 relative group" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('image-upload').click()">
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-3xl p-10 text-center cursor-pointer hover:bg-blue-50/30 hover:border-blue-500 transition-all-300" onclick="document.getElementById('image-upload').click()">
                         <input type="file" id="image-upload" accept="image/jpeg, image/png, image/webp" class="hidden" onchange="handleImageUpload(event)">
-                        
                         <div id="upload-prompt" class="space-y-4">
-                            <div class="bg-blue-50 text-blue-600 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-inner">
-                                <i class="fas fa-cloud-arrow-up text-3xl"></i>
-                            </div>
-                            <div>
-                                <p class="text-slate-700 font-bold text-sm md:text-base">ចុចទីនេះ ដើម្បីជ្រើសរើសរូបភាព</p>
-                                <p class="text-xs text-slate-400 mt-1">ឬ ទាញទម្លាក់រូបភាពរបស់លោកគ្រូដាក់ចូលក្នុងប្រអប់នេះ</p>
-                            </div>
+                            <i class="fas fa-cloud-arrow-up text-3xl text-blue-600"></i>
+                            <p class="text-slate-700 font-bold">ចុចទីនេះ ដើម្បីជ្រើសរើសរូបភាព</p>
                         </div>
-                        
                         <div id="image-preview-container" class="hidden mt-2 relative">
-                            <img id="image-preview" src="" alt="Preview" class="max-h-80 mx-auto rounded-2xl shadow-lg object-contain border border-slate-200">
-                            <button onclick="clearImage(event)" class="absolute -top-3.5 -right-3.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-2.5 shadow-xl transition-transform hover:scale-110 active:scale-95" title="លុបរូបភាព">
-                                <i class="fas fa-trash-alt w-4 h-4 flex items-center justify-center"></i>
-                            </button>
+                            <img id="image-preview" src="" alt="Preview" class="max-h-80 mx-auto rounded-2xl shadow-lg object-contain">
                         </div>
                     </div>
-
                     <div class="flex justify-end pt-2">
                         <button id="analyze-btn" onclick="analyzeImage()" class="bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-2xl shadow-md flex items-center transition-all-300 cursor-not-allowed" disabled>
                             <i class="fas fa-brain mr-2.5"></i> ចាប់ផ្តើមវិភាគរូបភាព
@@ -269,394 +228,60 @@
                     </div>
                 </div>
 
-                <!-- Loading Screen Spinner -->
                 <div id="loading" class="hidden flex flex-col items-center justify-center py-16">
-                    <div class="relative flex items-center justify-center">
-                        <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-16 w-16 mb-4"></div>
-                        <i class="fas fa-robot text-blue-600 absolute text-xl animate-pulse"></i>
-                    </div>
-                    <p class="text-blue-600 font-bold text-base mt-4" id="loading-text">កំពុងវិភាគទិន្នន័យ សូមរង់ចាំបន្តិច...</p>
+                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-16 w-16 mb-4"></div>
+                    <p class="text-blue-600 font-bold" id="loading-text">កំពុងវិភាគ... សូមរង់ចាំ</p>
                 </div>
 
-                <!-- Result Content Layout -->
-                <div id="result-container" class="hidden mt-10 border-t border-slate-200/80 pt-8 transition-all-300">
-                    <div class="flex items-center justify-between mb-5">
-                        <h3 class="text-base font-muol text-slate-800 flex items-center">
-                            <i class="fas fa-square-poll-horizontal text-emerald-500 mr-2.5 text-2xl"></i> លទ្ធផលនៃការវាយតម្លៃ៖
-                        </h3>
-                    </div>
-                    
-                    <!-- Result Card Wrapper -->
-                    <div class="result-card p-6 md:p-8 bg-white border border-slate-100">
-                        <div id="result-content" class="markdown-body">
-                            <!-- Content Injected via JS -->
-                        </div>
-                    </div>
+                <div id="result-container" class="hidden mt-10 border-t border-slate-200/80 pt-8">
+                    <div id="result-content" class="markdown-body"></div>
                 </div>
-
             </div>
         </div>
     </main>
 
-    <!-- Professional Footer -->
-    <footer class="bg-white border-t border-slate-200/80 py-6 mt-16 text-center text-slate-400 text-xs">
-        <p class="font-bold text-slate-500 font-muol mb-1">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងចំណេះដឹងឌីជីថល</p>
-        <p>Powered by Google Gemini Engine & Vercel</p>
-    </footer>
-
-    <!-- Custom Alert Dialog Box -->
-    <div id="alert-modal" class="hidden fixed inset-0 bg-slate-950/70 flex items-center justify-center p-4 z-[60] backdrop-blur-sm">
-        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-scale-in">
-            <div id="alert-icon-bg" class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border text-2xl shadow-inner">
-                <i id="alert-icon" class="fas"></i>
-            </div>
-            <h4 id="alert-title" class="font-bold text-slate-800 text-lg mb-2 font-muol"></h4>
-            <p id="alert-msg" class="text-xs text-slate-500 leading-relaxed mb-6 font-medium"></p>
-            <button onclick="closeAlert()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md active:scale-95">
-                យល់ព្រម
-            </button>
-        </div>
-    </div>
-
     <script>
-        // ទាញយក API Key ពីផ្នែកខាងលើនៃកូដ
         const apiKey = typeof MY_GEMINI_API_KEY !== 'undefined' ? MY_GEMINI_API_KEY : ""; 
-
-        // ម៉ូដែលដែលគាំទ្រផ្លូវការ និងមានស្ថិរភាពខ្ពស់បំផុត
-        const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025"; 
-
-        let currentBase64Image = null;
-        let currentImageMimeType = null;
+        const GEMINI_MODEL = "gemini-1.5-flash"; 
 
         function switchTab(tab) {
-            const tabText = document.getElementById('tab-text');
-            const tabImage = document.getElementById('tab-image');
             const sectionText = document.getElementById('section-text');
             const sectionImage = document.getElementById('section-image');
-            document.getElementById('result-container').classList.add('hidden');
-
             if (tab === 'text') {
-                tabText.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-blue-600 bg-white shadow-sm border border-slate-200/50 text-sm flex items-center justify-center gap-2";
-                tabImage.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-slate-500 hover:text-blue-600 hover:bg-white/60 text-sm flex items-center justify-center gap-2";
                 sectionText.classList.replace('hidden', 'block');
                 sectionImage.classList.replace('block', 'hidden');
             } else {
-                tabImage.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-blue-600 bg-white shadow-sm border border-slate-200/50 text-sm flex items-center justify-center gap-2";
-                tabText.className = "flex-grow md:flex-initial py-3.5 px-6 rounded-2xl text-center font-bold text-slate-500 hover:text-blue-600 hover:bg-white/60 text-sm flex items-center justify-center gap-2";
                 sectionImage.classList.replace('hidden', 'block');
                 sectionText.classList.replace('block', 'hidden');
             }
         }
 
-        function showLoading(show, text = "") {
-            const loading = document.getElementById('loading');
-            if (show) {
-                document.getElementById('loading-text').innerText = text;
-                loading.classList.remove('hidden');
-                document.getElementById('result-container').classList.add('hidden');
-            } else {
-                loading.classList.add('hidden');
-            }
-        }
-
-        // --- Custom Alert System ---
-        function showAlert(message, title = "មានបញ្ហា", type = "error") {
-            const iconBg = document.getElementById('alert-icon-bg');
-            const icon = document.getElementById('alert-icon');
-            const modal = document.getElementById('alert-modal');
-            
-            if (type === "success") {
-                iconBg.className = "w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-200/60 text-emerald-500 text-2xl shadow-inner";
-                icon.className = "fas fa-circle-check";
-            } else if (type === "warning") {
-                iconBg.className = "w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-200/60 text-amber-500 text-2xl shadow-inner";
-                icon.className = "fas fa-triangle-exclamation";
-            } else {
-                iconBg.className = "w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-200/60 text-rose-500 text-2xl shadow-inner";
-                icon.className = "fas fa-circle-exclamation";
-            }
-            
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-msg').innerText = message;
-            modal.classList.remove('hidden');
-        }
-
-        function closeAlert() {
-            document.getElementById('alert-modal').classList.add('hidden');
-        }
-
-        function showError(message) {
-            const resultContent = document.getElementById('result-content');
-            resultContent.innerHTML = `<div class="p-5 bg-rose-50 text-rose-700 rounded-2xl border border-rose-100 text-sm">
-                <div class="font-bold font-muol mb-1.5 text-rose-800"><i class="fas fa-circle-exclamation mr-2"></i> ការវិភាគមិនជោគជ័យ</div>
-                <p class="leading-relaxed">${message}</p>
-            </div>`;
-            document.getElementById('result-container').classList.remove('hidden');
-        }
-
-        // Highly Optimized and Premium Markdown Formatter
-        function formatMarkdown(text) {
-            let cleanText = text.replace(/\$1/g, '').trim();
-            let statusHTML = '';
-            let parsedText = cleanText;
-
-            if (cleanText.includes("សន្និដ្ឋាន៖") || cleanText.includes("សន្និដ្ឋាន ៖") || cleanText.includes("សន្និដ្ឋាន:")) {
-                const lines = cleanText.split('\n');
-                for (let i = 0; i < lines.length; i++) {
-                    const currentLine = lines[i];
-                    if (currentLine.includes("សន្និដ្ឋាន") && (currentLine.includes("ពិត") || currentLine.includes("ក្លែងក្លាយ") || currentLine.includes("បំភាន់") || currentLine.includes("សង្ស័យ") || currentLine.includes("យល់ច្រឡំ"))) {
-                        const conclusionText = currentLine.replace(/សន្និដ្ឋាន\s*៖\s*/, '').replace(/សន្និដ្ឋាន\s*:\s*/, '').trim();
-                        
-                        let boxClass = 'status-box-misleading';
-                        let boxIcon = 'fa-circle-question';
-                        
-                        if (conclusionText.includes("ពិត")) {
-                            boxClass = 'status-box-true';
-                            boxIcon = 'fa-circle-check';
-                        } else if (conclusionText.includes("ក្លែងក្លាយ")) {
-                            boxClass = 'status-box-false';
-                            boxIcon = 'fa-circle-xmark';
-                        } else if (conclusionText.includes("បំភាន់") || conclusionText.includes("យល់ច្រឡំ")) {
-                            boxClass = 'status-box-misleading';
-                            boxIcon = 'fa-triangle-exclamation';
-                        }
-                        
-                        statusHTML = `
-                            <div class="status-box ${boxClass}">
-                                <i class="fas ${boxIcon} text-2xl mt-0.5 animate-pulse"></i>
-                                <div>
-                                    <div class="font-muol text-xs mb-1 uppercase tracking-wider">សេចក្តីសន្និដ្ឋានការវិភាគ</div>
-                                    <div class="text-sm font-semibold leading-relaxed">${conclusionText}</div>
-                                </div>
-                            </div>
-                        `;
-                        lines.splice(i, 1);
-                        parsedText = lines.join('\n');
-                        break;
-                    }
-                }
-            }
-
-            let formatted = parsedText;
-            formatted = formatted.replace(/\*\*(.*?)\*\"/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            let tempBody = formatted;
-
-            tempBody = tempBody.replace(/## ហេតុផល និងការពន្យល់លម្អិត៖(.*?)(\n\n##|$)/gs, function(match, content) {
-                let parsedContent = content.trim();
-                parsedContent = parsedContent.replace(/^\* (.*?)(\n|$)/gm, '<li>$1</li>');
-                parsedContent = parsedContent.replace(/((?:<li>.*<\/li>)+)/g, '<ul class="space-y-3 my-3">$1</ul>');
-                
-                return `
-                    <div class="section-box">
-                        <h2><i class="fas fa-square-poll-vertical text-blue-600 mr-2"></i> ហេតុផល និងការពន្យល់លម្អិត</h2>
-                        <div class="content-body">${parsedContent}</div>
-                    </div>
-                `;
-            });
-
-            tempBody = tempBody.replace(/## អនុសាសន៍ និងការណែនាំ៖(.*?)($)/gs, function(match, content) {
-                let parsedContent = content.trim();
-                parsedContent = parsedContent.replace(/^\* (.*?)(\n|$)/gm, '<li class="guide-item">$1</li>');
-                parsedContent = parsedContent.replace(/^\d+\.\s*(.*?)(\n|$)/gm, '<li class="guide-item">$1</li>');
-                parsedContent = parsedContent.replace(/((?:<li class="guide-item">.*<\/li>)+)/g, '<ul class="space-y-3 my-3 recommendation-section">$1</ul>');
-                
-                return `
-                    <div class="section-box border-emerald-100 bg-emerald-50/10 hover:bg-emerald-50/20 hover:border-emerald-200">
-                        <h2 class="text-emerald-800 border-emerald-200/80"><i class="fas fa-lightbulb text-emerald-500 mr-2"></i> អនុសាសន៍ និងការណែនាំ</h2>
-                        <div class="content-body">${parsedContent}</div>
-                    </div>
-                `;
-            });
-
-            tempBody = tempBody.split('\n').map(line => {
-                let trimmed = line.trim();
-                if (!trimmed) return '';
-                if (trimmed.startsWith('<div') || trimmed.startsWith('</div') || trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<li') || trimmed.startsWith('<p')) {
-                    return trimmed;
-                }
-                return `<p class="mb-4">${trimmed}</p>`;
-            }).filter(line => line !== '').join('\n');
-
-            tempBody = tempBody.replace(/\n/g, '<br>');
-            return statusHTML + tempBody;
-        }
-
-        // --- Core Secure API Engine with Exponential Backoff Retry ---
         async function fetchGeminiAI(payload) {
-            const finalKey = apiKey.trim(); 
-            
-            if (!finalKey || finalKey.includes("សូមជំនួសដោយ") || finalKey === "") {
-                throw new Error("លោកគ្រូមិនទាន់បានកំណត់ API Key ត្រឹមត្រូវនៅឡើយទេ។ សូមពិនិត្យមើល និងដាក់ API Key របស់លោកគ្រូនៅជួរទី ១២ នៃកូដ index.html។");
-            }
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${finalKey}`;
-            
-            const maxRetries = 5;
-            let currentDelay = 2000;
-
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    // ប្រសិនបើកូតាត្រូវបានប្រើប្រាស់ហួសកម្រិត (HTTP 429)
-                    if (response.status === 429) {
-                        if (attempt === maxRetries) {
-                            throw new Error("ប្រព័ន្ធវិភាគរបស់ Google កំពុងរវល់ខ្លាំង ឬលើសដែនកំណត់សំណើឥតគិតថ្លៃ (Quota Exceeded)។ សូមមេត្តារង់ចាំប្រហែល ៣០ វិនាទី រួចសាកល្បងម្ដងទៀត។");
-                        }
-                        await new Promise(resolve => setTimeout(resolve, currentDelay));
-                        currentDelay *= 2;
-                        continue;
-                    }
-
-                    if (!response.ok) {
-                        const errPayload = await response.json().catch(() => ({}));
-                        const errMsg = errPayload?.error?.message || "HTTP Connection Error " + response.status;
-                        throw new Error(errMsg);
-                    }
-
-                    return await response.json();
-                } catch (error) {
-                    if (attempt === maxRetries) {
-                        throw error;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, currentDelay));
-                    currentDelay *= 1.5;
-                }
-            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error("កំហុសក្នុងការតភ្ជាប់ទៅ Google Gemini API");
+            return await response.json();
         }
 
-        // --- Fact Checking Logic ---
         async function analyzeText() {
             const text = document.getElementById('text-input').value.trim();
-            if (!text) {
-                showAlert("សូមបញ្ចូលអត្ថបទព័ត៌មានដែលចង់វិភាគជាមុនសិន!", "បញ្ជាក់ឡើងវិញ", "warning");
-                return;
-            }
-
-            showLoading(true, "AI កំពុងវិភាគរចនាសម្ព័ន្ធអត្ថបទ និងស្វែងរកការពិត... សូមមេត្តារង់ចាំ");
-
-            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញផ្ទៀងផ្ទាត់ការពិតព័ត៌មាន (Fact-Checker) អាជីពនៅកម្ពុជា។ 
-            សូមឆ្លើយតបមកវិញដោយប្រើប្រាស់រចនាសម្ព័ន្ធផ្លូវការ និងរបៀបរៀបរយដូចខាងក្រោមជានិច្ច៖
-
-            សន្និដ្ឋាន៖ [ព័ត៌មានពិតប្រាកដ ឬ ព័ត៌មានក្លែងក្លាយ ឬ ព័ត៌មានបំភាន់ ឬការយល់ច្រឡំលើការផ្លាស់ប្តូរឈ្មោះ (Misleading)]
-
-            ## ហេតុផល និងការពន្យល់លម្អិត៖
-            * [ហេតុផលចំណុចទី ១]
-            * [ហេតុផលចំណុចទី ២]
-            * [ហេតុផលចំណុចទី ៣]
-
-            ## អនុសាសន៍ និងការណែនាំ៖
-            [ការណែនាំពីរបៀបផ្ទៀងផ្ទាត់ និងប្រុងប្រយ័ត្នសម្រាប់អ្នកអាន]
-
-            សូមសរសេរជាភាសាខ្មែរ គួរសម និងងាយស្រួលយល់សម្រាប់ប្រជាជនទូទៅ។`;
-
-            const payload = {
-                contents: [{ parts: [{ text: text }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] }
-            };
-
+            if (!text) return alert("សូមបញ្ចូលអត្ថបទ");
+            document.getElementById('loading').classList.remove('hidden');
             try {
+                const payload = { contents: [{ parts: [{ text: `ផ្ទៀងផ្ទាត់ព័ត៌មាន៖ ${text}` }] }] };
                 const data = await fetchGeminiAI(payload);
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនមានចម្លើយវិភាគត្រឡប់មកវិញទេ។";
-                document.getElementById('result-content').innerHTML = formatMarkdown(reply);
+                document.getElementById('result-content').innerHTML = data.candidates[0].content.parts[0].text;
                 document.getElementById('result-container').classList.remove('hidden');
-            } catch (error) {
-                showError("ដំណើរការវិភាគព័ត៌មានបរាជ័យ៖ <br>" + error.message);
+            } catch (e) {
+                alert("បរាជ័យ៖ " + e.message);
             } finally {
-                showLoading(false);
-            }
-        }
-
-        // --- Drag & Drop Image Handlers ---
-        function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-active'); }
-        function handleDragLeave(e) { e.preventDefault(); document.getElementById('drop-zone').classList.remove('drag-active'); }
-        function handleDrop(e) {
-            e.preventDefault();
-            document.getElementById('drop-zone').classList.remove('drag-active');
-            if(e.dataTransfer.files[0]) processImageFile(e.dataTransfer.files[0]);
-        }
-        function handleImageUpload(e) { if(e.target.files[0]) processImageFile(e.target.files[0]); }
-
-        function processImageFile(file) {
-            if (!file.type.match('image.*')) {
-                showAlert("សូមជ្រើសរើសតែឯកសាររូបភាពប៉ុណ្ណោះ!", "ខុសទម្រង់ឯកសារ", "warning");
-                return;
-            }
-            currentImageMimeType = file.type;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('image-preview').src = e.target.result;
-                currentBase64Image = e.target.result.split(',')[1];
-                document.getElementById('upload-prompt').classList.add('hidden');
-                document.getElementById('image-preview-container').classList.remove('hidden');
-                
-                const btn = document.getElementById('analyze-btn');
-                btn.removeAttribute('disabled');
-                btn.className = "bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg flex items-center transition-all cursor-pointer";
-            }
-            reader.readAsDataURL(file);
-        }
-
-        function clearImage(e) {
-            e.stopPropagation();
-            currentBase64Image = null;
-            document.getElementById('upload-prompt').classList.remove('hidden');
-            document.getElementById('image-preview-container').classList.add('hidden');
-            document.getElementById('image-upload').value = '';
-            
-            const btn = document.getElementById('analyze-btn');
-            btn.setAttribute('disabled', 'true');
-            btn.className = "bg-slate-300 text-slate-500 font-bold py-3.5 px-8 rounded-2xl shadow-md flex items-center cursor-not-allowed";
-            document.getElementById('result-container').classList.add('hidden');
-        }
-
-        // --- AI Image Analysis Logic ---
-        async function analyzeImage() {
-            if (!currentBase64Image) return;
-            showLoading(true, "AI កំពុងស្កែនរចនាសម្ព័ន្ធភីកសែល និងវាយតម្លៃរូបភាព... សូមមេត្តារង់ចាំ");
-
-            const promptText = `សូមពិនិត្យមើលរូបភាពនេះឱ្យបានល្អិតល្អន់ រួចឆ្លើយតបមកវិញដោយប្រើប្រាស់រចនាសម្ព័ន្ធផ្លូវការ និងរបៀបរៀបរយដូចខាងក្រោមជានិច្ច៖
-
-            សន្និដ្ឋាន៖ [រូបថតពិតជាក់ស្តែង (Real Photo) ឬ រូបភាពបង្កើតដោយបញ្ញាសិប្បនិម្មិត AI (AI-Generated Image)]
-
-            ## ហេតុផល និងការពន្យល់លម្អិត៖
-            * [ចំណុចវិភាគខុសប្រក្រតីទី ១]
-            * [ចំណុចវិការមកខុសប្រក្រតីទី ២]
-            * [ចំណុចវិភាគខុសប្រក្រតីទី ៣]
-
-            ## អនុសាសន៍ និងការណែនាំ៖
-            [ការណែនាំពីរបៀបសម្គាល់រូបភាពប្រភេទនេះសម្រាប់អ្នកប្រើប្រាស់]
-
-            សូមសរសេរជាភាសាខ្មែរ គួរសម និងងាយយល់បំផុត។`;
-
-            const payload = {
-                contents: [{
-                    parts: [
-                        { text: promptText },
-                        { inlineData: { mimeType: currentImageMimeType, data: currentBase64Image } }
-                    ]
-                }]
-            };
-
-            try {
-                const data = await fetchGeminiAI(payload);
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនមានចម្លើយវិភាគត្រឡប់មកវិញទេ។";
-                document.getElementById('result-content').innerHTML = formatMarkdown(reply);
-                document.getElementById('result-container').classList.remove('hidden');
-            } catch (error) {
-                showError("ដំណើរការវិភាគរូបភាពជួបបញ្ហា៖ <br>" + error.message);
-            } finally {
-                showLoading(false);
+                document.getElementById('loading').classList.add('hidden');
             }
         }
     </script>
 </body>
 </html>
-<script>
-        const MY_GEMINI_API_KEY = "AIzaSyCdS-sveuqN9gmlzWUrbdpfhnIcVp2QoQc";
-    </script>
