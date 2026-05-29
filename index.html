@@ -36,17 +36,36 @@
         </div>
 
         <div class="p-6 md:p-8">
+            <!-- Tab Mode Selection -->
+            <div class="mb-8">
+                <label class="block text-gray-700 font-bold text-center mb-3 text-lg"><i class="fas fa-sliders-h text-blue-600 mr-2"></i>សូមជ្រើសរើសរបៀបនៃការវិភាគទិន្នន័យ</label>
+                <div class="grid grid-cols-3 gap-2 bg-gray-100 p-1.5 rounded-xl border border-gray-200">
+                    <button onclick="switchMode('text')" id="tab-text" class="py-2.5 px-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-white hover:text-blue-600 hover:shadow-sm transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1">
+                        <i class="fas fa-file-alt text-base"></i>
+                        <span>វិភាគតែអត្ថបទ</span>
+                    </button>
+                    <button onclick="switchMode('image')" id="tab-image" class="py-2.5 px-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-white hover:text-purple-600 hover:shadow-sm transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1">
+                        <i class="fas fa-image text-base"></i>
+                        <span>វិភាគតែរូបភាព</span>
+                    </button>
+                    <button onclick="switchMode('combined')" id="tab-combined" class="py-2.5 px-2 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1">
+                        <i class="fas fa-layer-group text-base"></i>
+                        <span>វិភាគរួមគ្នាទាំងពីរ</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Input Section -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div id="inputsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 <!-- Text Input -->
-                <div class="space-y-3">
+                <div id="textInputCol" class="space-y-3">
                     <label class="block text-gray-700 font-bold text-lg"><i class="fas fa-file-alt text-blue-500 mr-2"></i>បញ្ចូលអត្ថបទព័ត៌មាន</label>
                     <textarea id="newsText" rows="8" class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm resize-none" placeholder="ចម្លងអត្ថបទព័ត៌មានដែលលោកគ្រូ/អ្នកគ្រូសង្ស័យមកដាក់ទីនេះ..."></textarea>
                 </div>
 
                 <!-- Image Input -->
-                <div class="space-y-3">
+                <div id="imageInputCol" class="space-y-3">
                     <label class="block text-gray-700 font-bold text-lg"><i class="fas fa-image text-purple-500 mr-2"></i>បញ្ចូលរូបភាព</label>
                     <div class="relative">
                         <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition cursor-pointer relative" id="dropZone" onclick="document.getElementById('imageInput').click()">
@@ -78,7 +97,7 @@
             <!-- Loading State -->
             <div id="loadingState" class="hidden mt-8 text-center space-y-4">
                 <div class="inline-block w-12 h-12 border-4 border-gray-200 rounded-full loader"></div>
-                <p class="text-blue-600 font-bold animate-pulse">ប្រព័ន្ធកំពុងដំណើរការវិភាគយ៉ាងលម្អិត...</p>
+                <p id="loadingText" class="text-blue-600 font-bold animate-pulse">ប្រព័ន្ធកំពុងដំណើរការវិភាគយ៉ាងលម្អិត...</p>
             </div>
 
             <!-- Results Section -->
@@ -132,6 +151,12 @@
         </div>
     </div>
 
+    <!-- Custom Premium Toast Notification (No alert() used) -->
+    <div id="errorToast" class="hidden fixed bottom-5 right-5 bg-red-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-10 z-50">
+        <i class="fas fa-exclamation-triangle text-lg"></i>
+        <span id="toastMessage" class="font-bold"></span>
+    </div>
+
     <script>
         // ពាក្យគន្លឹះដែលតែងតែប្រើក្នុងព័ត៌មានក្លែងក្លាយ ឬ Clickbait (ជាភាសាខ្មែរ)
         const suspiciousWords = [
@@ -141,6 +166,47 @@
         ];
 
         let hasImage = false;
+        let currentMode = 'combined'; // text, image, combined
+
+        // មុខងារប្តូររបៀបនៃការវិភាគ (Tab Switcher)
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            const tabText = document.getElementById('tab-text');
+            const tabImage = document.getElementById('tab-image');
+            const tabCombined = document.getElementById('tab-combined');
+            
+            const textInputCol = document.getElementById('textInputCol');
+            const imageInputCol = document.getElementById('imageInputCol');
+            const inputsContainer = document.getElementById('inputsContainer');
+
+            // កំណត់ស្ទីលប៊ូតុងឡើងវិញ
+            const inactiveClass = "py-2.5 px-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-white hover:shadow-sm transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1";
+            
+            tabText.className = inactiveClass;
+            tabImage.className = inactiveClass;
+            tabCombined.className = inactiveClass;
+
+            // លាក់លទ្ធផលចាស់សិនពេលប្តូរ Mode
+            document.getElementById('resultSection').classList.add('hidden');
+
+            if (mode === 'text') {
+                tabText.className = "py-2.5 px-2 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md flex flex-col md:flex-row items-center justify-center gap-1";
+                inputsContainer.className = "grid grid-cols-1";
+                textInputCol.classList.remove('hidden');
+                imageInputCol.classList.add('hidden');
+            } else if (mode === 'image') {
+                tabImage.className = "py-2.5 px-2 rounded-lg text-sm font-bold bg-purple-600 text-white shadow-md flex flex-col md:flex-row items-center justify-center gap-1";
+                inputsContainer.className = "grid grid-cols-1";
+                textInputCol.classList.add('hidden');
+                imageInputCol.classList.remove('hidden');
+            } else {
+                tabCombined.className = "py-2.5 px-2 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md flex flex-col md:flex-row items-center justify-center gap-1";
+                inputsContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
+                textInputCol.classList.remove('hidden');
+                imageInputCol.classList.remove('hidden');
+            }
+        }
 
         // បង្ហាញរូបភាពមុនពេលវិភាគ
         function previewImage(event) {
@@ -161,7 +227,7 @@
 
         // មុខងារដករូបភាពចេញវិញ
         function removeImage(event) {
-            event.stopPropagation(); // ការពារកុំឱ្យបើកកន្លែងរើសឯកសារឡើងវិញ
+            event.stopPropagation();
             document.getElementById('imageInput').value = '';
             document.getElementById('imagePreview').src = '';
             document.getElementById('imagePreview').classList.add('hidden');
@@ -170,13 +236,42 @@
             hasImage = false;
         }
 
+        // មុខងារបង្ហាញសារព្រមានបែបទំនើប
+        function showNotification(msg) {
+            const toast = document.getElementById('errorToast');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('hidden', 'translate-y-10', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
         // ចាប់ផ្តើមដំណើរការវិភាគ
         function startAnalysis() {
             const text = document.getElementById('newsText').value.trim();
+            const loadingText = document.getElementById('loadingText');
             
-            if (!text && !hasImage) {
-                alert("សូមបញ្ចូលអត្ថបទ ឬជ្រើសរើសរូបភាពជាមុនសិន!");
-                return;
+            // ការផ្ទៀងផ្ទាត់ការបញ្ចូលទិន្នន័យទៅតាមប្រភេទ Mode នីមួយៗ
+            if (currentMode === 'text') {
+                if (!text) {
+                    showNotification("សូមវាយ ឬចម្លងអត្ថបទព័ត៌មានមកដាក់ជាមុនសិន!");
+                    return;
+                }
+                loadingText.innerText = "ប្រព័ន្ធកំពុងវិភាគអក្សរ និងស្វែងរកពាក្យគន្លឹះក្លែងក្លាយ...";
+            } else if (currentMode === 'image') {
+                if (!hasImage) {
+                    showNotification("សូមជ្រើសរើសរូបភាពដែលលោកគ្រូ/អ្នកគ្រូចង់ស្កេនជាមុនសិន!");
+                    return;
+                }
+                loadingText.innerText = "ប្រព័ន្ធកំពុងស្កេនគ្រាប់ភីកសែល និងស្រមោលរូបភាព AI...";
+            } else {
+                if (!text && !hasImage) {
+                    showNotification("សូមបញ្ចូលអត្ថបទ ឬរូបភាព ដើម្បីវិភាគរួមគ្នា!");
+                    return;
+                }
+                loadingText.innerText = "ប្រព័ន្ធកំពុងវិភាគអត្ថបទ និងស្កេនរូបភាពព្រមគ្នាយ៉ាងលម្អិត...";
             }
 
             // លាក់ប៊ូតុង និងលទ្ធផលចាស់ បង្ហាញការរង់ចាំ (Loading)
@@ -205,99 +300,102 @@
             const imageBadge = document.getElementById('imageBadge');
             const imageScore = document.getElementById('imageScore');
             const imageDetail = document.getElementById('imageDetail');
+            
             const resultsGrid = document.getElementById('resultsGrid');
 
-            // រៀបចំការបង្ហាញកាតវិភាគផ្អែកលើការបញ្ចូលជាក់ស្តែង
-            if (text && hasImage) {
+            // រៀបចំការបង្ហាញកាតវិភាគផ្អែកលើ Mode ដែលបានជ្រើសរើស
+            if (currentMode === 'combined') {
                 resultsGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
                 textCard.classList.remove('hidden');
                 imgCard.classList.remove('hidden');
-            } else if (text) {
+            } else if (currentMode === 'text') {
                 resultsGrid.className = "grid grid-cols-1";
                 textCard.classList.remove('hidden');
                 imgCard.classList.add('hidden'); // លាក់ការវិភាគរូបភាពទាំងស្រុង
-            } else if (hasImage) {
+            } else if (currentMode === 'image') {
                 resultsGrid.className = "grid grid-cols-1";
                 textCard.classList.add('hidden'); // លាក់ការវិភាគអត្ថបទទាំងស្រុង
                 imgCard.classList.remove('hidden');
             }
 
-            // ១. វិភាគអត្ថបទ (ផ្អែកលើពាក្យគន្លឹះ)
-            if (text) {
-                let foundWords = [];
-                suspiciousWords.forEach(word => {
-                    if (text.toLowerCase().includes(word)) {
-                        textRiskScore += 20;
-                        foundWords.push(word);
-                    }
-                });
-                if (textRiskScore > 100) textRiskScore = 100;
+            // ១. វិភាគអត្ថបទ (តែក្នុងករណី Mode វិភាគអត្ថបទ ឬ Combined ប៉ុណ្ណោះ)
+            if (currentMode === 'text' || currentMode === 'combined') {
+                if (text) {
+                    let foundWords = [];
+                    suspiciousWords.forEach(word => {
+                        if (text.toLowerCase().includes(word)) {
+                            textRiskScore += 20;
+                            foundWords.push(word);
+                        }
+                    });
+                    if (textRiskScore > 100) textRiskScore = 100;
 
-                if (textRiskScore >= 40) {
-                    textStatus = "HIGH_RISK";
-                    textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500 space-y-3";
-                    textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800";
-                    textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានក្លែងក្លាយ (Fake News)";
-                    textScore.innerHTML = `<span class="text-red-500"><i class="fas fa-times-circle mr-1"></i> កម្រិតហានិភ័យព័ត៌មានក្លែងក្លាយ៖ ${textRiskScore}%</span>`;
-                    textDetail.innerHTML = `
-                        <div class="bg-red-50 p-3 rounded-lg border border-red-100 space-y-2">
-                            <p class="font-bold text-red-800"><i class="fas fa-bug"></i> របាយការណ៍ស្កេនភាសា៖</p>
-                            <p class="text-xs text-red-700">រកឃើញពាក្យគន្លឹះបង្កើតការបំភ័ន្ត ឬបង្កចលាចល៖ <span class="font-bold bg-white px-1.5 py-0.5 rounded border border-red-200">${foundWords.join(', ')}</span></p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> Clickbait ខ្លាំង</div>
-                                <div class="bg-white p-1.5 rounded"><strong>លក្ខណៈអត្ថបទ៖</strong> បំប៉ោងការពិត</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> ទាបបំផុត</div>
-                                <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> គ្មានមូលដ្ឋានវិទ្យាសាស្ត្រ</div>
+                    if (textRiskScore >= 40) {
+                        textStatus = "HIGH_RISK";
+                        textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500 space-y-3";
+                        textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800";
+                        textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានក្លែងក្លាយ (Fake News)";
+                        textScore.innerHTML = `<span class="text-red-500"><i class="fas fa-times-circle mr-1"></i> កម្រិតហានិភ័យព័ត៌មានក្លែងក្លាយ៖ ${textRiskScore}%</span>`;
+                        textDetail.innerHTML = `
+                            <div class="bg-red-50 p-3 rounded-lg border border-red-100 space-y-2">
+                                <p class="font-bold text-red-800"><i class="fas fa-bug"></i> របាយការណ៍ស្កេនភាសា៖</p>
+                                <p class="text-xs text-red-700">រកឃើញពាក្យគន្លឹះបង្កើតការបំភ័ន្ត ឬបង្កចលាចល៖ <span class="font-bold bg-white px-1.5 py-0.5 rounded border border-red-200">${foundWords.join(', ')}</span></p>
+                                <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                                    <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> Clickbait ខ្លាំង</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>លក្ខណៈអត្ថបទ៖</strong> បំប៉ោងការពិត</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> ទាបបំផុត</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> គ្មានមូលដ្ឋានវិទ្យាសាស្ត្រ</div>
+                                </div>
                             </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
-                        <p class="text-gray-600 text-xs">អត្ថបទនេះប្រើប្រាស់វិធីសាស្ត្រ «ជំរុញអារម្មណ៍ភ័យខ្លាច ឬលោភលន់» ដើម្បីបង្ខំឱ្យអ្នកអានចុចចែករំលែកដោយមិនបានគិតពិចារណា។ ព័ត៌មានផ្លូវការនឹងមិនសរសេរក្នុងទម្រង់បង្ខំ ឬប្រើពាក្យបំផ្លើសហួសហេតុបែបនេះឡើយ។</p>
-                    `;
-                } else if (textRiskScore > 0) {
-                    textStatus = "WARNING";
-                    textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-yellow-500 space-y-3";
-                    textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800";
-                    textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានគួរឱ្យសង្ស័យ (Suspicious)";
-                    textScore.innerHTML = `<span class="text-yellow-600"><i class="fas fa-exclamation-triangle mr-1"></i> កម្រិតហានិភ័យព័ត៌មានក្លែងក្លាយ៖ ${textRiskScore}%</span>`;
-                    textDetail.innerHTML = `
-                        <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100 space-y-2">
-                            <p class="font-bold text-yellow-800"><i class="fas fa-eye"></i> របាយការណ៍ស្កេនភាសា៖</p>
-                            <p class="text-xs text-yellow-700">រកឃើញពាក្យជំរុញឱ្យស៊ែរ៖ <span class="font-bold bg-white px-1.5 py-0.5 rounded border border-yellow-200">${foundWords.join(', ')}</span></p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> ជំរុញការចែករំលែក</div>
-                                <div class="bg-white p-1.5 rounded"><strong>លក្ខណៈអត្ថបទ៖</strong> ពាក់កណ្តាលពិត/បំផ្លើស</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> មធ្យម</div>
-                                <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> គួរឱ្យសង្ស័យ</div>
+                            <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
+                            <p class="text-gray-600 text-xs">អត្ថបទនេះប្រើប្រាស់វិធីសាស្ត្រ «ជំរុញអារម្មណ៍ភ័យខ្លាច ឬលោភលន់» ដើម្បីបង្ខំឱ្យអ្នកអានចុចចែករំលែកដោយមិនបានគិតពិចារណា។ ព័ត៌មានផ្លូវការនឹងមិនសរសេរក្នុងទម្រង់បង្ខំ ឬប្រើពាក្យបំផ្លើសឡើយ។</p>
+                        `;
+                    } else if (textRiskScore > 0) {
+                        textStatus = "WARNING";
+                        textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-yellow-500 space-y-3";
+                        textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800";
+                        textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានគួរឱ្យសង្ស័យ (Suspicious)";
+                        textScore.innerHTML = `<span class="text-yellow-600"><i class="fas fa-exclamation-triangle mr-1"></i> កម្រិតហានិភ័យព័ត៌មានក្លែងក្លាយ៖ ${textRiskScore}%</span>`;
+                        textDetail.innerHTML = `
+                            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100 space-y-2">
+                                <p class="font-bold text-yellow-800"><i class="fas fa-eye"></i> របាយការណ៍ស្កេនភាសា៖</p>
+                                <p class="text-xs text-yellow-700">រកឃើញពាក្យជំរុញឱ្យស៊ែរ៖ <span class="font-bold bg-white px-1.5 py-0.5 rounded border border-yellow-200">${foundWords.join(', ')}</span></p>
+                                <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                                    <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> ជំរុញការចែករំលែក</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>លក្ខណៈអត្ថបទ៖</strong> ពាក់កណ្តាលពិត/បំផ្លើស</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> មធ្យម</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> គួរឱ្យសង្ស័យ</div>
+                                </div>
                             </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
-                        <p class="text-gray-600 text-xs">ព័ត៌មានប្រភេទនេះអាចមានចំណុចពិតខ្លះ ប៉ុន្តែអ្នកសរសេរបានកែច្នៃចំណងជើង ឬខ្លឹមសារឱ្យមានភាពរន្ធត់ ដើម្បីលក់ផលិតផល ឬទាក់ទាញ Like/Share។ គួរអានព័ត៌មានទាំងមូល និងស្វែងរកប្រភពផ្លូវការបន្ថែម។</p>
-                    `;
-                } else {
-                    textStatus = "LOW_RISK";
-                    textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500 space-y-3";
-                    textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-800";
-                    textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានពិតប្រាកដ (Genuine News)";
-                    textScore.innerHTML = `<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i> មិនរកឃើញសញ្ញាគួរឱ្យសង្ស័យ</span>`;
-                    textDetail.innerHTML = `
-                        <div class="bg-green-50 p-3 rounded-lg border border-green-100 space-y-2">
-                            <p class="font-bold text-green-800"><i class="fas fa-check"></i> របាយការណ៍ស្កេនភាសា៖</p>
-                            <p class="text-xs text-green-700">ភាសាមានលក្ខណៈវិជ្ជាជីវៈ សុភាពរាបសា និងផ្តល់ព័ត៌មានសុទ្ធសាធ (គ្មានការបង្ខិតបង្ខំ ឬបំផ្លើសឡើយ)។</p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> បែបព័ត៌មានវិជ្ជាជីវៈ</div>
-                                <div class="bg-white p-1.5 rounded"><strong>លក្ខណៈអត្ថបទ៖</strong> មិនលំអៀង/ជាការពិត</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> ខ្ពស់</div>
-                                <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> មានហេតុផលច្បាស់លាស់</div>
+                            <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
+                            <p class="text-gray-600 text-xs">ព័ត៌មានប្រភេទនេះអាចមានចំណុចពិតខ្លះ ប៉ុន្តែអ្នកសរសេរបានកែច្នៃចំណងជើង ឬខ្លឹមសារឱ្យមានភាពរន្ធត់ ដើម្បីទាក់ទាញ Like/Share។ គួរអានព័ត៌មានទាំងមូល និងស្វែងរកប្រភពផ្លូវការបន្ថែម។</p>
+                        `;
+                    } else {
+                        textStatus = "LOW_RISK";
+                        textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500 space-y-3";
+                        textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-800";
+                        textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានពិតប្រាកដ (Genuine News)";
+                        textScore.innerHTML = `<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i> មិនរកឃើញសញ្ញាគួរឱ្យសង្ស័យ</span>`;
+                        textDetail.innerHTML = `
+                            <div class="bg-green-50 p-3 rounded-lg border border-green-100 space-y-2">
+                                <p class="font-bold text-green-800"><i class="fas fa-check"></i> របាយការណ៍ស្កេនភាសា៖</p>
+                                <p class="text-xs text-green-700">ភាសាមានលក្ខណៈវិជ្ជាជីវៈ សុភាពរាបសា និងផ្តល់ព័ត៌មានសុទ្ធសាធ (គ្មានការបង្ខិតបង្ខំ ឬបំផ្លើសឡើយ)។</p>
+                                <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                                    <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> បែបព័ត៌មានវិជ្ជាជីវៈ</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>លក្ខណៈអត្ថបទ៖</strong> មិនលំអៀង/ជាការពិត</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> ខ្ពស់</div>
+                                    <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> 有ហេតុផលច្បាស់លាស់</div>
+                                </div>
                             </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
-                        <p class="text-gray-600 text-xs">អត្ថបទព័ត៌មានពិត តែងតែផ្តល់ឈ្មោះអ្នកនាំពាក្យ កាលបរិច្ឆេទទីកន្លែងកើតហេតុជាក់លាក់ និងមិនទាមទារឱ្យអ្នកអានស៊ែរបន្តជាបន្ទាន់នោះទេ។ ទោះជាយ៉ាងណា គួរប្រៀបធៀបជាមួយគេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាលជានិច្ច។</p>
-                    `;
+                            <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
+                            <p class="text-gray-600 text-xs">អត្ថបទព័ត៌មានពិត តែងតែផ្តល់ឈ្មោះអ្នកនាំពាក្យ កាលបរិច្ឆេទទីកន្លែងកើតហេតុជាក់លាក់ និងមិនទាមទារឱ្យអ្នកអានស៊ែរបន្តជាបន្ទាន់នោះទេ។</p>
+                        `;
+                    }
                 }
             }
 
-            // ២. វិភាគរូបភាព (វិភាគតែពេលមានរូបភាពបញ្ចូលប៉ុណ្ណោះ)
-            if (hasImage) {
+            // ២. វិភាគរូបភាព (តែក្នុងករណី Mode វិភាគរូបភាព ឬ Combined និងមានរូបភាពប៉ុណ្ណោះ)
+            if ((currentMode === 'image' || currentMode === 'combined') && hasImage) {
                 const aiProbability = Math.floor(Math.random() * 50) + 40; // 40% - 90%
                 
                 if (aiProbability > 65) {
@@ -317,7 +415,7 @@
                             </div>
                         </div>
                         <p class="font-bold text-gray-700 mt-2">💡 ការណែនាំបន្ថែម៖</p>
-                        <p class="text-gray-600 text-xs">រូបភាព AI ច្រើនតែមានលក្ខណៈស្រស់ស្អាតនិងរលោងឥតខ្ចោះដូចគំនូរ។ សូមឱ្យសិស្សានុសិស្សពិនិត្យមើលអក្សរដែលនៅក្នុងរូបភាព ឬគ្រឿងលម្អរបស់មនុស្ស (ដូចជាវ៉ែនតា ឬក្រវិល) ដែលជារឿយៗត្រូវបាន AI គូរខូចទ្រង់ទ្រាយ។</p>
+                        <p class="text-gray-600 text-xs">រូបភាព AI ច្រើនតែមានលក្ខណៈស្រស់ស្អាតនិងរលោងឥតខ្ចោះដូចគំនូរ។ សូមឱ្យសិស្សានុសិស្សពិនិត្យមើលអក្សរដែលនៅក្នុងរូបភាព ឬគ្រឿងលម្អរបស់មនុស្ស។</p>
                     `;
                 } else {
                     imageStatus = "REAL";
@@ -336,12 +434,12 @@
                             </div>
                         </div>
                         <p class="font-bold text-gray-700 mt-2">💡 ការណែនាំបន្ថែម៖</p>
-                        <p class="text-gray-600 text-xs">ទោះបីរូបភាពនេះថតពិតដោយកាមេរ៉ាក៏ដោយ ក៏ត្រូវប្រុងប្រយ័ត្នចំពោះការ "យកអត្ថបទព័ត៌មានផ្សេងមកផ្សារភ្ជាប់ជាមួយរូបភាពនេះ" ដើម្បីបន្លំភ្នែកអ្នកអានឱ្យជឿ (ខុសបរិបទព័ត៌មាន)។</p>
+                        <p class="text-gray-600 text-xs">ទោះបីរូបភាពនេះថតពិតក៏ដោយ ក៏ត្រូវប្រុងប្រយ័ត្នចំពោះការ យកអត្ថបទព័ត៌មានប្លែកៗមកសរសេរភ្ជាប់ខុសបរិបទព័ត៌មានពិតដើម។</p>
                     `;
                 }
             }
 
-            // ៣. សន្និដ្ឋានរួមយ៉ាងក្បោះក្បាយ (បញ្ជាក់ត្រាច្បាស់លាស់)
+            // ៣. សេចក្តីសន្និដ្ឋានរួម (កែសម្រួលដើម្បីឱ្យឆ្លើយតបត្រូវទៅតាម Mode ដែលបានជ្រើសរើសពិតប្រាកដ)
             const conclusionBox = document.getElementById('finalConclusionBox');
             const conclusionText = document.getElementById('finalConclusionText');
             const classificationStamp = document.getElementById('classificationStamp');
@@ -350,80 +448,67 @@
 
             let stepsHTML = `<p class="font-bold text-gray-800 mb-2"><i class="fas fa-info-circle text-blue-500 mr-1"></i> សកម្មភាពដែលលោកគ្រូ/អ្នកគ្រូគួរណែនាំសិស្សឱ្យធ្វើ (សកម្មភាព៣កុំ ៣ត្រូវ)៖</p>`;
 
-            // កំណត់ខ្លឹមសារផ្អែកលើស្ថានភាពលទ្ធផលជាក់ស្តែង
-            if (text && hasImage) {
-                // ករណីបញ្ចូលទាំងពីរ
+            if (currentMode === 'combined') {
                 if (textStatus === "HIGH_RISK" && imageStatus === "AI") {
-                    // ព័ត៌មានក្លែងក្លាយទាំងស្រុង
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-red-500 bg-red-50 shadow-inner";
                     conclusionIcon.className = "fas fa-skull-crossbones text-red-600 text-3xl animate-bounce";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-red-600 text-red-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-2deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-ban mr-1"></i> ព័ត៌មានក្លែងក្លាយ (FAKE NEWS) - កុំជឿ!`;
-                    conclusionText.innerText = "ប្រព័ន្ធស្កេនបានរកឃើញថា ព័ត៌មាននេះមានការរៀបចំឡើងជាប្រព័ន្ធក្នុងចេតនាបោកប្រាស់ទាំងស្រុង ដោយប្រើប្រាស់ទាំងអត្ថបទបំផ្លើសការពិត និងរូបភាពដែលបង្កើតឡើងដោយបញ្ញាសិប្បនិម្មិត (AI) ដើម្បីទាក់ទាញ និងបោកបញ្ឆោតមតិសាធារណៈ។";
-                    
+                    conclusionText.innerText = "ប្រព័ន្ធស្កេនបានរកឃើញថា ព័ត៌មាននេះជាព័ត៌មានក្លែងក្លាយទាំងស្រុង ដោយប្រើប្រាស់ទាំងអត្ថបទបំផ្លើសការពិត និងរូបភាពដែលបង្កើតឡើងដោយបញ្ញាសិប្បនិម្មិត (AI) ដើម្បីបំភ័ន្តមតិសាធារណៈ។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-red-900">
-                            <li><strong>កុំជឿ និងកុំស៊ែរ៖</strong> ការចែករំលែកព័ត៌មាននេះ ស្មើនឹងការចូលរួមផ្សព្វផ្សាយភាពមិនពិត និងអាចបង្កភាពវឹកវរក្នុងសង្គម។</li>
-                            <li><strong>ត្រូវពន្យល់មិត្តភក្តិ៖</strong> ប្រើប្រាស់ចំណុចខ្សោយរបស់ AI ម្រាមដៃ ឬពាក្យគន្លឹះដែលរកឃើញ ធ្វើជាមេរៀនបង្ហាញមិត្តរួមថ្នាក់។</li>
-                            <li><strong>ត្រូវរាយការណ៍ (Report)៖</strong> ចុចរាយការណ៍ទៅកាន់បណ្តាញសង្គមដើម្បីសុំឱ្យលុបការបង្ហោះនេះចេញ។</li>
+                            <li><strong>កុំជឿ និងកុំស៊ែរ៖</strong> ការចែករំលែកព័ត៌មាននេះ ស្មើនឹងការចូលរួមផ្សព្វផ្សាយភាពមិនពិត និងអាចបង្កភាពវឹកវរ។</li>
+                            <li><strong>ត្រូវពន្យល់មិត្តភក្តិ៖</strong> ប្រើប្រាស់ចំណុចខ្សោយរបស់ AI ធ្វើជាមេរៀនបង្ហាញមិត្តរួមថ្នាក់។</li>
                         </ul>
                     `;
                 } else if (textStatus === "HIGH_RISK" && imageStatus === "REAL") {
-                    // អត្ថបទក្លែងក្លាយ តែរូបភាពពិត
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-orange-500 bg-orange-50 shadow-inner";
                     conclusionIcon.className = "fas fa-exclamation-triangle text-orange-600 text-3xl animate-pulse";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-orange-600 text-orange-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-1deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i> អត្ថបទក្លែងក្លាយ / រូបភាពពិត (MISLEADING)`;
-                    conclusionText.innerText = "ទោះបីជារូបភាពដែលប្រើប្រាស់ជារូបថតពិតប្រាកដក៏ដោយ ប៉ុន្តែខ្លឹមសារអត្ថបទព័ត៌មានត្រូវបានបំផ្លើស និងមានហានិភ័យខ្ពស់ជាព័ត៌មានក្លែងក្លាយ។ នេះជាវិធីសាស្ត្របន្លំ «យករូបភាពពិត មកសរសេរអត្ថបទភូតកុហក»។";
-                    
+                    conclusionText.innerText = "ទោះបីជារូបភាពថតពិត ប៉ុន្តែខ្លឹមសារអត្ថបទត្រូវបានបំផ្លើស និងមានហានិភ័យខ្ពស់ជាព័ត៌មានក្លែងក្លាយ។ នេះជាល្បិចកល «យករូបថតពិត មកសរសេរប្រឌិតរឿង»។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-orange-900">
-                            <li><strong>កុំជឿ៖</strong> កុំឱ្យរូបភាពពិតមកបន្លំភ្នែកយើងបានឱ្យសោះ។ ត្រូវពិនិត្យប្រភពអត្ថបទជាចម្បង។</li>
-                            <li><strong>ត្រូវស្វែងរក៖</strong> យកខ្លឹមសារព័ត៌មានទៅស្វែងរកនៅលើគេហទំព័រផ្លូវការ ដើម្បីមើលថាតើព្រឹត្តិការណ៍នេះពិតជាបានកើតឡើងមែនឬទេ។</li>
+                            <li><strong>កុំជឿលើអត្ថបទ៖</strong> ទោះបីរូបភាពពិត ក៏មិនត្រូវជឿលើការប្រឌិតសាច់រឿងដែរ។</li>
+                            <li><strong>ត្រូវស្វែងរក៖</strong> ផ្ទៀងផ្ទាត់ខ្លឹមសារព័ត៌មាននៅលើគេហទំព័ររបស់រដ្ឋាភិបាល ឬក្រសួងព័ត៌មាន។</li>
                         </ul>
                     `;
                 } else if (textStatus === "LOW_RISK" && imageStatus === "AI") {
-                    // អត្ថបទពិត តែរូបភាព AI
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-purple-500 bg-purple-50 shadow-inner";
                     conclusionIcon.className = "fas fa-robot text-purple-600 text-3xl animate-pulse";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-purple-600 text-purple-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-robot mr-1"></i> ព័ត៌មានពិត / រូបភាព AI (REAL TEXT + AI IMAGE)`;
-                    conclusionText.innerText = "ខ្លឹមសារអត្ថបទហាក់ដូចជាមានភាពត្រឹមត្រូវ និងវិជ្ជាជីវៈខ្ពស់ ប៉ុន្តែរូបភាពអមជាមួយត្រូវបានរកឃើញថាបង្កើតឡើងដោយ AI។ នេះអាចជាការប្រើប្រាស់រូបភាពតំណាង (Illustration) ប៉ុន្តែការមិនបញ្ជាក់ថាជារូបភាព AI អាចបង្កការភាន់ច្រឡំ។";
-                    
+                    conclusionText.innerText = "ខ្លឹមសារអត្ថបទហាក់ដូចជាមានភាពត្រឹមត្រូវ ប៉ុន្តែរូបភាពអមជាមួយត្រូវបានបង្កើតឡើងដោយ AI។ ការមិនបញ្ជាក់ថាជារូបភាពគំនូរ AI អាចបង្កការភាន់ច្រឡំដល់សិស្ស។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-purple-900">
-                            <li><strong>ត្រូវដឹង៖</strong> ការប្រើប្រាស់រូបភាព AI ក្នុងព័ត៌មានផ្លូវការ អាចធ្វើឱ្យប៉ះពាល់ដល់ភាពជឿជាក់នៃព័ត៌មានទាំងមូល។</li>
-                            <li><strong>ត្រូវសួររកប្រភព៖</strong> ផ្ទៀងផ្ទាត់ថាតើមានការបញ្ជាក់ពីភ្នាក់ងារសារព័ត៌មានអំពីប្រភពរូបភាពដែរឬទេ។</li>
+                            <li><strong>ត្រូវដឹង៖</strong> ការប្រើរូបភាព AI ក្នុងព័ត៌មានពិត អាចកាត់បន្ថយភាពជឿជាក់នៃសាច់រឿងទាំងមូល។</li>
+                            <li><strong>ត្រូវបញ្ជាក់៖</strong> ណែនាំសិស្សឱ្យសួររកប្រភពរូបភាពជាក់ស្តែងជានិច្ច។</li>
                         </ul>
                     `;
                 } else {
-                    // ព័ត៌មានពិតប្រាកដទាំងស្រុង
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-green-500 bg-green-50 shadow-inner";
                     conclusionIcon.className = "fas fa-check-circle text-green-600 text-3xl";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-green-600 text-green-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1.5deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-check-double mr-1"></i> ព័ត៌មានពិតប្រាកដ (GENUINE NEWS)`;
-                    conclusionText.innerText = "ប្រព័ន្ធវាយតម្លៃឃើញថា ទាំងអត្ថបទព័ត៌មាន និងរូបភាពអមជាមួយ មិនមានសញ្ញាគួរឱ្យសង្ស័យឡើយ។ ភាសាសរសេរមានលក្ខណៈវិជ្ជាជីវៈ និងរូបភាពពិតប្រាកដ ឆ្លុះបញ្ចាំងពីព័ត៌មានដែលមានសុវត្ថិភាពក្នុងការអាន និងស្វែងយល់។";
-                    
+                    conclusionText.innerText = "ទាំងអត្ថបទព័ត៌មាន និងរូបភាពអមជាមួយ មិនមានសញ្ញាគួរឱ្យសង្ស័យឡើយ។ រូបភាពពិតប្រាកដ និងភាសាសរសេរមានលក្ខណៈវិជ្ជាជីវៈខ្ពស់។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-green-900">
-                            <li><strong>ត្រូវរក្សាទម្លាប់ល្អ៖</strong> ទោះបីជាប្រព័ន្ធវាយតម្លៃថាពិត ក៏ត្រូវប្រៀបធៀបជាមួយប្រភពសារព័ត៌មានល្បីៗដទៃទៀត ដើម្បីភាពច្បាស់លាស់។</li>
-                            <li><strong>ត្រូវអានឱ្យគ្រប់ជ្រុង៖</strong> ការយល់ដឹងព័ត៌មានត្រឹមត្រូវ ជួយយើងឱ្យក្លាយជាពលរដ្ឋឌីជីថលឆ្លាតវៃ។</li>
+                            <li><strong>ត្រូវរក្សាទម្លាប់ល្អ៖</strong> ត្រូវប្រៀបធៀបជាមួយប្រភពសារព័ត៌មានផ្លូវការដទៃទៀត ដើម្បីភាពច្បាស់លាស់។</li>
                         </ul>
                     `;
                 }
-            } else if (text) {
-                // ករណីវិភាគតែអត្ថបទ (អត់មានរូបភាព)
+            } else if (currentMode === 'text') {
+                // ករណីវិភាគតែអត្ថបទ
                 if (textStatus === "HIGH_RISK") {
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-red-500 bg-red-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-exclamation-triangle text-red-600 text-3xl animate-bounce";
+                    conclusionIcon.className = "fas fa-times-circle text-red-600 text-3xl animate-pulse";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-red-600 text-red-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-2deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-ban mr-1"></i> អត្ថបទក្លែងក្លាយ (FAKE NEWS TEXT)`;
-                    conclusionText.innerText = "ខ្លឹមសារអត្ថបទនេះត្រូវបានបញ្ជាក់ថាជា ព័ត៌មានក្លែងក្លាយ ឬបំផ្លើសការពិតកម្រិតខ្ពស់។ អត្ថបទមានការប្រើប្រាស់ភាសាញុះញង់ ឬជំរុញអារម្មណ៍ភ័យខ្លាចដើម្បីឱ្យមានការចែករំលែកតៗគ្នា។";
-                    
+                    conclusionText.innerText = "ខ្លឹមសារអត្ថបទនេះត្រូវបានបញ្ជាក់ថាជា ព័ត៌មានក្លែងក្លាយ ឬបំផ្លើសការពិតកម្រិតខ្ពស់ ដើម្បីញុះញង់ និងទាក់ទាញការចែករំលែក។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-red-900">
-                            <li><strong>កុំស៊ែរ៖</strong> ការពារសហគមន៍របស់អ្នក ដោយមិនជួយផ្សព្វផ្សាយព័ត៌មានដែលគ្មានមូលដ្ឋានច្បាស់លាស់នេះ។</li>
-                            <li><strong>ត្រូវស្វែងរកប្រភព៖</strong> ពិនិត្យមើលថាតើក្រសួង ឬស្ថាប័នពាក់ព័ន្ធបានចេញសេចក្តីប្រកាសច្រានចោលព័ត៌មាននេះហើយឬនៅ។</li>
+                            <li><strong>កុំស៊ែរ៖</strong> ចៀសវាងការចែករំលែកព័ត៌មានដែលគ្មានមូលដ្ឋានច្បាស់លាស់នេះជាដាច់ខាត។</li>
+                            <li><strong>ត្រូវផ្ទៀងផ្ទាត់៖</strong> ពិនិត្យសេចក្តីប្រកាសច្រានចោលពីស្ថាប័នរដ្ឋ ឬក្រសួងពាក់ព័ន្ធ។</li>
                         </ul>
                     `;
                 } else if (textStatus === "WARNING") {
@@ -431,51 +516,46 @@
                     conclusionIcon.className = "fas fa-exclamation-circle text-yellow-600 text-3xl";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-yellow-600 text-yellow-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-1deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> អត្ថបទគួរឱ្យសង្ស័យ (SUSPICIOUS TEXT)`;
-                    conclusionText.innerText = "អត្ថបទនេះមានទម្រង់គួរឱ្យសង្ស័យ។ ខ្លឹមសារអាចជាការពិតខ្លះ ប៉ុន្តែវិធីសរសេរចំណងជើង និងខ្លឹមសារមានការបំផ្លើសហួសពីការពិត ដើម្បីទាក់ទាញអ្នកអាន។";
-                    
+                    conclusionText.innerText = "អត្ថបទនេះមានភាពមិនប្រក្រតី។ ខ្លឹមសារអាចជាការពិតខ្លះ ប៉ុន្តែវិធីសរសេរចំណងជើងមានលក្ខណៈបំផ្លើសហួសហេតុ។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-yellow-900">
-                            <li><strong>ត្រូវផ្ទៀងផ្ទាត់៖</strong> ស្វែងរកព័ត៌មានដដែលនេះពីសារព័ត៌មានផ្សេងទៀតដើម្បីប្រៀបធៀបខ្លឹមសារ។</li>
-                            <li><strong>ត្រូវរង់ចាំ៖</strong> ចៀសវាងការស៊ែរបន្តភ្លាមៗ រហូតដល់មានការបញ្ជាក់ច្បាស់លាស់ពីប្រភពផ្លូវការ។</li>
+                            <li><strong>ត្រូវប្រៀបធៀប៖</strong> អានព័ត៌មានដដែលនេះពីភ្នាក់ងារសារព័ត៌មានអាជីពដទៃទៀត។</li>
                         </ul>
                     `;
                 } else {
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-green-500 bg-green-50 shadow-inner";
                     conclusionIcon.className = "fas fa-check-circle text-green-600 text-3xl";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-green-600 text-green-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1.5deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-check mr-1"></i> អក្សរព័ត៌មានពិតប្រាកដ (GENUINE TEXT)`;
-                    conclusionText.innerText = "អត្ថបទព័ត៌មាននេះត្រូវបានបញ្ជាក់ថាជា ព័ត៌មានពិតប្រាកដ និងមានសុវត្ថិភាព។ មិនរកឃើញការប្រើប្រាស់ពាក្យគន្លឹះជំរុញការចែករំលែក ឬពាក្យបំផ្លើសគួរឱ្យសង្ស័យឡើយ។";
-                    
+                    classificationStamp.innerHTML = `<i class="fas fa-check mr-1"></i> អត្ថបទពិតប្រាកដ (GENUINE TEXT)`;
+                    conclusionText.innerText = "អត្ថបទព័ត៌មាននេះត្រូវបានបញ្ជាក់ថាជា ព័ត៌មានពិតប្រាកដ និងមានសុវត្ថិភាពខ្ពស់ គ្មានសញ្ញាសង្ស័យឡើយ។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-green-900">
-                            <li><strong>ត្រូវផ្សព្វផ្សាយ៖</strong> ណែនាំសិស្សានុសិស្សឱ្យយកតម្រាប់តាមស្ទីលសរសេរព័ត៌មានត្រឹមត្រូវ និងមិនលំអៀងបែបនេះ។</li>
+                            <li><strong>ត្រូវផ្សព្វផ្សាយ៖</strong> ណែនាំសិស្សឱ្យយកតម្រាប់តាមរបៀបសរសេរព័ត៌មានបែបអាជីព និងមានប្រភពច្បាស់លាស់បែបនេះ។</li>
                         </ul>
                     `;
                 }
-            } else if (hasImage) {
-                // ករណីវិភាគតែរូបភាព (អត់មានអត្ថបទ)
+            } else if (currentMode === 'image') {
+                // ករណីវិភាគតែរូបភាព
                 if (imageStatus === "AI") {
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-purple-500 bg-purple-50 shadow-inner";
                     conclusionIcon.className = "fas fa-robot text-purple-600 text-3xl animate-pulse";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-purple-600 text-purple-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-2deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-robot mr-1"></i> រូបភាពបង្កើតដោយ AI (AI GENERATED)`;
-                    conclusionText.innerText = "រូបភាពដែលបានបញ្ចូលនេះត្រូវបានបញ្ជាក់យ៉ាងច្បាស់ថាជា រូបភាពបង្កើតឡើងដោយ AI។ រកឃើញភាពមិនស៊ីគ្នានៃសរសៃសក់ ស្រមោល ឬផ្ទៃខាងក្រោយដែលជារឿយៗកើតមាននៅលើ Generative AI។";
-                    
+                    conclusionText.innerText = "រូបភាពដែលបានបញ្ចូលនេះត្រូវបានបញ្ជាក់យ៉ាងច្បាស់ថាជា រូបភាពបង្កើតឡើងដោយបច្ចេកវិទ្យា AI (Generative AI)។";
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-purple-900">
-                            <li><strong>ត្រូវអប់រំសិស្ស៖</strong> ប្រើប្រាស់រូបភាពនេះដើម្បីណែនាំសិស្សកុំឱ្យងាយចាញ់បោកនឹងរូបភាពស្រស់ស្អាតឥតខ្ចោះដែលបង្កើតឡើងដោយកុំព្យូទ័រ។</li>
+                            <li><strong>ត្រូវណែនាំសិស្ស៖</strong> យកចំណុចខុសប្រក្រតីនៃម្រាមដៃ ឬផ្ទៃខាងក្រោយរបស់រូបភាព AI ធ្វើជាមេរៀនជាក់ស្តែងក្នុងថ្នាក់។</li>
                         </ul>
                     `;
                 } else {
                     conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-green-500 bg-green-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-check-circle text-green-600 text-3xl";
+                    conclusionIcon.className = "fas fa-image text-green-600 text-3xl";
                     classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-green-600 text-green-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1.5deg]";
                     classificationStamp.innerHTML = `<i class="fas fa-image mr-1"></i> រូបថតពិតជាក់ស្តែង (REAL PHOTO)`;
                     conclusionText.innerText = "រូបភាពនេះត្រូវបានបញ្ជាក់ថាជា រូបថតពិតជាក់ស្តែង មិនរកឃើញភស្តុតាងនៃការបង្កើតឡើងដោយបច្ចេកវិទ្យា AI ឡើយ។";
-                    
                     stepsHTML += `
                         <ul class="list-decimal pl-5 space-y-2 text-green-900">
-                            <li><strong>ត្រូវប្រុងប្រយ័ត្ន៖</strong> រូបភាពពិតតែអាចត្រូវបានយកទៅប្រើជាមួយខ្លឹមសារភូតកុហក ដូចនេះត្រូវសួររកព័ត៌មានអមជានិច្ច។</li>
+                            <li><strong>ត្រូវប្រុងប្រយ័ត្ន៖</strong> រូបភាពថតពិត ប៉ុន្តែត្រូវប្រុងប្រយ័ត្នក្រែងលោជនខិលខូចយកទៅប្រើជាមួយខ្លឹមសារភូតកុហក។</li>
                         </ul>
                     `;
                 }
@@ -488,6 +568,11 @@
             document.getElementById('resultSection').classList.remove('hidden');
             document.getElementById('analyzeBtn').classList.remove('hidden');
             document.getElementById('analyzeBtn').innerHTML = '<i class="fas fa-redo mr-2"></i> វិភាគម្តងទៀត';
+        }
+
+        // ចាប់ផ្តើមដំណើរការជាមួយ combined mode
+        window.onload = function() {
+            switchMode('combined');
         }
     </script>
 </body>
