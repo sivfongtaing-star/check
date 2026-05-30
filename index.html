@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { ShieldAlert, Image as ImageIcon, FileText, CheckCircle, AlertTriangle, XCircle, Loader2, Upload } from 'lucide-react';
 
-// API Key is provided by the execution environment
-const apiKey = ""; 
+// សូមដាក់ API Key របស់លោកគ្រូនៅទីនេះ សម្រាប់ការធ្វើតេស្ត
+const apiKey = "ដាក់_API_KEY_របស់អ្នកនៅទីនេះ"; 
+// ចំណាំ៖ នៅពេលលោកគ្រូ Deploy លើ Vercel (ប្រើ Vite) សូមដកសញ្ញា // ពីបន្ទាត់ខាងក្រោម ហើយលុបបន្ទាត់ខាងលើចោល
+// const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 // Helper function for API calls with exponential backoff
 const fetchWithBackoff = async (url, options, maxRetries = 5) => {
