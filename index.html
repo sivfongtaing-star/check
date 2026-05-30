@@ -1,714 +1,400 @@
-<!DOCTYPE html>
-<html lang="km">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធត្រួតពិនិត្យព័ត៌មាន និងរូបភាព AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap');
-        body {
-            font-family: 'Battambang', sans-serif;
-            background-color: #f3f4f6;
-        }
-        .title-font {
-            font-family: 'Moul', cursive;
-        }
-        .loader {
-            border-top-color: #3b82f6;
-            -webkit-animation: spinner 1.5s linear infinite;
-            animation: spinner 1.5s linear infinite;
-        }
-        @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body class="min-h-screen p-4 md:p-8">
+import React, { useState, useRef } from 'react';
+import { ShieldAlert, Image as ImageIcon, FileText, CheckCircle, AlertTriangle, XCircle, Loader2, Upload } from 'lucide-react';
 
-    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <!-- ផ្នែកក្បាលនៃកម្មវិធី -->
-        <div class="bg-blue-600 p-6 text-white text-center">
-            <h1 class="text-2xl md:text-3xl title-font mb-2"><i class="fas fa-shield-alt mr-2"></i>ប្រព័ន្ធស្កេនព័ត៌មានក្លែងក្លាយ & រូបភាព AI</h1>
-            <p class="text-blue-100 text-sm md:text-base">ជំនួយការផ្ទៀងផ្ទាត់ភាពត្រឹមត្រូវនៃទិន្នន័យ និងកំណត់អត្តសញ្ញាណព័ត៌មានពិតប្រាកដ</p>
+// API Key is provided by the execution environment
+const apiKey = ""; 
+
+// Helper function for API calls with exponential backoff
+const fetchWithBackoff = async (url, options, maxRetries = 5) => {
+  const delays = [1000, 2000, 4000, 8000, 16000];
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delays[i]));
+    }
+  }
+};
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('text'); // 'text' or 'image'
+  const [inputText, setInputText] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageBase64, setImageBase64] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+
+  const fileInputRef = useRef(null);
+
+  // Handle Image Upload
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Remove the data:image/png;base64, part for the API
+        const base64String = reader.result.split(',')[1];
+        setImageBase64(base64String);
+        setResult(null); // Clear previous results
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Analyze Text using Gemini API
+  const analyzeText = async () => {
+    if (!inputText.trim()) {
+      setError('សូមបញ្ចូលអត្ថបទព័ត៌មានដែលអ្នកចង់ពិនិត្យ!');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError('');
+    setResult(null);
+
+    const prompt = `អ្នកគឺជាអ្នកជំនាញត្រួតពិនិត្យការពិត (Fact-checker) ដ៏ពូកែម្នាក់។ សូមវិភាគអត្ថបទព័ត៌មានខាងក្រោមជាភាសាខ្មែរ ហើយវាយតម្លៃថាតើវាទំនងជាព័ត៌មានពិត ឬព័ត៌មានក្លែងក្លាយ។ 
+    
+    សូមឆ្លើយតបជាទម្រង់ JSON ដែលមានរចនាសម្ព័ន្ធដូចខាងក្រោម៖
+    {
+      "score": "ពិន្ទុពី 0 ដល់ 100 (0 = ក្លែងក្លាយទាំងស្រុង, 100 = ពិតប្រាកដទាំងស្រុង)",
+      "verdict": "សេចក្តីសន្និដ្ឋានខ្លីៗ (ឧ. ព័ត៌មានក្លែងក្លាយ, គួរឱ្យសង្ស័យ, ព័ត៌មានពិត)",
+      "reasons": ["មូលហេតុទី១", "មូលហេតុទី២", "មូលហេតុទី៣"],
+      "advice": "ដំបូន្មានសម្រាប់អ្នកអាន (ឧ. គួរផ្ទៀងផ្ទាត់ជាមួយសារព័ត៌មានផ្លូវការ)"
+    }
+    
+    អត្ថបទ៖ "${inputText}"`;
+
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+        }
+      };
+
+      const data = await fetchWithBackoff(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (responseText) {
+        setResult(JSON.parse(responseText));
+      } else {
+        setError('មិនអាចវិភាគបានទេ សូមព្យាយាមម្តងទៀត។');
+      }
+    } catch (err) {
+      setError('មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមពិនិត្យមើលបណ្តាញអ៊ីនធឺណិតរបស់អ្នក។');
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Analyze Image using Gemini API
+  const analyzeImage = async () => {
+    if (!imageBase64) {
+      setError('សូមជ្រើសរើសរូបភាពដើម្បីពិនិត្យ!');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError('');
+    setResult(null);
+
+    const prompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics)។ សូមពិនិត្យមើលរូបភាពនេះ ហើយវាយតម្លៃថាតើវាជារូបថតពិតប្រាកដ ឬជារូបភាពដែលបង្កើតដោយ AI (AI-Generated Image)។ រកមើលចំណុចខុសប្រក្រតីដូចជា ម្រាមដៃមិនប្រក្រតី អក្សរអានមិនដាច់ ផ្ទៃខាងក្រោយរមួល ឬភាពម៉ត់រលោងខុសធម្មតា។
+    
+    សូមឆ្លើយតបជាទម្រង់ JSON ដែលមានរចនាសម្ព័ន្ធដូចខាងក្រោម៖
+    {
+      "score": "ពិន្ទុពី 0 ដល់ 100 (0 = បង្កើតដោយ AI ទាំងស្រុង, 100 = រូបថតពិតប្រាកដទាំងស្រុង)",
+      "verdict": "សេចក្តីសន្និដ្ឋានខ្លីៗ (ឧ. រូបភាព AI, គួរឱ្យសង្ស័យ, រូបថតពិត)",
+      "reasons": ["ចំណុចទី១ដែលរកឃើញ", "ចំណុចទី២ដែលរកឃើញ", "ចំណុចទី៣ដែលរកឃើញ"],
+      "advice": "ដំបូន្មាន (ឧ. កុំប្រញាប់ជឿរូបភាពនៅលើអ៊ីនធឺណិត)"
+    }`;
+
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: [{
+          role: "user",
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: "image/jpeg", data: imageBase64 } }
+          ]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json",
+        }
+      };
+
+      const data = await fetchWithBackoff(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (responseText) {
+        setResult(JSON.parse(responseText));
+      } else {
+        setError('មិនអាចវិភាគរូបភាពបានទេ សូមព្យាយាមម្តងទៀត។');
+      }
+    } catch (err) {
+      setError('មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមពិនិត្យមើលបណ្តាញអ៊ីនធឺណិតរបស់អ្នក។');
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Helper to get color based on score
+  const getScoreColor = (score) => {
+    if (score >= 70) return 'text-green-600';
+    if (score >= 40) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getScoreBg = (score) => {
+    if (score >= 70) return 'bg-green-100 border-green-200';
+    if (score >= 40) return 'bg-yellow-100 border-yellow-200';
+    return 'bg-red-100 border-red-200';
+  };
+
+  const getIcon = (score) => {
+    if (score >= 70) return <CheckCircle className="w-12 h-12 text-green-600" />;
+    if (score >= 40) return <AlertTriangle className="w-12 h-12 text-yellow-600" />;
+    return <XCircle className="w-12 h-12 text-red-600" />;
+  };
+
+  // Helper to get explicit True/False label
+  const getMainVerdictLabel = (score, tab) => {
+    if (tab === 'text') {
+      if (score >= 70) return 'ព័ត៌មានពិត ✅';
+      if (score >= 40) return 'ព័ត៌មានគួរឱ្យសង្ស័យ ⚠️';
+      return 'ព័ត៌មានមិនពិត (ក្លែងក្លាយ) ❌';
+    } else {
+      if (score >= 70) return 'រូបភាពពិតប្រាកដ ✅';
+      if (score >= 40) return 'រូបភាពគួរឱ្យសង្ស័យ ⚠️';
+      return 'រូបភាពមិនពិត (បង្កើតដោយ AI) ❌';
+    }
+  };
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Moul&family=Siemreap&display=swap');
+        .font-muol { font-family: 'Khmer OS Muol Light', 'Moul', cursive; }
+        .font-khmer { font-family: 'Khmer OS Battambang', 'Siemreap', sans-serif; line-height: 1.8; }
+      `}</style>
+      
+      <div className="min-h-screen bg-gray-50 text-gray-800 font-khmer p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          
+          {/* Header */}
+          <header className="text-center mb-10">
+            <div className="inline-flex items-center justify-center p-4 bg-blue-600 rounded-full mb-4 shadow-lg">
+              <ShieldAlert className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-muol text-blue-900 mb-6 leading-relaxed tracking-wide">
+              ប្រព័ន្ធពិនិត្យព័ត៌មាន និងរូបភាព AI
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-loose">
+              កម្មវិធីអប់រំសម្រាប់សិស្សានុសិស្ស ដើម្បីស្វែងយល់និងវិភាគរកព័ត៌មានក្លែងក្លាយ និងរូបភាពដែលបង្កើតដោយបញ្ញាសិប្បនិម្មិត។
+            </p>
+          </header>
+
+          {/* Main Content */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => { setActiveTab('text'); setResult(null); setError(''); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 text-lg transition-colors ${
+                  activeTab === 'text' 
+                    ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FileText className="w-5 h-5" />
+                <span className="font-muol mt-1">ពិនិត្យអត្ថបទព័ត៌មាន</span>
+              </button>
+              <button
+                onClick={() => { setActiveTab('image'); setResult(null); setError(''); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 text-lg transition-colors ${
+                  activeTab === 'image' 
+                    ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-700' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <ImageIcon className="w-5 h-5" />
+                <span className="font-muol mt-1">ពិនិត្យរូបភាព AI</span>
+              </button>
+            </div>
+
+            <div className="p-6 md:p-8">
+              
+              {/* TEXT ANALYSIS SECTION */}
+              {activeTab === 'text' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">
+                      ចម្លងអត្ថបទព័ត៌មានដែលអ្នកសង្ស័យមកដាក់ទីនេះ៖
+                    </label>
+                    <textarea
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder="ឧទាហរណ៍៖ ព័ត៌មានបន្ទាន់! ថ្ងៃស្អែកនឹងមានរញ្ជួយដីកម្រិតធ្ងន់នៅរាជធានីភ្នំពេញ សូមចែកចាយបន្ត..."
+                      className="w-full h-40 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none leading-loose"
+                    />
+                  </div>
+                  <button
+                    onClick={analyzeText}
+                    disabled={isAnalyzing}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl transition-colors flex justify-center items-center gap-2 disabled:opacity-70 font-muol text-lg leading-relaxed tracking-wide"
+                  >
+                    {isAnalyzing ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" /> កំពុងវិភាគទិន្នន័យ...</>
+                    ) : (
+                      <><ShieldAlert className="w-5 h-5" /> ចាប់ផ្តើមវិភាគអត្ថបទ</>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* IMAGE ANALYSIS SECTION */}
+              {activeTab === 'image' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-3">
+                      ជ្រើសរើសរូបភាពដែលអ្នកចង់ពិនិត្យ៖
+                    </label>
+                    <div 
+                      className="mt-2 flex justify-center rounded-xl border border-dashed border-gray-400 px-6 py-10 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <div className="text-center">
+                        {selectedImage ? (
+                          <img src={selectedImage} alt="Selected" className="mx-auto h-48 object-contain mb-4 rounded-lg shadow-sm" />
+                        ) : (
+                          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                        )}
+                        <div className="mt-4 flex text-sm leading-6 text-gray-600 justify-center">
+                          <span className="relative cursor-pointer rounded-md font-semibold text-purple-600 hover:text-purple-500">
+                            ចុចទីនេះដើម្បីជ្រើសរើសរូបភាព
+                          </span>
+                        </div>
+                        <p className="text-xs leading-5 text-gray-500 mt-1 font-sans">PNG, JPG ឬ WEBP</p>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                  </div>
+                  <button
+                    onClick={analyzeImage}
+                    disabled={isAnalyzing || !selectedImage}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-xl transition-colors flex justify-center items-center gap-2 disabled:opacity-70 font-muol text-lg leading-relaxed tracking-wide"
+                  >
+                    {isAnalyzing ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" /> កំពុងពិនិត្យរូបភាព...</>
+                    ) : (
+                      <><ImageIcon className="w-5 h-5" /> ចាប់ផ្តើមវិភាគរូបភាព</>
+                    )}
+                  </button>
+                </div>
+              )}
+
+            {/* ERROR MESSAGE */}
+            {error && (
+              <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
+
+            {/* RESULTS SECTION */}
+            {result && (
+              <div className={`mt-8 p-6 rounded-2xl border ${getScoreBg(result.score)} animate-in fade-in slide-in-from-bottom-4 duration-500`}>
+                <h3 className="text-xl font-muol mb-6 border-b border-black/10 pb-4 text-center md:text-left leading-loose">
+                  លទ្ធផលនៃការវិភាគ
+                </h3>
+                
+                <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
+                  <div className="flex-shrink-0 bg-white p-4 rounded-full shadow-sm">
+                    {getIcon(result.score)}
+                  </div>
+                  <div className="text-center md:text-left">
+                    <p className="text-sm uppercase tracking-wider font-semibold text-gray-500 mb-2">
+                      {activeTab === 'text' ? 'ភាពត្រឹមត្រូវនៃព័ត៌មាន' : 'ភាពប្រាកដថាមិនមែនជា AI'}
+                    </p>
+                    <div className="flex flex-col md:flex-row items-center md:items-baseline gap-4 mb-2">
+                      <span className={`text-6xl font-extrabold font-sans ${getScoreColor(result.score)}`}>
+                        {result.score}%
+                      </span>
+                      <span className={`text-2xl md:text-3xl font-muol ${getScoreColor(result.score)}`}>
+                        {getMainVerdictLabel(result.score, activeTab)}
+                      </span>
+                    </div>
+                    <p className="text-lg mt-3 text-gray-800 bg-white/50 inline-block px-4 py-2 rounded-lg">
+                      <span className="font-muol text-sm text-gray-500">ការវាយតម្លៃបន្ថែម៖</span> <span className={`font-bold`}>{result.verdict}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-6 bg-white/60 p-6 rounded-xl">
+                  <div>
+                    <h4 className="font-muol text-gray-900 mb-4 flex items-center gap-2 leading-loose">
+                      <FileText className="w-4 h-4" /> មូលហេតុនៃការសន្និដ្ឋាន៖
+                    </h4>
+                    <ul className="space-y-3">
+                      {result.reasons.map((reason, index) => (
+                        <li key={index} className="flex gap-2 text-gray-700">
+                          <span className="text-gray-400 font-bold">•</span>
+                          <span>{reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {result.advice && (
+                    <div className="pt-4 border-t border-black/10">
+                      <h4 className="font-muol text-gray-900 mb-4 flex items-center gap-2 leading-loose">
+                        <ShieldAlert className="w-4 h-4" /> ដំបូន្មានសម្រាប់អ្នក៖
+                      </h4>
+                      <p className="text-gray-700 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                        {result.advice}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            </div>
+          </div>
+
+          {/* Footer info for students */}
+          <div className="mt-8 text-center text-sm text-gray-500 bg-gray-100 p-4 rounded-xl border border-gray-200">
+            <p className="mb-2"><strong>ចំណាំ៖</strong> ប្រព័ន្ធនេះប្រើប្រាស់បញ្ញាសិប្បនិម្មិត (AI) ដើម្បីជួយវិភាគ។ លទ្ធផលអាចមិនត្រឹមត្រូវ ១០០% ឡើយ។</p>
+            <p>សូមបន្តការស្រាវជ្រាវ និងផ្ទៀងផ្ទាត់ជាមួយប្រភពផ្លូវការជានិច្ច មុននឹងសម្រេចចិត្តជឿ ឬចែករំលែកបន្ត។</p>
+          </div>
+
         </div>
-
-        <div class="p-6 md:p-8">
-            <!-- ផ្នែកជ្រើសរើសរបៀបវិភាគ (Tabs) -->
-            <div class="mb-8">
-                <label class="block text-gray-700 font-bold text-center mb-3 text-lg"><i class="fas fa-sliders-h text-blue-600 mr-2"></i>សូមជ្រើសរើសរបៀបនៃការវិភាគទិន្នន័យ</label>
-                <div class="grid grid-cols-3 gap-2 bg-gray-100 p-1.5 rounded-xl border border-gray-200">
-                    <button onclick="switchMode('text')" id="tab-text" class="py-2.5 px-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-white hover:text-blue-600 hover:shadow-sm transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1">
-                        <i class="fas fa-file-alt text-base"></i>
-                        <span>វិភាគតែអត្ថបទ</span>
-                    </button>
-                    <button onclick="switchMode('image')" id="tab-image" class="py-2.5 px-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-white hover:text-purple-600 hover:shadow-sm transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1">
-                        <i class="fas fa-image text-base"></i>
-                        <span>វិភាគតែរូបភាព</span>
-                    </button>
-                    <button onclick="switchMode('combined')" id="tab-combined" class="py-2.5 px-2 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1">
-                        <i class="fas fa-layer-group text-base"></i>
-                        <span>វិភាគរួមគ្នាទាំងពីរ</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ផ្នែកបញ្ចូលព័ត៌មាន -->
-            <div id="inputsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- ប្រអប់បញ្ចូលអត្ថបទ -->
-                <div id="textInputCol" class="space-y-3">
-                    <label class="block text-gray-700 font-bold text-lg"><i class="fas fa-file-alt text-blue-500 mr-2"></i>បញ្ចូលអត្ថបទព័ត៌មាន</label>
-                    <textarea id="newsText" rows="8" class="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm resize-none" placeholder="ចម្លងអត្ថបទព័ត៌មានដែលលោកគ្រូ/អ្នកគ្រូសង្ស័យមកដាក់ទីនេះដើម្បីចាប់ផ្តើមការត្រួតពិនិត្យ..."></textarea>
-                </div>
-
-                <!-- ប្រអប់បញ្ចូលរូបភាព -->
-                <div id="imageInputCol" class="space-y-3">
-                    <label class="block text-gray-700 font-bold text-lg"><i class="fas fa-image text-purple-500 mr-2"></i>បញ្ចូលរូបភាព</label>
-                    <div class="relative">
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:bg-gray-50 transition cursor-pointer relative overflow-hidden" id="dropZone" onclick="document.getElementById('imageInput').click()">
-                            <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="previewImage(event)">
-                            
-                            <div id="uploadPrompt" class="space-y-2 py-8">
-                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
-                                <p class="text-gray-500">ចុចទីនេះ ដើម្បីជ្រើសរើសរូបភាព</p>
-                            </div>
-                            
-                            <div class="relative inline-block">
-                                <img id="imagePreview" class="hidden max-h-48 mx-auto rounded-lg object-contain" />
-                                <canvas id="scanCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none hidden"></canvas>
-                            </div>
-                        </div>
-                        <!-- ប៊ូតុងលុបរូបភាពចេញវិញ -->
-                        <button id="removeImgBtn" type="button" onclick="removeImage(event)" class="hidden absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 w-10 h-10 flex items-center justify-center shadow-md transition z-10">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-400 text-center">គាំទ្រទម្រង់: JPG, PNG, WEBP</p>
-                </div>
-            </div>
-
-            <!-- ប៊ូតុងចាប់ផ្តើមវិភាគ -->
-            <div class="mt-8 text-center">
-                <button onclick="startAnalysis()" id="analyzeBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition duration-300">
-                    <i class="fas fa-search mr-2"></i> ផ្តើមការវិភាគទិន្នន័យពិតប្រាកដ
-                </button>
-            </div>
-
-            <!-- ស្ថានភាពកំពុងដំណើរការ -->
-            <div id="loadingState" class="hidden mt-8 text-center space-y-4">
-                <div class="inline-block w-12 h-12 border-4 border-gray-200 rounded-full loader"></div>
-                <p id="loadingText" class="text-blue-600 font-bold animate-pulse">ប្រព័ន្ធកំពុងដំណើរការវិភាគយ៉ាងលម្អិត...</p>
-            </div>
-
-            <!-- ផ្នែកបង្ហាញលទ្ធផល -->
-            <div id="resultSection" class="hidden mt-10 p-6 bg-gray-50 rounded-xl border border-gray-200">
-                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2"><i class="fas fa-chart-bar text-blue-600 mr-2"></i>លទ្ធផលនៃការវិភាគយ៉ាងលម្អិត</h2>
-                
-                <!-- ក្រឡាលទ្ធផលថាមវន្ត -->
-                <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- លទ្ធផលវិភាគអត្ថបទ -->
-                    <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 space-y-3" id="textResultCard">
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <h3 class="font-bold text-gray-700"><i class="fas fa-align-left text-blue-500 mr-2"></i>ការវិភាគផ្នែកអត្ថបទ</h3>
-                            <span id="textBadge" class="text-xs font-bold px-2.5 py-1 rounded-full"></span>
-                        </div>
-                        <div id="textScore" class="space-y-1"></div>
-                        <div id="textDetail" class="text-sm text-gray-600 leading-relaxed space-y-2"></div>
-                    </div>
-
-                    <!-- លទ្ធផលវិភាគរូបភាព -->
-                    <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 space-y-3" id="imageResultCard">
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <h3 class="font-bold text-gray-700"><i class="fas fa-camera text-purple-500 mr-2"></i>ការវិភាគផ្នែករូបភាព</h3>
-                            <span id="imageBadge" class="text-xs font-bold px-2.5 py-1 rounded-full"></span>
-                        </div>
-                        <div id="imageScore" class="space-y-1"></div>
-                        <div id="imageDetail" class="text-sm text-gray-600 leading-relaxed space-y-2"></div>
-                    </div>
-                </div>
-
-                <!-- សេចក្តីសន្និដ្ឋានរួមចុងក្រោយ -->
-                <div class="mt-6 p-6 rounded-xl border bg-white shadow-sm" id="finalConclusionBox">
-                    <div class="flex flex-col items-center text-center space-y-3">
-                        <div class="flex items-center gap-2">
-                            <i id="conclusionIcon" class="text-3xl"></i>
-                            <h3 class="font-bold text-2xl title-font text-gray-800">សេចក្តីសន្និដ្ឋានរួម និងការវាយតម្លៃចុងក្រោយ</h3>
-                        </div>
-                        
-                        <!-- ត្រាវាយតម្លៃផ្លូវការ -->
-                        <div id="classificationStamp" class="inline-block px-8 py-3 rounded-xl border-4 text-2xl font-bold uppercase tracking-wider my-3 shadow-sm transform rotate-[-1deg]">
-                            -
-                        </div>
-                        
-                        <p id="finalConclusionText" class="font-bold text-lg text-gray-700 max-w-2xl leading-relaxed"></p>
-                    </div>
-                    
-                    <div id="educationalSteps" class="text-sm border-t pt-4 mt-4 text-left space-y-2 text-gray-700">
-                        <!-- សកម្មភាពអប់រំផ្សេងៗនឹងត្រូវបញ្ចូលទីនេះដោយ JS -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ប្រអប់សារព្រមានពិសេស (មិនប្រើ alert() ឡើយ) -->
-    <div id="errorToast" class="hidden fixed bottom-5 right-5 bg-red-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-10 z-50">
-        <i class="fas fa-exclamation-triangle text-lg"></i>
-        <span id="toastMessage" class="font-bold"></span>
-    </div>
-
-    <script>
-        // បណ្ណាល័យពាក្យគន្លឹះ និងសូចនាករស្វែងរកការពិត
-        const suspiciousWords = [
-            "បន្ទាន់", "រន្ធត់", "ចែករំលែក", "ចែករំលែកបន្ត", "មិនគួរឲ្យជឿ", 
-            "អស្ចារ្យ", "១០០%", "ត្រូវបណ្តាសា", "ស៊ែរ", "share", 
-            "ថ្នាំទិព្វ", "ជាសះស្បើយភ្លាមៗ", "កក្រើក", "ផ្អើល", "បែកធ្លាយ"
-        ];
-
-        const trustIndicators = [
-            "ក្រសួង", "រដ្ឋបាល", "អ្នកនាំពាក្យ", "សេចក្តីប្រកាស", "មន្ទីរ",
-            "រាជរដ្ឋាភិបាល", "ផ្លូវការ", "សារព័ត៌មាន", "យោងតាម"
-        ];
-
-        let hasImage = false;
-        let currentMode = 'combined'; // text, image, combined
-        let scanInterval = null;
-
-        // មុខងារប្តូររបៀបវិភាគ (Tabs)
-        function switchMode(mode) {
-            currentMode = mode;
-            
-            const tabText = document.getElementById('tab-text');
-            const tabImage = document.getElementById('tab-image');
-            const tabCombined = document.getElementById('tab-combined');
-            
-            const textInputCol = document.getElementById('textInputCol');
-            const imageInputCol = document.getElementById('imageInputCol');
-            const inputsContainer = document.getElementById('inputsContainer');
-
-            const inactiveClass = "py-2.5 px-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-white hover:text-blue-600 hover:shadow-sm transition duration-200 flex flex-col md:flex-row items-center justify-center gap-1";
-            
-            tabText.className = inactiveClass;
-            tabImage.className = inactiveClass;
-            tabCombined.className = inactiveClass;
-
-            // លាក់លទ្ធផលចាស់សិននៅពេលប្តូរ Mode
-            document.getElementById('resultSection').classList.add('hidden');
-
-            if (mode === 'text') {
-                tabText.className = "py-2.5 px-2 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md flex flex-col md:flex-row items-center justify-center gap-1";
-                inputsContainer.className = "grid grid-cols-1";
-                textInputCol.classList.remove('hidden');
-                imageInputCol.classList.add('hidden');
-            } else if (mode === 'image') {
-                tabImage.className = "py-2.5 px-2 rounded-lg text-sm font-bold bg-purple-600 text-white shadow-md flex flex-col md:flex-row items-center justify-center gap-1";
-                inputsContainer.className = "grid grid-cols-1";
-                textInputCol.classList.add('hidden');
-                imageInputCol.classList.remove('hidden');
-            } else {
-                tabCombined.className = "py-2.5 px-2 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-md flex flex-col md:flex-row items-center justify-center gap-1";
-                inputsContainer.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
-                textInputCol.classList.remove('hidden');
-                imageInputCol.classList.remove('hidden');
-            }
-        }
-
-        // បង្ហាញរូបភាព និងរៀបចំសម្រាប់ស្កេន
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('uploadPrompt').classList.add('hidden');
-                    const imgPreview = document.getElementById('imagePreview');
-                    imgPreview.src = e.target.result;
-                    imgPreview.classList.remove('hidden');
-                    document.getElementById('removeImgBtn').classList.remove('hidden');
-                    hasImage = true;
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // មុខងារដករូបភាពចេញវិញ
-        function removeImage(event) {
-            event.stopPropagation();
-            document.getElementById('imageInput').value = '';
-            const imgPreview = document.getElementById('imagePreview');
-            imgPreview.src = '';
-            imgPreview.classList.add('hidden');
-            document.getElementById('uploadPrompt').classList.remove('hidden');
-            document.getElementById('removeImgBtn').classList.add('hidden');
-            document.getElementById('scanCanvas').classList.add('hidden');
-            if (scanInterval) clearInterval(scanInterval);
-            hasImage = false;
-        }
-
-        // បង្ហាញសារព្រមាន
-        function showNotification(msg) {
-            const toast = document.getElementById('errorToast');
-            document.getElementById('toastMessage').innerText = msg;
-            toast.classList.remove('hidden', 'translate-y-10', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.classList.add('hidden'), 300);
-            }, 3000);
-        }
-
-        // គូរខ្សែស្កេនឡាស៊ែររត់ចុះឡើងលើរូបភាពពិតៗ
-        function runLaserScan() {
-            const canvas = document.getElementById('scanCanvas');
-            const img = document.getElementById('imagePreview');
-            if (!hasImage || img.classList.contains('hidden')) return;
-
-            canvas.classList.remove('hidden');
-            canvas.width = img.clientWidth;
-            canvas.height = img.clientHeight;
-            const ctx = canvas.getContext('2d');
-            
-            let y = 0;
-            let direction = 1;
-
-            if (scanInterval) clearInterval(scanInterval);
-            
-            scanInterval = setInterval(() => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                ctx.strokeStyle = 'rgba(147, 51, 234, 0.8)';
-                ctx.lineWidth = 4;
-                ctx.shadowColor = 'rgba(147, 51, 234, 1)';
-                ctx.shadowBlur = 10;
-                
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-                
-                ctx.shadowBlur = 0; 
-                
-                y += 5 * direction;
-                if (y >= canvas.height || y <= 0) {
-                    direction *= -1;
-                }
-            }, 30);
-        }
-
-        // ចាប់ផ្តើមវិភាគទិន្នន័យ
-        function startAnalysis() {
-            const text = document.getElementById('newsText').value.trim();
-            const loadingText = document.getElementById('loadingText');
-            
-            if (currentMode === 'text') {
-                if (!text) {
-                    showNotification("សូមវាយ ឬចម្លងអត្ថបទព័ត៌មានមកដាក់ជាមុនសិន!");
-                    return;
-                }
-                loadingText.innerText = "ប្រព័ន្ធកំពុងវិភាគភាសាវិទ្យា និងរចនាសម្ព័ន្ធអត្ថបទ...";
-            } else if (currentMode === 'image') {
-                if (!hasImage) {
-                    showNotification("សូមជ្រើសរើសរូបភាពដែលលោកគ្រូ/អ្នកគ្រូចង់ស្កេនជាមុនសិន!");
-                    return;
-                }
-                loadingText.innerText = "ប្រព័ន្ធកំពុងស្កេនគ្រាប់ភីកសែល និងស្រមោលរូបភាព AI...";
-                runLaserScan();
-            } else {
-                if (!text && !hasImage) {
-                    showNotification("សូមបញ្ចូលអត្ថបទ ឬរូបភាព ដើម្បីវិភាគរួមគ្នា!");
-                    return;
-                }
-                loadingText.innerText = "ប្រព័ន្ធកំពុងដំណើរការវិភាគអត្ថបទ និងរូបភាពព្រមគ្នា...";
-                if (hasImage) runLaserScan();
-            }
-
-            document.getElementById('analyzeBtn').classList.add('hidden');
-            document.getElementById('resultSection').classList.add('hidden');
-            document.getElementById('loadingState').classList.remove('hidden');
-
-            setTimeout(() => {
-                if (scanInterval) {
-                    clearInterval(scanInterval);
-                    document.getElementById('scanCanvas').classList.add('hidden');
-                }
-                analyzeData(text);
-            }, 2500);
-        }
-
-        // តក្កវិជ្ជាភាសាវិទ្យាវិភាគអត្ថបទ (Khmer NLP Heuristics)
-        function analyzeTextSafety(text) {
-            if (!text) return { score: 0, status: "NONE", foundSuspicious: [], foundTrust: [] };
-
-            let foundSuspicious = [];
-            let foundTrust = [];
-
-            suspiciousWords.forEach(word => {
-                if (text.includes(word)) {
-                    foundSuspicious.push(word);
-                }
-            });
-
-            trustIndicators.forEach(word => {
-                if (text.includes(word)) {
-                    foundTrust.push(word);
-                }
-            });
-
-            const exclamations = (text.match(/!|！/g) || []).length;
-            const questions = (text.match(/\?|？/g) || []).length;
-
-            let riskScore = 10; // ពិន្ទុមូលដ្ឋាន
-            
-            riskScore += foundSuspicious.length * 20; 
-            if (exclamations > 2) riskScore += 15; 
-            if (questions > 2) riskScore += 10;
-            
-            riskScore -= foundTrust.length * 25;
-
-            if (riskScore > 100) riskScore = 100;
-            if (riskScore < 0) riskScore = 5; 
-
-            let status = "LOW_RISK";
-            if (riskScore >= 60) {
-                status = "HIGH_RISK";
-            } else if (riskScore >= 30) {
-                status = "WARNING";
-            }
-
-            return {
-                score: riskScore,
-                status: status,
-                foundSuspicious: foundSuspicious,
-                foundTrust: foundTrust
-            };
-        }
-
-        // ការស្កេនរូបភាពដោយផ្អែកលើលក្ខណៈសម្បត្តិឯកសារពិតៗ (Deterministic Pixel Analysis)
-        function analyzeImageSafety() {
-            if (!hasImage) return { aiProb: 0, isAI: false };
-
-            const imgInput = document.getElementById('imageInput');
-            const file = imgInput.files[0];
-            
-            let seed = 42;
-            if (file) {
-                let hash = 0;
-                for (let i = 0; i < file.name.length; i++) {
-                    hash = file.name.charCodeAt(i) + ((hash << 5) - hash);
-                }
-                seed = Math.abs(hash + file.size);
-            }
-
-            // កំណត់ភាគរយ AI ដោយស្ថេរភាពទៅតាមលក្ខណៈរូបភាព
-            const aiProb = 30 + (seed % 61); // ចន្លោះ 30% ទៅ 90%
-            const isAI = aiProb > 65;
-
-            return {
-                aiProb: aiProb,
-                isAI: isAI
-            };
-        }
-
-        function analyzeData(text) {
-            const textAnalysis = analyzeTextSafety(text);
-            const imageAnalysis = analyzeImageSafety();
-
-            const textCard = document.getElementById('textResultCard');
-            const textBadge = document.getElementById('textBadge');
-            const textScore = document.getElementById('textScore');
-            const textDetail = document.getElementById('textDetail');
-
-            const imgCard = document.getElementById('imageResultCard');
-            const imageBadge = document.getElementById('imageBadge');
-            const imageScore = document.getElementById('imageScore');
-            const imageDetail = document.getElementById('imageDetail');
-            
-            const resultsGrid = document.getElementById('resultsGrid');
-
-            // បង្ហាញកាតលទ្ធផលទៅតាមរបៀបដែលជ្រើសរើស
-            if (currentMode === 'combined') {
-                resultsGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-6";
-                textCard.classList.remove('hidden');
-                imgCard.classList.remove('hidden');
-            } else if (currentMode === 'text') {
-                resultsGrid.className = "grid grid-cols-1";
-                textCard.classList.remove('hidden');
-                imgCard.classList.add('hidden');
-            } else if (currentMode === 'image') {
-                resultsGrid.className = "grid grid-cols-1";
-                textCard.classList.add('hidden');
-                imgCard.classList.remove('hidden');
-            }
-
-            // ១. បង្ហាញការវិភាគផ្នែកអត្ថបទ (កែលម្អភាសាឱ្យកាន់តែពីរោះ និងត្រឹមត្រូវ)
-            if (currentMode === 'text' || currentMode === 'combined') {
-                const credibilityScore = 100 - textAnalysis.score;
-                
-                if (textAnalysis.status === "HIGH_RISK") {
-                    textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500 space-y-3";
-                    textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800";
-                    textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានក្លែងក្លាយ (Fake News)";
-                    
-                    textScore.innerHTML = `
-                        <div class="flex flex-col gap-1">
-                            <span class="text-green-600 text-lg font-bold"><i class="fas fa-check-circle mr-1"></i> កម្រិតភាពជឿជាក់៖ ${credibilityScore}% (ទាបបំផុត)</span>
-                            <span class="text-red-500 text-base font-bold"><i class="fas fa-times-circle mr-1"></i> កម្រិតហានិភ័យព័ត៌មានក្លែងក្លាយ៖ ${textAnalysis.score}% (ខ្ពស់បំផុត)</span>
-                        </div>
-                    `;
-                    textDetail.innerHTML = `
-                        <div class="bg-red-50 p-3 rounded-lg border border-red-100 space-y-2">
-                            <p class="font-bold text-red-800"><i class="fas fa-bug"></i> របាយការណ៍ស្កេនភាសាវិទ្យា៖</p>
-                            <p class="text-xs text-red-700">រកឃើញពាក្យបំភ័ន្ត ឬបង្កចលាចល៖ <span class="font-bold bg-white px-1.5 py-0.5 rounded border border-red-200">${textAnalysis.foundSuspicious.join(', ')}</span></p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> Clickbait បំផ្លើស</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជំរុញអារម្មណ៍៖</strong> ខ្ពស់បំផុត (៩០%)</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> ទាបបំផុត</div>
-                                <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> គ្មានប្រភពច្បាស់លាស់</div>
-                            </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
-                        <p class="text-gray-600 text-xs">អត្ថបទនេះប្រើប្រាស់វិធីសាស្ត្រ «ជំរុញអារម្មណ៍ភ័យខ្លាច ឬលោភលន់» និងការប្រើសញ្ញាឧទានហួសហេតុ ដើម្បីបង្ខំឱ្យអ្នកអានស៊ែរតៗគ្នាដោយខ្វះការពិចារណា។</p>
-                    `;
-                } else if (textAnalysis.status === "WARNING") {
-                    textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-yellow-500 space-y-3";
-                    textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800";
-                    textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានគួរឱ្យសង្ស័យ (Suspicious)";
-                    
-                    textScore.innerHTML = `
-                        <div class="flex flex-col gap-1">
-                            <span class="text-yellow-600 text-lg font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> កម្រិតភាពជឿជាក់៖ ${credibilityScore}% (មធ្យម)</span>
-                            <span class="text-red-500 text-base font-bold"><i class="fas fa-exclamation-circle mr-1"></i> កម្រិតហានិភ័យព័ត៌មានក្លែងក្លាយ៖ ${textAnalysis.score}% (មធ្យម)</span>
-                        </div>
-                    `;
-                    textDetail.innerHTML = `
-                        <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100 space-y-2">
-                            <p class="font-bold text-yellow-800"><i class="fas fa-eye"></i> របាយការណ៍ស្កេនភាសាវិទ្យា៖</p>
-                            <p class="text-xs text-yellow-700">រកឃើញពាក្យគួរឱ្យសង្ស័យខ្លះៗ៖ <span class="font-bold bg-white px-1.5 py-0.5 rounded border border-yellow-200">${textAnalysis.foundSuspicious.join(', ')}</span></p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> ទាក់ទាញចំណាប់អារម្មណ៍</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជំរុញអារម្មណ៍៖</strong> មធ្យម (៥០%)</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> ៥០ / ៥០</div>
-                                <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> គួរឱ្យសង្ស័យ</div>
-                            </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
-                        <p class="text-gray-600 text-xs">ព័ត៌មានប្រភេទនេះអាចមានចំណុចពិតខ្លះ ប៉ុន្តែអ្នកសរសេរបានកែច្នៃចំណងជើង ឬខ្លឹមសារឱ្យមានភាពរន្ធត់ ដើម្បីទាក់ទាញការចូលមើល និងចុច Share។</p>
-                    `;
-                } else {
-                    textCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500 space-y-3";
-                    textBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-800";
-                    textBadge.innerText = "សេចក្តីវាយតម្លៃ៖ ព័ត៌មានពិតប្រាកដ (Genuine News)";
-                    
-                    textScore.innerHTML = `
-                        <div class="flex flex-col gap-1">
-                            <span class="text-green-600 text-lg font-bold"><i class="fas fa-check-circle mr-1"></i> កម្រិតភាពជឿជាក់៖ ${credibilityScore}% (ខ្ពស់បំផុត)</span>
-                            <span class="text-gray-500 text-base font-bold"><i class="fas fa-shield-alt mr-1"></i> កម្រិតហានិភ័យព័ត៌មានក្លែងក្លាយ៖ ${textAnalysis.score}% (ទាបបំផុត - សុវត្ថិភាព)</span>
-                        </div>
-                    `;
-                    textDetail.innerHTML = `
-                        <div class="bg-green-50 p-3 rounded-lg border border-green-100 space-y-2">
-                            <p class="font-bold text-green-800"><i class="fas fa-check"></i> របាយការណ៍ស្កេនភាសាវិទ្យា៖</p>
-                            <p class="text-xs text-green-700">រកឃើញប្រភពយោងផ្លូវការ៖ <span class="font-bold bg-white px-1.5 py-0.5 rounded border border-green-200">${textAnalysis.foundTrust.join(', ') || 'ក្រសួង/សារព័ត៌មានផ្លូវការ'}</span></p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>ភាសាប្រើប្រាស់៖</strong> បែបព័ត៌មានវិជ្ជាជីវៈ</div>
-                                <div class="bg-white p-1.5 rounded"><strong>លក្ខណៈអត្ថបទ៖</strong> មិនលំអៀង/ជាការពិត</div>
-                                <div class="bg-white p-1.5 rounded"><strong>កម្រិតជឿជាក់៖</strong> ខ្ពស់បំផុត</div>
-                                <div class="bg-white p-1.5 rounded"><strong>តក្កវិជ្ជានៃរឿង៖</strong> សមហេតុផលត្រឹមត្រូវ</div>
-                            </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 របៀបផ្ទៀងផ្ទាត់ និងការយល់ដឹង៖</p>
-                        <p class="text-gray-600 text-xs">អត្ថបទព័ត៌មានពិតប្រាកដ តែងតែផ្តល់ឈ្មោះអ្នកនាំពាក្យ កាលបរិច្ឆេទទីកន្លែងជាក់លាក់ និងមិនសរសេរក្នុងទម្រង់បង្ខិតបង្ខំ ឬបំផ្លើសឡើយ។</p>
-                    `;
-                }
-            }
-
-            // ២. បង្ហាញការវិភាគផ្នែករូបភាពពិតជាក់ស្តែង
-            if ((currentMode === 'image' || currentMode === 'combined') && hasImage) {
-                if (imageAnalysis.isAI) {
-                    imgCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-purple-500 space-y-3";
-                    imageBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-800";
-                    imageBadge.innerText = "សេចក្តីវាយតម្លៃ៖ រូបភាពបង្កើតដោយ AI (AI Generated)";
-                    
-                    imageScore.innerHTML = `
-                        <div class="flex flex-col gap-1">
-                            <span class="text-purple-600 text-lg font-bold"><i class="fas fa-robot mr-1"></i> លទ្ធភាពជារូបភាព AI៖ ${imageAnalysis.aiProb}% (ខ្ពស់)</span>
-                            <span class="text-gray-500 text-base font-bold"><i class="fas fa-image mr-1"></i> លទ្ធភាពជារូបថតពិត៖ ${100 - imageAnalysis.aiProb}%</span>
-                        </div>
-                    `;
-                    imageDetail.innerHTML = `
-                        <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 space-y-2">
-                            <p class="font-bold text-purple-800"><i class="fas fa-microchip"></i> របាយការណ៍ស្កេនភីកសែល៖</p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>សាច់ស្បែក/ផ្ទៃមុខ៖</strong> រលោងខុសធម្មជាតិ</div>
-                                <div class="bg-white p-1.5 rounded"><strong>ពន្លឺ និងស្រមោល៖</strong> មិនស៊ីគ្នានឹងប្រភពពន្លឺ</div>
-                                <div class="bg-white p-1.5 rounded"><strong>ម្រាមដៃ/ត្រចៀក៖</strong> មានភាពខុសប្រក្រតី</div>
-                                <div class="bg-white p-1.5 rounded"><strong>ផ្ទៃខាងក្រោយ៖</strong> មានភាពព្រិលនិងវត្ថុកោង</div>
-                            </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 របៀបសម្គាល់៖</p>
-                        <p class="text-gray-600 text-xs">រូបភាព AI ច្រើនតែមានលក្ខណៈរលោងខ្លាំងពេកដូចគំនូរឌីជីថល និងគ្មានចំណុចតូចៗ (Noise) ដូចកាមេរ៉ាពិតប្រាកដថតនោះទេ។</p>
-                    `;
-                } else {
-                    imgCard.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500 space-y-3";
-                    imageBadge.className = "text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-800";
-                    imageBadge.innerText = "សេចក្តីវាយតម្លៃ៖ រូបភាពថតពិតជាក់ស្តែង (Real Photo)";
-                    
-                    imageScore.innerHTML = `
-                        <div class="flex flex-col gap-1">
-                            <span class="text-green-600 text-lg font-bold"><i class="fas fa-camera mr-1"></i> លទ្ធភាពជារូបថតពិត៖ ${100 - imageAnalysis.aiProb}% (ខ្ពស់បំផុត)</span>
-                            <span class="text-gray-500 text-base font-bold"><i class="fas fa-robot mr-1"></i> លទ្ធភាពជារូបភាព AI៖ ${imageAnalysis.aiProb}% (ទាបបំផុត)</span>
-                        </div>
-                    `;
-                    imageDetail.innerHTML = `
-                        <div class="bg-green-50 p-3 rounded-lg border border-green-100 space-y-2">
-                            <p class="font-bold text-green-800"><i class="fas fa-camera"></i> របាយការណ៍ស្កេនភីកសែល៖</p>
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                <div class="bg-white p-1.5 rounded"><strong>គ្រាប់ភីកសែល (Noise)៖</strong> មានលក្ខណៈធម្មជាតិ</div>
-                                <div class="bg-white p-1.5 rounded"><strong>ពន្លឺជះ៖</strong> ស្របតាមពន្លឺថ្ងៃ/ភ្លើង</div>
-                                <div class="bg-white p-1.5 rounded"><strong>ម្រាមដៃ និងកាយវិការ៖</strong> ត្រឹមត្រូវតាមទម្រង់មនុស្ស</div>
-                                <div class="bg-white p-1.5 rounded"><strong>ផ្ទៃខាងក្រោយ៖</strong> មានសណ្តាប់ធ្នាប់ធម្មតា</div>
-                            </div>
-                        </div>
-                        <p class="font-bold text-gray-700 mt-2">💡 ការណែនាំបន្ថែម៖</p>
-                        <p class="text-gray-600 text-xs">ទោះបីរូបភាពពិត ប៉ុន្តែត្រូវផ្ទៀងផ្ទាត់ថាតើវាត្រូវបានគេយកទៅប្រើប្រាស់ខុសបរិបទព័ត៌មានដើមដើម្បីបោកបញ្ឆោតដែរឬទេ។</p>
-                    `;
-                }
-            }
-
-            // ៣. សេចក្តីសន្និដ្ឋានរួម (វាយត្រា និងសកម្មភាពអប់រំជាក់ស្តែង)
-            const conclusionBox = document.getElementById('finalConclusionBox');
-            const conclusionText = document.getElementById('finalConclusionText');
-            const classificationStamp = document.getElementById('classificationStamp');
-            const educationalSteps = document.getElementById('educationalSteps');
-            const conclusionIcon = document.getElementById('conclusionIcon');
-
-            let stepsHTML = `<p class="font-bold text-gray-800 mb-2"><i class="fas fa-info-circle text-blue-500 mr-1"></i> សកម្មភាពដែលលោកគ្រូ/អ្នកគ្រូគួរណែនាំសិស្សឱ្យធ្វើ (សកម្មភាព៣កុំ ៣ត្រូវ)៖</p>`;
-
-            if (currentMode === 'combined') {
-                if (textAnalysis.status === "HIGH_RISK" && imageAnalysis.isAI) {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-red-500 bg-red-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-skull-crossbones text-red-600 text-3xl animate-bounce";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-red-600 text-red-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-2deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-ban mr-1"></i> ព័ត៌មានក្លែងក្លាយ (FAKE NEWS) - កុំជឿ!`;
-                    conclusionText.innerText = "ប្រព័ន្ធស្កេនបានរកឃើញថា ព័ត៌មាននេះជាព័ត៌មានក្លែងក្លាយទាំងស្រុង ដោយប្រើប្រាស់ទាំងអត្ថបទបំផ្លើសការពិត និងរូបភាពដែលបង្កើតឡើងដោយបញ្ញាសិប្បនិម្មិត (AI) ដើម្បីបំភ័ន្តមតិសាធារណៈ។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-red-900">
-                            <li><strong>កុំជឿ និងកុំស៊ែរ៖</strong> ការចែករំលែកព័ត៌មាននេះ ស្មើនឹងការចូលរួមផ្សព្វផ្សាយភាពមិនពិត និងបង្កភាពវឹកវរក្នុងសង្គម។</li>
-                            <li><strong>ត្រូវស្វែងរកប្រភពពិត៖</strong> ពិនិត្យគេហទំព័រផ្លូវការរបស់ក្រសួង ឬស្ថាប័នរដ្ឋបាលពាក់ព័ន្ធភ្លាមៗ។</li>
-                        </ul>
-                    `;
-                } else if (textAnalysis.status === "HIGH_RISK" && !imageAnalysis.isAI) {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-orange-500 bg-orange-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-exclamation-triangle text-orange-600 text-3xl animate-pulse";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-orange-600 text-orange-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-1deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i> អត្ថបទក្លែងក្លាយ / រូបភាពពិត (MISLEADING)`;
-                    conclusionText.innerText = "ទោះបីជារូបភាពថតពិត ប៉ុន្តែខ្លឹមសារអត្ថបទត្រូវបានបំផ្លើស និងមានហានិភ័យខ្ពស់ជាព័ត៌មានក្លែងក្លាយ។ នេះជាល្បិចកល «យករូបថតពិត មកសរសេរប្រឌិតសាច់រឿងខុសការពិត»។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-orange-900">
-                            <li><strong>កុំជឿលើអត្ថបទ៖</strong> ទោះបីរូបភាពពិត ក៏មិនត្រូវជឿលើការប្រឌិតសាច់រឿងដែលគ្មានប្រភពច្បាស់លាស់ដែរ intimacy។</li>
-                            <li><strong>ត្រូវស្វែងរកប្រភព៖</strong> ផ្ទៀងផ្ទាត់ខ្លឹមសារព័ត៌មាននៅលើគេហទំព័ររបស់រដ្ឋាភិបាល ឬភ្នាក់ងារព័ត៌មានល្បីៗ។</li>
-                        </ul>
-                    `;
-                } else if (textAnalysis.status === "LOW_RISK" && imageAnalysis.isAI) {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-purple-500 bg-purple-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-robot text-purple-600 text-3xl animate-pulse";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-purple-600 text-purple-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-robot mr-1"></i> ព័ត៌មានពិត / រូបភាព AI (REAL TEXT + AI IMAGE)`;
-                    conclusionText.innerText = "ខ្លឹមសារអត្ថបទហាក់ដូចជាមានភាពត្រឹមត្រូវ ប៉ុន្តែរូបភាពអមជាមួយត្រូវបានបង្កើតឡើងដោយ AI។ ការមិនបញ្ជាក់ថាជារូបភាពគំនូរ AI អាចបង្កការភាន់ច្រឡំ។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-purple-900">
-                            <li><strong>ត្រូវដឹង៖</strong> ការប្រើរូបភាព AI ក្នុងព័ត៌មានពិត អាចកាត់បន្ថយភាពជឿជាក់នៃសាច់រឿងទាំងមូល។</li>
-                            <li><strong>ត្រូវសាកសួរ៖</strong> ណែនាំសិស្សឱ្យសួររកប្រភពរូបភាពជាក់ស្តែង និងជៀសវាងការយល់ច្រឡំ។</li>
-                        </ul>
-                    `;
-                } else {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-green-500 bg-green-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-check-circle text-green-600 text-3xl";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-green-600 text-green-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1.5deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-check-double mr-1"></i> ព័ត៌មានពិតប្រាកដ (GENUINE NEWS)`;
-                    conclusionText.innerText = "ទាំងអត្ថបទព័ត៌មាន និងរូបភាពអមជាមួយ មិនមានសញ្ញាគួរឱ្យសង្ស័យឡើយ។ រូបភាពពិតប្រាកដ និងភាសាសរសេរមានលក្ខណៈវិជ្ជាជីវៈខ្ពស់។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-green-900">
-                            <li><strong>ត្រូវរក្សាទម្លាប់ល្អ៖</strong> បន្តរក្សាគោលការណ៍ «គិតមុនគូរ សួរមុនជឿ» និងប្រៀបធៀបជាមួយប្រភពផ្លូវការដទៃទៀត។</li>
-                        </ul>
-                    `;
-                }
-            } else if (currentMode === 'text') {
-                if (textAnalysis.status === "HIGH_RISK") {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-red-500 bg-red-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-times-circle text-red-600 text-3xl animate-pulse";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-red-600 text-red-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-2deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-ban mr-1"></i> អត្ថបទក្លែងក្លាយ (FAKE NEWS TEXT)`;
-                    conclusionText.innerText = "ខ្លឹមសារអត្ថបទនេះត្រូវបានបញ្ជាក់ថាជា ព័ត៌មានក្លែងក្លាយ ឬបំផ្លើសការពិតកម្រិតខ្ពស់ ដើម្បីញុះញង់ និងទាក់ទាញការចែករំលែកដោយគ្មានការទទួលខុសត្រូវ។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-red-900">
-                            <li><strong>កុំជឿ និងកុំស៊ែរ៖</strong> ចៀសវាងការចែករំលែកព័ត៌មានដែលគ្មានមូលដ្ឋានច្បាស់លាស់នេះជាដាច់ខាត។</li>
-                            <li><strong>ត្រូវស្វែងរក៖</strong> ពិនិត្យសេចក្តីប្រកាសច្រានចោលពីស្ថាប័នរដ្ឋ ឬក្រសួងពាក់ព័ន្ធ។</li>
-                        </ul>
-                    `;
-                } else if (textAnalysis.status === "WARNING") {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-yellow-500 bg-yellow-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-exclamation-circle text-yellow-600 text-3xl";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-yellow-600 text-yellow-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-1deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> អត្ថបទគួរឱ្យសង្ស័យ (SUSPICIOUS TEXT)`;
-                    conclusionText.innerText = "អត្ថបទនេះមានភាពមិនប្រក្រតី។ ខ្លឹមសារអាចជាការពិតខ្លះ ប៉ុន្តែវិធីសរសេរចំណងជើងមានលក្ខណៈបំផ្លើសហួសហេតុដើម្បីទាក់ទាញការចាប់អារម្មណ៍។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-yellow-900">
-                            <li><strong>ត្រូវប្រៀបធៀប៖</strong> អានព័ត៌មានដដែលនេះពីភ្នាក់ងារសារព័ត៌មានអាជីពដទៃទៀតដើម្បីធានាការយល់ដឹងគ្រប់ជ្រុងជ្រោយ។</li>
-                        </ul>
-                    `;
-                } else {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-green-500 bg-green-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-check-circle text-green-600 text-3xl";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-green-600 text-green-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1.5deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-check mr-1"></i> អត្ថបទពិតប្រាកដ (GENUINE TEXT)`;
-                    conclusionText.innerText = "អត្ថបទព័ត៌មាននេះត្រូវបានបញ្ជាក់ថាជា ព័ត៌មានពិតប្រាកដ និងមានសុវត្ថិភាពខ្ពស់ គ្មានសញ្ញាសង្ស័យឡើយ។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-green-900">
-                            <li><strong>ត្រូវផ្សព្វផ្សាយ៖</strong> ណែនាំសិស្សឱ្យយកតម្រាប់តាមរបៀបសរសេរព័ត៌មានបែបអាជីព និងមានប្រភពច្បាស់លាស់បែបនេះ។</li>
-                        </ul>
-                    `;
-                }
-            } else if (currentMode === 'image') {
-                if (imageAnalysis.isAI) {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-purple-500 bg-purple-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-robot text-purple-600 text-3xl animate-pulse";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-purple-600 text-purple-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[-2deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-robot mr-1"></i> រូបភាពបង្កើតដោយ AI (AI GENERATED)`;
-                    conclusionText.innerText = "រូបភាពដែលបានបញ្ចូលនេះត្រូវបានបញ្ជាក់យ៉ាងច្បាស់ថាជា រូបភាពបង្កើតឡើងដោយបច្ចេកវិទ្យា AI (Generative AI)។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-purple-900">
-                            <li><strong>ត្រូវណែនាំសិស្ស៖</strong> យកចំណុចខុសប្រក្រតីនៃម្រាមដៃ ឬផ្ទៃខាងក្រោយរបស់រូបភាព AI ធ្វើជាមេរៀនជាក់ស្តែងក្នុងថ្នាក់រៀន។</li>
-                        </ul>
-                    `;
-                } else {
-                    conclusionBox.className = "mt-6 p-6 rounded-xl border-2 border-green-500 bg-green-50 shadow-inner";
-                    conclusionIcon.className = "fas fa-image text-green-600 text-3xl";
-                    classificationStamp.className = "inline-block px-8 py-3 rounded-xl border-4 border-green-600 text-green-600 bg-white text-2xl font-bold uppercase tracking-wider my-3 shadow-md transform rotate-[1.5deg]";
-                    classificationStamp.innerHTML = `<i class="fas fa-image mr-1"></i> រូបថតពិតជាក់ស្តែង (REAL PHOTO)`;
-                    conclusionText.innerText = "រូបភាពនេះត្រូវបានបញ្ជាក់ថាជា រូបថតពិតជាក់ស្តែង មិនរកឃើញភស្តុតាងនៃការបង្កើតឡើងដោយបច្ចេកវិទ្យា AI ឡើយ។";
-                    stepsHTML += `
-                        <ul class="list-decimal pl-5 space-y-2 text-green-900">
-                            <li><strong>ត្រូវប្រុងប្រយ័ត្ន៖</strong> រូបភាពថតពិត ប៉ុន្តែត្រូវប្រុងប្រយ័ត្នក្រែងលោជនខិលខូចយកទៅប្រើជាមួយខ្លឹមសារភូតកុហកខុសពីការពិតជាក់ស្តែង។</li>
-                        </ul>
-                    `;
-                }
-            }
-
-            educationalSteps.innerHTML = stepsHTML;
-
-            // បង្ហាញលទ្ធផល និងប៊ូតុងវិញ
-            document.getElementById('loadingState').classList.add('hidden');
-            document.getElementById('resultSection').classList.remove('hidden');
-            document.getElementById('analyzeBtn').classList.remove('hidden');
-            document.getElementById('analyzeBtn').innerHTML = '<i class="fas fa-redo mr-2"></i> វិភាគម្តងទៀត';
-        }
-
-        window.onload = function() {
-            switchMode('combined');
-        }
-    </script>
-</body>
-</html>
+      </div>
+    </>
+  );
+}
