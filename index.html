@@ -138,7 +138,7 @@
                         <p class="text-sm md:text-base text-slate-500 mt-3 max-w-[400px] leading-relaxed">ប្រព័ន្ធកំពុងស្វែងរកទិន្នន័យ ផ្ទៀងផ្ទាត់ប្រភពដើម វិភាគលំនាំភាសា និងវាយតម្លៃរចនាសម្ព័ន្ធតក្កវិទ្យាដោយប្រើបញ្ញាសិប្បនិម្មិតកម្រិតខ្ពស់។</p>
                     </div>
 
-                    <!-- Real Result Panel (Highly detailed, Larger Text) -->
+                    <!-- Real Result Panel -->
                     <div id="text-result" class="hidden bg-white p-8 rounded-3xl shadow-md border border-slate-100 flex flex-col gap-6">
                         <div class="flex items-center justify-between border-b-2 border-slate-100 pb-5 flex-wrap gap-4">
                             <h3 class="font-bold text-slate-900 text-xl md:text-2xl">លទ្ធផលនៃការវិភាគស៊ីជម្រៅ</h3>
@@ -289,7 +289,7 @@
                         <p class="text-sm md:text-base text-slate-500 mt-3 max-w-[400px] leading-relaxed">ប្រព័ន្ធកំពុងស្វែងរកចំណុចមិនប្រក្រតីដូចជា ទម្រង់ម្រាមដៃ ផ្ទៃស្បែកលោងខុសធម្មជាតិ ការបំភ័ន្តពន្លឺ ស្រមោល និងទម្រង់អក្សរផ្ទៃខាងក្រោយដែលត្រូវបានបង្កើតឡើងដោយ AI។</p>
                     </div>
 
-                    <!-- Real Result Panel (Highly detailed, Larger Text) -->
+                    <!-- Real Result Panel -->
                     <div id="image-result" class="hidden bg-white p-8 rounded-3xl shadow-md border border-slate-100 flex flex-col gap-6">
                         <div class="flex items-center justify-between border-b-2 border-slate-100 pb-5 flex-wrap gap-4">
                             <h3 class="font-bold text-slate-900 text-xl md:text-2xl">លទ្ធផលនៃការវិភាគរូបភាព</h3>
@@ -461,6 +461,7 @@
             container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
+        // Close Alert
         function closeAlert() {
             document.getElementById('alert-container').classList.add('hidden');
         }
