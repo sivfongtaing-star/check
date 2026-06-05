@@ -144,7 +144,7 @@
                 document.getElementById('tab-image-btn').classList.remove('text-gray-500', 'border-transparent');
             }
         }
-const apiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U"
+
         function previewImage(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -306,74 +306,6 @@ const apiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U"
             return formatted;
         }
 
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="km">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធត្រួតពិនិត្យព័ត៌មាន</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-4 min-h-screen flex items-center justify-center">
-    <div id="root" class="w-full max-w-lg bg-white p-6 rounded-2xl shadow-xl">
-        <h1 class="text-2xl font-bold mb-6 text-center text-blue-700">ប្រព័ន្ធត្រួតពិនិត្យព័ត៌មាន</h1>
-        
-        <textarea id="inputText" class="w-full h-32 p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 outline-none" placeholder="បញ្ចូលអត្ថបទព័ត៌មានដែលសង្ស័យនៅទីនេះ..."></textarea>
-        
-        <button onclick="analyze()" id="analyzeBtn" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all">
-            ចាប់ផ្តើមវិភាគការពិត
-        </button>
-
-        <div id="result" class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl hidden">
-            <div id="status" class="text-sm text-gray-600 mb-2 font-medium"></div>
-            <div id="output"></div>
-        </div>
-    </div>
-
-    <script>
-        async function analyze() {
-            const text = document.getElementById('inputText').value;
-            const resDiv = document.getElementById('result');
-            const status = document.getElementById('status');
-            const output = document.getElementById('output');
-            const btn = document.getElementById('analyzeBtn');
-
-            if(!text.trim()) return alert("សូមបញ្ចូលអត្ថបទជាមុនសិន!");
-            
-            resDiv.classList.remove('hidden');
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-
-            // ក្លែងធ្វើដំណើរការវិភាគ
-            status.innerText = "កំពុងតភ្ជាប់ទៅកាន់ប្រព័ន្ធ Fact-Check...";
-            await new Promise(r => setTimeout(r, 1500));
-            
-            status.innerText = "កំពុងវិភាគតក្កវិជ្ជា និងប្រភពព័ត៌មាន...";
-            await new Promise(r => setTimeout(r, 1500));
-            
-            const isFake = text.includes('សៀម') || text.includes('ផែនទី') || text.length < 10;
-            
-            status.innerText = "លទ្ធផលវិភាគ៖";
-            output.innerHTML = isFake ? 
-                `<div class="text-red-600">
-                    <p class="font-bold text-lg">⚠️ ព័ត៌មាននេះមានសញ្ញាណប្រឌិត!</p>
-                    <ul class="list-disc pl-5 mt-2 text-sm">
-                        <li>មិនមានប្រភពយោងផ្លូវការ។</li>
-                        <li>អត្ថបទមានលក្ខណៈបំផ្លើសខ្លាំង។</li>
-                        <li>មិនមានចុះផ្សាយលើសារព័ត៌មានធំៗ។</li>
-                    </ul>
-                </div>` : 
-                `<div class="text-green-600">
-                    <p class="font-bold text-lg">✅ ព័ត៌មាននេះហាក់ដូចជាពិត។</p>
-                    <p class="text-sm mt-2">ប្រព័ន្ធរកឃើញការយោងពីប្រភពជាច្រើនស្របគ្នា។</p>
-                </div>`;
-            
-            btn.disabled = false;
-            btn.classList.remove('opacity-50');
-        }
     </script>
 </body>
 </html>
