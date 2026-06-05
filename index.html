@@ -116,11 +116,12 @@
 
     <script>
         // --- API Configuration ---
-        const apiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U"; 
+        // លោកគ្រូអាចរក្សាទុក API Key របស់លោកគ្រូនៅចន្លោះសញ្ញាសម្រង់ "" ខាងក្រោមនេះ៖
+        const apiKey = ""; 
         
-        // មុខងារទាញយក API URL
+        // ប្រើប្រាស់ Model ជំនាន់ផ្លូវការ និងមានស្ថេរភាព (Stable Version) របស់ Gemini
         function getModelUrl() {
-            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
         }
 
         let currentBase64Image = null;
@@ -201,7 +202,8 @@
                     
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({}));
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        const statusText = errorData.error?.message || response.statusText;
+                        throw new Error(`HTTP error! status: ${response.status} (${statusText})`);
                     }
                     return await response.json();
                 } catch (error) {
@@ -217,16 +219,11 @@
             
             if (error.message.includes('403') || error.message.includes('400')) {
                 errorMsg += `<div class="mt-4 p-4 bg-red-50 rounded border border-red-200 text-gray-800">
-                    <p class="font-bold mb-2">ដំណោះស្រាយសម្រាប់បញ្ហា 403 (បាត់បង់សិទ្ធិ API Key)៖</p>
+                    <p class="font-bold mb-2">ដំណោះស្រាយបច្ចេកទេស៖</p>
                     <ul class="list-decimal ml-5 space-y-2">
-                        <li>ប្រសិនបើលោកគ្រូកំពុងប្រើវានៅលើគេហទំព័រនេះ (Canvas) ដោយផ្ទាល់ សូមសាកល្បងចុច <strong>Refresh (F5)</strong> ទំព័រនេះម្តងទៀត។</li>
-                        <li>ប្រសិនបើលោកគ្រូបាន <strong>Download</strong> ឯកសារ HTML នេះទៅប្រើនៅលើកុំព្យូទ័រ៖
-                            <ul class="list-disc ml-5 mt-1 text-sm text-gray-600">
-                                <li>សូមបើកឯកសារនេះដោយប្រើកម្មវិធី Notepad </li>
-                                <li>ស្វែងរកបន្ទាត់កូដទី 144 ដែលសរសេរថា <code>const apiKey = "";</code></li>
-                                <li>សូមយក API Key របស់លោកគ្រូមកដាក់នៅចន្លោះសញ្ញា "" នោះ រួច Save។</li>
-                            </ul>
-                        </li>
+                        <li><strong>ពិនិត្យមើល API Key៖</strong> សូមប្រាកដថា API Key របស់លោកគ្រូដែលបានចម្លងមកដាក់នៅត្រង់ <code>const apiKey = "...";</code> គឺត្រឹមត្រូវ និងគ្មានចន្លោះទទេ (Space) នៅខាងដើម ឬខាងចុង។</li>
+                        <li><strong>ការប្រើប្រាស់នៅលើ Canvas៖</strong> ប្រសិនបើលោកគ្រូប្រើប្រាស់ផ្ទាល់នៅលើ Canvas នេះ មិនបាច់បំពេញ API Key ឡើយ (ទុកចោល "") ព្រោះប្រព័ន្ធនឹងបំពេញដោយស្វ័យប្រវត្តិ។</li>
+                        <li><strong>ការប្រើប្រាស់នៅលើកុំព្យូទ័រ (Local)៖</strong> ប្រសិនបើលោកគ្រូទាញយកឯកសារនេះទៅប្រើ សូមប្រាកដថាបានបង្កើត API Key ថ្មីពី <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold">Google AI Studio</a>។</li>
                     </ul>
                 </div>`;
             } else {
@@ -261,13 +258,18 @@
 ៣. ចំណុចគួរឱ្យសង្ស័យនៅក្នុងអត្ថបទ (ឧទាហរណ៍៖ ការប្រើពាក្យរំជួលចិត្តខ្លាំង, គ្មានប្រភពច្បាស់លាស់, តំណភ្ជាប់ខុសប្រក្រតី)
 ៤. ដំបូន្មានសម្រាប់អ្នកអាន`;
 
+            // រៀបចំ Payload តាមទម្រង់ត្រឹមត្រូវបំផុតសម្រាប់ Gemini API stable version
             const payload = {
-                contents: [{ parts: [{ text: textInput }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] }
+                contents: [{ 
+                    role: "user",
+                    parts: [{ text: textInput }] 
+                }],
+                systemInstruction: { 
+                    parts: [{ text: systemPrompt }] 
+                }
             };
 
             try {
-                // ហៅទៅយក URL 
                 const url = getModelUrl();
                 const data = await callGeminiAPI(url, payload);
                 const answerText = data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនមានទិន្នន័យឆ្លើយតប។";
@@ -299,6 +301,7 @@
 ២. កំហុស ឬចំណុចដែលបញ្ជាក់ថាជា AI (ឧ. ម្រាមដៃ ខុសទម្រង់ធម្មជាតិ, ពន្លឺស្រមោលប្លែកៗ, ផ្ទៃខាងក្រោយរញ៉េរញ៉ៃ, អក្សរមិនច្បាស់លាស់) បើមាន។
 ៣. កម្រិតភាគរយនៃការជឿជាក់របស់អ្នកលើការសន្និដ្ឋាននេះ។`;
 
+            // រៀបចំ Payload គាំទ្ររូបភាពសម្រាប់ Gemini 2.5 Flash API stable version
             const payload = {
                 contents: [{
                     role: "user",
@@ -310,7 +313,6 @@
             };
 
             try {
-                // ហៅទៅយក URL
                 const url = getModelUrl();
                 const data = await callGeminiAPI(url, payload);
                 const answerText = data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនមានទិន្នន័យឆ្លើយតប។";
@@ -325,7 +327,7 @@
             }
         }
 
-        // Helper function to make the markdown-like text from Gemini look slightly better in HTML
+        // Helper function to format response
         function formatOutput(text) {
             // បំបាត់សញ្ញា ### ឬ ## ឬ # ហើយប្តូរវាទៅជាអក្សរដិត (Bold)
             let formatted = text.replace(/^#+\s*(.*)/gm, '<strong class="text-blue-800 text-lg block mt-3 mb-1">$1</strong>');
