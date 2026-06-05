@@ -49,14 +49,6 @@
             <p class="text-blue-100">ឧបករណ៍ជំនួយសម្រាប់គ្រូបង្រៀន និងសិស្សានុសិស្សក្នុងការត្រួតពិនិត្យភាពត្រឹមត្រូវនៃទិន្នន័យ</p>
         </div>
 
-        <!-- API Key Settings -->
-        <div class="bg-blue-50 border-b border-blue-100 p-4 text-sm flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="text-blue-800 text-center md:text-left">
-                <strong>បញ្ជាក់៖</strong> ប្រសិនបើជួបបញ្ហា Error 403 សូមបញ្ចូល <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline text-blue-600 hover:text-blue-800">API Key ផ្ទាល់ខ្លួន</a> នៅទីនេះ។
-            </div>
-            <input type="password" id="api-key-input" placeholder="Google Gemini API Key..." class="px-3 py-2 border border-blue-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64 shadow-sm">
-        </div>
-
         <!-- Tabs Navigation -->
         <div class="flex border-b border-gray-200">
             <button id="tab-text-btn" onclick="switchTab('text')" class="flex-1 py-4 px-6 text-center font-bold text-blue-600 border-b-4 border-blue-600 hover:bg-gray-50 transition-colors">
@@ -126,11 +118,9 @@
         // --- API Configuration ---
         const apiKey = ""; // Execution environment injects this automatically
         
-        // មុខងារទាញយក API URL (វាអាចប្រើ Key ដែលបញ្ចូលថ្មី ឬ Key របស់ប្រព័ន្ធ)
+        // មុខងារទាញយក API URL
         function getModelUrl() {
-            const customKey = document.getElementById('api-key-input').value.trim();
-            const activeKey = customKey || apiKey;
-            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`;
+            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         }
 
         let currentBase64Image = null;
@@ -252,7 +242,7 @@
             };
 
             try {
-                // ហៅទៅយក URL ដែលមានភ្ជាប់ API Key
+                // ហៅទៅយក URL 
                 const url = getModelUrl();
                 const data = await callGeminiAPI(url, payload);
                 const answerText = data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនមានទិន្នន័យឆ្លើយតប។";
@@ -260,7 +250,7 @@
                 resultContent.innerHTML = formatOutput(answerText);
                 resultContainer.classList.remove('hidden');
             } catch (error) {
-                resultContent.innerHTML = `<span class="text-red-500 font-bold">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}។ សូមបញ្ចូល API Key ផ្ទាល់ខ្លួននៅផ្នែកខាងលើ ហើយព្យាយាមម្តងទៀត។</span>`;
+                resultContent.innerHTML = `<span class="text-red-500 font-bold">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}។ សូមព្យាយាមម្តងទៀត។</span>`;
                 resultContainer.classList.remove('hidden');
             } finally {
                 setLoadingState('btn-analyze-text', false);
@@ -295,7 +285,7 @@
             };
 
             try {
-                // ហៅទៅយក URL ដែលមានភ្ជាប់ API Key
+                // ហៅទៅយក URL
                 const url = getModelUrl();
                 const data = await callGeminiAPI(url, payload);
                 const answerText = data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនមានទិន្នន័យឆ្លើយតប។";
@@ -303,7 +293,7 @@
                 resultContent.innerHTML = formatOutput(answerText);
                 resultContainer.classList.remove('hidden');
             } catch (error) {
-                resultContent.innerHTML = `<span class="text-red-500 font-bold">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}។ សូមបញ្ចូល API Key ផ្ទាល់ខ្លួននៅផ្នែកខាងលើ ហើយព្យាយាមម្តងទៀត។</span>`;
+                resultContent.innerHTML = `<span class="text-red-500 font-bold">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}។ សូមព្យាយាមម្តងទៀត។</span>`;
                 resultContainer.classList.remove('hidden');
             } finally {
                 setLoadingState('btn-analyze-image', false);
