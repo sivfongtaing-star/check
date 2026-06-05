@@ -84,7 +84,7 @@
             <!-- Tab 2: Image Analysis -->
             <div id="tab-image" class="tab-content">
                 <h2 class="text-xl font-bold mb-4">បញ្ចូលរូបភាពដើម្បីវិភាគ</h2>
-                <p class="text-gray-600 mb-4 text-sm">សូមជ្រើសរើសរូបភាពមួយ ប្រព័ន្ធនឹងប្រើប្រាស់បច្ចេកវិទ្យា AI ដើម្បីស្វែងរកកំហុស (Artifacts) ដែលបញ្ជាក់ថាវាជារូបភាពបង្កើតដោយកុំព្យូទ័រ។</p>
+                <p class="text-gray-600 mb-4 text-sm">សូមជ្រើសរើសរូបភាពមួយ ប្រព័ន្ធនឹងប្រើប្រាស់បច្គេកវិទ្យា AI ដើម្បីស្វែងរកកំហុស (Artifacts) ដែលបញ្ជាក់ថាវាជារូបភាពបង្កើតដោយកុំព្យូទ័រ។</p>
 
                 <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer relative" onclick="document.getElementById('image-input').click()">
                     <input type="file" id="image-input" accept="image/*" class="hidden" onchange="previewImage(event)">
@@ -116,12 +116,21 @@
 
     <script>
         // --- API Configuration ---
-        // លោកគ្រូអាចរក្សាទុក API Key របស់លោកគ្រូនៅចន្លោះសញ្ញាសម្រង់ "localApiKey" ខាងក្រោមនេះ៖
-       localApiKey = "localApiKey"; 
+        // លោកគ្រូអាចរក្សាទុក ApiKey របស់លោកគ្រូនៅចន្លោះសញ្ញាសម្រង់ "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U" ខាងក្រោមនេះ៖
+        const localApiKey = ""; 
         
         // ប្រើប្រាស់ Model ជំនាន់ផ្លូវការ និងមានស្ថេរភាព (Stable Version) របស់ Gemini
         function getModelUrl() {
-            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            // ការពារករណី apiKey របស់ប្រព័ន្ធ Canvas មិនទាន់ត្រូវបានប្រកាស (undefined)
+            let activeKey = "";
+            
+            if (localApiKey && localApiKey.trim() !== "") {
+                activeKey = localApiKey;
+            } else if (typeof apiKey !== 'undefined' && apiKey) {
+                activeKey = apiKey;
+            }
+            
+            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
         }
 
         let currentBase64Image = null;
@@ -217,13 +226,16 @@
         function handleErrorDisplay(error, elementId) {
             let errorMsg = `<strong class="text-red-600 text-lg">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}</strong>`;
             
-            if (error.message.includes('403') || error.message.includes('400')) {
-                errorMsg += `<div class="mt-4 p-4 bg-red-50 rounded border border-red-200 text-gray-800">
+            if (error.message.includes('403') || error.message.includes('400') || error.message.includes('API key')) {
+                errorMsg += `<div class="mt-4 p-4 bg-red-50 rounded border border-red-200 text-gray-800 text-left">
                     <p class="font-bold mb-2">ដំណោះស្រាយបច្ចេកទេស៖</p>
                     <ul class="list-decimal ml-5 space-y-2">
-                        <li><strong>ពិនិត្យមើល API Key៖</strong> សូមប្រាកដថា API Key របស់លោកគ្រូដែលបានចម្លងមកដាក់នៅត្រង់ <code>const apiKey = "...";</code> គឺត្រឹមត្រូវ និងគ្មានចន្លោះទទេ (Space) នៅខាងដើម ឬខាងចុង។</li>
-                        <li><strong>ការប្រើប្រាស់នៅលើ Canvas៖</strong> ប្រសិនបើលោកគ្រូប្រើប្រាស់ផ្ទាល់នៅលើ Canvas នេះ មិនបាច់បំពេញ API Key ឡើយ (ទុកចោល "") ព្រោះប្រព័ន្ធនឹងបំពេញដោយស្វ័យប្រវត្តិ។</li>
-                        <li><strong>ការប្រើប្រាស់នៅលើកុំព្យូទ័រ (Local)៖</strong> ប្រសិនបើលោកគ្រូទាញយកឯកសារនេះទៅប្រើ សូមប្រាកដថាបានបង្កើត API Key ថ្មីពី <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold">Google AI Studio</a>។</li>
+                        <li><strong>ការប្រើប្រាស់នៅលើ Canvas៖</strong> ប្រសិនបើលោកគ្រូប្រើប្រាស់ផ្ទាល់នៅលើ Canvas នេះ សូមសាកល្បងចុច <strong>Refresh (F5)</strong> ទំព័រនេះម្តងទៀត។</li>
+                        <li><strong>ការប្រើប្រាស់នៅលើកុំព្យូទ័រ (Local)៖</strong> ប្រសិនបើលោកគ្រូទាញយកឯកសារនេះទៅប្រើ សូមប្រាកដថាបានបង្កើត API Key ថ្មីពី <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold" rel="noopener noreferrer">Google AI Studio</a> រួចយកទៅដាក់ក្នុងកូដត្រង់៖
+                            <div class="bg-gray-800 text-green-400 p-2 rounded mt-2 text-xs font-mono">
+                                const localApiKey = "API_KEY_របស់លោកគ្រូនៅទីនេះ";
+                            </div>
+                        </li>
                     </ul>
                 </div>`;
             } else {
@@ -259,7 +271,7 @@
 ៤. ដំបូន្មានសម្រាប់អ្នកអាន`;
 
             // រៀបចំ Payload តាមទម្រង់ត្រឹមត្រូវបំផុតសម្រាប់ Gemini API stable version
-            const payload = {
+            localApiKey = {
                 contents: [{ 
                     role: "user",
                     parts: [{ text: textInput }] 
