@@ -116,7 +116,8 @@
 
     <script>
         // --- API Configuration ---
-        const apiKey = ""; // Execution environment injects this automatically
+        // ចំណាំ៖ ប្រសិនបើលោកគ្រូទាញយក (Download) ឯកសារនេះទៅប្រើនៅលើកុំព្យូទ័រ សូមបញ្ចូល API Key ផ្ទាល់ខ្លួននៅចន្លោះសញ្ញា "" ខាងក្រោមនេះ៖
+        const apiKey = ""; 
         
         // មុខងារទាញយក API URL
         function getModelUrl() {
@@ -211,6 +212,31 @@
             }
         }
 
+        // --- Error Handler Function ---
+        function handleErrorDisplay(error, elementId) {
+            let errorMsg = `<strong class="text-red-600 text-lg">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}</strong>`;
+            
+            if (error.message.includes('403') || error.message.includes('400')) {
+                errorMsg += `<div class="mt-4 p-4 bg-red-50 rounded border border-red-200 text-gray-800">
+                    <p class="font-bold mb-2">ដំណោះស្រាយសម្រាប់បញ្ហា 403 (បាត់បង់សិទ្ធិ API Key)៖</p>
+                    <ul class="list-decimal ml-5 space-y-2">
+                        <li>ប្រសិនបើលោកគ្រូកំពុងប្រើវានៅលើគេហទំព័រនេះ (Canvas) ដោយផ្ទាល់ សូមសាកល្បងចុច <strong>Refresh (F5)</strong> ទំព័រនេះម្តងទៀត។</li>
+                        <li>ប្រសិនបើលោកគ្រូបាន <strong>Download</strong> ឯកសារ HTML នេះទៅប្រើនៅលើកុំព្យូទ័រ៖
+                            <ul class="list-disc ml-5 mt-1 text-sm text-gray-600">
+                                <li>សូមបើកឯកសារនេះដោយប្រើកម្មវិធី Notepad </li>
+                                <li>ស្វែងរកបន្ទាត់កូដទី 144 ដែលសរសេរថា <code>const apiKey = "";</code></li>
+                                <li>សូមយក API Key របស់លោកគ្រូមកដាក់នៅចន្លោះសញ្ញា "" នោះ រួច Save។</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>`;
+            } else {
+                errorMsg += `<br><br>សូមពិនិត្យមើលការតភ្ជាប់អ៊ីនធឺណិតរបស់លោកអ្នក ហើយព្យាយាមម្តងទៀត។`;
+            }
+            
+            document.getElementById(elementId).innerHTML = errorMsg;
+        }
+
         // --- Analysis Logic ---
         async function analyzeText() {
             const textInput = document.getElementById('news-input').value.trim();
@@ -250,7 +276,7 @@
                 resultContent.innerHTML = formatOutput(answerText);
                 resultContainer.classList.remove('hidden');
             } catch (error) {
-                resultContent.innerHTML = `<span class="text-red-500 font-bold">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}។ សូមព្យាយាមម្តងទៀត។</span>`;
+                handleErrorDisplay(error, 'result-text-content');
                 resultContainer.classList.remove('hidden');
             } finally {
                 setLoadingState('btn-analyze-text', false);
@@ -293,7 +319,7 @@
                 resultContent.innerHTML = formatOutput(answerText);
                 resultContainer.classList.remove('hidden');
             } catch (error) {
-                resultContent.innerHTML = `<span class="text-red-500 font-bold">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}។ សូមព្យាយាមម្តងទៀត។</span>`;
+                handleErrorDisplay(error, 'result-image-content');
                 resultContainer.classList.remove('hidden');
             } finally {
                 setLoadingState('btn-analyze-image', false);
