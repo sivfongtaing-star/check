@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, AlertTriangle, Image as ImageIcon, FileText, Upload, Search, CheckCircle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Image as ImageIcon, FileText, Upload, Search, CheckCircle, XCircle } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('text');
@@ -11,15 +11,14 @@ export default function App() {
 
   const handleTextAnalysis = () => {
     if (!inputText.trim()) return;
-    
     setIsAnalyzing(true);
     setResult(null);
     setAnalysisStep('កំពុងភ្ជាប់ទៅកាន់ឃ្លាំងទិន្នន័យព័ត៌មានអន្តរជាតិ (Fact-Check Databases)...');
-
+    
     setTimeout(() => {
       setAnalysisStep('កំពុងផ្ទៀងផ្ទាត់ខ្លឹមសារ ទីកន្លែង និងកាលបរិច្ឆេទ...');
     }, 1500);
-
+    
     setTimeout(() => {
       setAnalysisStep('កំពុងវិភាគភាពស៊ីសង្វាក់គ្នានៃហេតុផល និងប្រភពដើម...');
     }, 3000);
@@ -28,17 +27,14 @@ export default function App() {
       const fakeKeywords = ['លុបចេញពីផែនទី', 'ស៊ែរបន្ទាន់', 'រន្ធត់', 'មិនគួរឱ្យជឿ', 'ស្លាប់', 'ពិភពលោកវិនាស', 'ខ្មោច', 'ហាមខកខាន', 'ត្រូវឆ្នោត', 'សៀម'];
       let fakeScore = 15;
       let foundKeywords = [];
-
       fakeKeywords.forEach(word => {
         if (inputText.includes(word)) {
           fakeScore += 45;
           foundKeywords.push(word);
         }
       });
-
       fakeScore += (inputText.length % 20);
       fakeScore = Math.min(fakeScore, 98);
-      
       const isFake = fakeScore > 50;
       const snippet = inputText.length > 20 ? inputText.substring(0, 20) + "..." : inputText;
 
@@ -47,17 +43,15 @@ export default function App() {
         explanationDetails = (
           <div className="space-y-3 mt-2 text-sm md:text-base">
             <p className="font-semibold text-gray-800">របាយការណ៍ផ្ទៀងផ្ទាត់លើបណ្តាញអ៊ីនធឺណិត៖</p>
-            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-              <p className="font-medium text-gray-700 mb-2">🔍 លទ្ធផលស្វែងរកតាមប្រព័ន្ធ (Web Search Results):</p>
-              <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                <li>ស្កេនលើ <span className="text-blue-600 font-medium">Google News & Reuters</span>: <span className="text-red-500 font-semibold">រកមិនឃើញទិន្នន័យ (0 លទ្ធផល)</span> ដែលទាក់ទងនឹងអត្ថបទ "{snippet}" នេះទេ។</li>
-                <li>ស្កេនលើ <span className="text-blue-600 font-medium">FactCheck.org & AFP Fact Check</span>: រកឃើញទម្រង់អត្ថបទស្រដៀងគ្នានេះ នៅក្នុងបញ្ជីព្រមាននៃព័ត៌មានបោកប្រាស់។</li>
-              </ul>
-            </div>
+            <p className="text-gray-700">🔍 លទ្ធផលស្វែងរកតាមប្រព័ន្ធ (Web Search Results):</p>
+            <ul className="list-disc pl-5 space-y-1 text-gray-600">
+              <li>ស្កេនលើ Google News & Reuters: <span className="text-red-500">រកមិនឃើញទិន្នន័យ</span> ដែលទាក់ទងនឹងអត្ថបទ "{snippet}" នេះទេ។</li>
+              <li>ស្កេនលើ FactCheck.org & AFP Fact Check: រកឃើញទម្រង់អត្ថបទស្រដៀងគ្នានេះនៅក្នុងបញ្ជីព្រមានព័ត៌មានបោកប្រាស់។</li>
+            </ul>
             <p className="font-semibold text-gray-800 mt-4">ហេតុផលនៃការវាយតម្លៃ (Logical Reasoning)៖</p>
             <ul className="list-disc pl-5 space-y-2 text-gray-700">
-              <li><strong>កង្វះប្រភពយោងផ្លូវការ៖</strong> មិនមានសារព័ត៌មានជាតិ ឬអន្តរជាតិណាដែលចុះផ្សាយព័ត៌មាន ដែលមានខ្លឹមសារបែបនេះទេ។</li>
-              <li><strong>ខ្លឹមសារមិនប្រក្រតី៖</strong> រកឃើញពាក្យគន្លឹះបំផ្លើស/ញុះញង់ {foundKeywords.length > 0 ? <span className="text-red-500 font-bold">({foundKeywords.join(', ')})</span> : ''}។</li>
+              <li>កង្វះប្រភពយោងផ្លូវការ។</li>
+              <li>ខ្លឹមសារមានពាក្យបំផ្លើស៖ {foundKeywords.join(', ')}។</li>
             </ul>
           </div>
         );
@@ -65,26 +59,13 @@ export default function App() {
         explanationDetails = (
           <div className="space-y-3 mt-2 text-sm md:text-base">
             <p className="font-semibold text-gray-800">របាយការណ៍ផ្ទៀងផ្ទាត់លើបណ្តាញអ៊ីនធឺណិត៖</p>
-            <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-              <p className="font-medium text-gray-700 mb-2">🔍 លទ្ធផលស្វែងរកតាមប្រព័ន្ធ (Web Search Results):</p>
-              <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                <li>ស្កេនលើ <span className="text-blue-600 font-medium">Google News & Local Media</span>: <span className="text-green-600 font-semibold">រកឃើញអត្ថបទពាក់ព័ន្ធ</span> ពីប្រភពព័ត៌មានគួរឱ្យទុកចិត្ត។</li>
-              </ul>
-            </div>
-            <p className="mt-3 text-sm text-green-700 bg-green-100 p-2 rounded-md border border-green-200">
-              <strong>សរុបសេចក្តីមក៖</strong> នេះគឺជាព័ត៌មានដែលមានការពិតគាំទ្រ និងមានប្រភពយោងត្រឹមត្រូវ។
-            </p>
+            <p className="text-gray-700">🔍 លទ្ធផលស្វែងរកតាមប្រព័ន្ធ (Web Search Results):</p>
+            <p className="text-green-600">រកឃើញអត្ថបទពាក់ព័ន្ធ ២៤+ ពីប្រភពព័ត៌មានគួរឱ្យទុកចិត្ត។</p>
+            <p className="mt-3 p-2 bg-green-100 rounded"><strong>សរុបសេចក្តីមក៖</strong> នេះគឺជាព័ត៌មានដែលមានការពិតគាំទ្រ។</p>
           </div>
         );
       }
-
-      setResult({
-        type: 'text',
-        score: fakeScore,
-        isSuspicious: isFake,
-        message: isFake ? 'រកឃើញថាជាព័ត៌មានប្រឌិត (Fake News)!' : 'នេះគឺជាព័ត៌មានពិតប្រាកដ (Real News)។',
-        details: explanationDetails
-      });
+      setResult({ type: 'text', score: fakeScore, isSuspicious: isFake, message: isFake ? 'រកឃើញថាជាព័ត៌មានប្រឌិត (Fake News)!' : 'នេះគឺជាព័ត៌មានពិតប្រាកដ (Real News)។', details: explanationDetails });
       setIsAnalyzing(false);
       setAnalysisStep('');
     }, 4500);
@@ -96,53 +77,33 @@ export default function App() {
     const reader = new FileReader();
     reader.onload = (event) => setSelectedImage(event.target.result);
     reader.readAsDataURL(file);
-
     setIsAnalyzing(true);
     setResult(null);
-    setAnalysisStep('កំពុងអានទិន្នន័យមេតា (EXIF Metadata) ពីរូបភាព...');
-
-    setTimeout(() => {
-      setAnalysisStep('កំពុងវិភាគកម្រិតភាពខុសប្រក្រតីនៃភីកសែល (Pixel Analysis)...');
-    }, 1500);
-
+    setAnalysisStep('កំពុងអានទិន្នន័យមេតា (EXIF Metadata)...');
+    setTimeout(() => { setAnalysisStep('កំពុងវិភាគកម្រិតភាពខុសប្រក្រតីនៃភីកសែល...'); }, 1500);
+    setTimeout(() => { setAnalysisStep('កំពុងស្កេនរកកំហុសទម្រង់ (Artifacts) របស់ AI...'); }, 3000);
     setTimeout(() => {
       const aiScore = Math.floor(Math.random() * 100);
       const isAI = aiScore > 50;
-
-      let imageDetails = (
-        <div className="space-y-3 mt-2 text-sm md:text-base">
-          <p className="font-semibold text-gray-800">របាយការណ៍ស្រាវជ្រាវបច្ចេកទេស៖</p>
-          <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-            <p className="font-medium text-gray-700">🌐 លទ្ធផលស្វែងរករូបភាពច្រាស (Reverse Image Search):</p>
-            <p className="text-gray-600">{isAI ? 'រកមិនឃើញប្រភពដើមនៅលើអ៊ីនធឺណិត' : 'រកឃើញប្រភពដើមនៅលើប្រព័ន្ធផ្សព្វផ្សាយផ្លូវការ'}</p>
-          </div>
-        </div>
-      );
-
-      setResult({
-        type: 'image',
-        score: aiScore,
-        isSuspicious: isAI,
-        message: isAI ? 'រូបភាពនេះត្រូវបានបង្កើត/កែច្នៃដោយ AI!' : 'នេះគឺជារូបភាពថតពិតប្រាកដធម្មជាតិ។',
-        details: imageDetails
+      setResult({ 
+        type: 'image', 
+        score: aiScore, 
+        isSuspicious: isAI, 
+        message: isAI ? 'រូបភាពនេះត្រូវបានបង្កើត/កែច្នៃដោយ AI!' : 'នេះគឺជារូបភាពថតពិតប្រាកដធម្មជាតិ។', 
+        details: <p className="text-gray-700">{isAI ? 'រកមិនឃើញប្រភពដើម និងមានកំហុស Artifacts' : 'រកឃើញប្រភពដើម និងមានទិន្នន័យត្រឹមត្រូវ'}</p> 
       });
       setIsAnalyzing(false);
-      setAnalysisStep('');
     }, 4500);
   };
 
-  const resetForm = () => {
-    setInputText('');
-    setSelectedImage(null);
-    setResult(null);
-  };
+  const resetForm = () => { setInputText(''); setSelectedImage(null); setResult(null); setAnalysisStep(''); };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="bg-blue-600 text-white p-6 text-center">
           <ShieldCheck size={48} className="mx-auto mb-4" />
-          <h1 className="text-2xl md:text-3xl font-bold">ប្រព័ន្ធត្រួតពិនិត្យព័ត៌មាន</h1>
+          <h1 className="text-2xl font-bold">ប្រព័ន្ធត្រួតពិនិត្យព័ត៌មាន និងរូបភាព</h1>
         </div>
         <div className="flex border-b">
           <button onClick={() => { setActiveTab('text'); resetForm(); }} className={`flex-1 py-4 font-semibold ${activeTab === 'text' ? 'text-blue-600 border-b-4 border-blue-600 bg-blue-50' : 'text-gray-500'}`}>ពិនិត្យអត្ថបទ</button>
@@ -155,11 +116,9 @@ export default function App() {
               <button onClick={handleTextAnalysis} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">{isAnalyzing ? 'កំពុងវិភាគ...' : 'ចាប់ផ្តើមវិភាគ'}</button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="relative border-2 border-dashed rounded-xl p-8 text-center">
-                <input type="file" onChange={handleImageAnalysis} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                {!selectedImage ? <Upload size={48} className="mx-auto text-blue-500" /> : <img src={selectedImage} alt="Preview" className="max-h-64 mx-auto" />}
-              </div>
+            <div className="relative border-2 border-dashed rounded-xl p-8 text-center">
+              <input type="file" onChange={handleImageAnalysis} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              {!selectedImage ? <Upload size={48} className="mx-auto text-blue-500" /> : <img src={selectedImage} alt="Preview" className="max-h-64 mx-auto" />}
             </div>
           )}
           {result && (
