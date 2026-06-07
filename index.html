@@ -84,7 +84,7 @@
             <!-- Tab 2: Image Analysis -->
             <div id="tab-image" class="tab-content">
                 <h2 class="text-xl font-bold mb-4">បញ្ចូលរូបភាពដើម្បីវិភាគ</h2>
-                <p class="text-gray-600 mb-4 text-sm">សូមជ្រើសរើសរូបភាពមួយ ប្រព័ន្ធនឹងប្រើប្រាស់បច្គេកវិទ្យា AI ដើម្បីស្វែងរកកំហុស (Artifacts) ដែលបញ្ជាក់ថាវាជារូបភាពបង្កើតដោយកុំព្យូទ័រ។</p>
+                <p class="text-gray-600 mb-4 text-sm">សូមជ្រើសរើសរូបភាពមួយ ប្រព័ន្ធនឹងប្រើប្រាស់បច្ចេកវិទ្យា AI ដើម្បីស្វែងរកកំហុស (Artifacts) ដែលបញ្ជាក់ថាវាជារូបភាពបង្កើតដោយកុំព្យូទ័រ។</p>
 
                 <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer relative" onclick="document.getElementById('image-input').click()">
                     <input type="file" id="image-input" accept="image/*" class="hidden" onchange="previewImage(event)">
@@ -119,9 +119,8 @@
         // លោកគ្រូអាចរក្សាទុក API Key របស់លោកគ្រូនៅចន្លោះសញ្ញាសម្រង់ "" ខាងក្រោមនេះ៖
         const localApiKey = ""; 
         
-        // ប្រើប្រាស់ Model ជំនាន់ផ្លូវការ និងមានស្ថេរភាព (Stable Version) របស់ Gemini
+        // ប្រើប្រាស់ Model ជំនាន់ Preview ដែលអនុញ្ញាតដោយប្រព័ន្ធ Canvas នេះ
         function getModelUrl() {
-            // ការពារករណី apiKey របស់ប្រព័ន្ធ Canvas មិនទាន់ត្រូវបានប្រកាស (undefined)
             let activeKey = "";
             
             if (localApiKey && localApiKey.trim() !== "") {
@@ -130,7 +129,7 @@
                 activeKey = apiKey;
             }
             
-            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeKey}`;
+            return `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`;
         }
 
         let currentBase64Image = null;
@@ -198,7 +197,7 @@
             }
         }
 
-        // --- Core API Function with Exponential Backoff ---
+        // --- Core API Function with Fast Fail on Critical Errors ---
         async function callGeminiAPI(url, payload, retries = 5) {
             const delays = [1000, 2000, 4000, 8000, 16000];
             for (let i = 0; i < retries; i++) {
@@ -210,18 +209,26 @@
                     });
                     
                     if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        const statusText = errorData.error?.message || response.statusText;
-                        const err = new Error(`HTTP error! status: ${response.status} (${statusText})`);
+                        let errorMsg = response.statusText;
+                        try {
+                            const errorData = await response.json();
+                            errorMsg = errorData.error?.message || errorMsg;
+                        } catch(e) {}
+                        
+                        const err = new Error(`HTTP error! status: ${response.status} (${errorMsg})`);
                         err.status = response.status;
                         throw err;
                     }
                     return await response.json();
                 } catch (error) {
-                    // បញ្ឈប់ការរង់ចាំភ្លាមៗ ប្រសិនបើវាជាកំហុសប្រភេទ 4xx (400, 403)
-                    if ((error.status >= 400 && error.status < 500) || i === retries - 1) {
+                    // បញ្ឈប់ភ្លាមៗប្រសិនបើ៖
+                    // ១. អត់មាន status code (TypeError, Network Error)
+                    // ២. Status កូដជា 4xx (400, 403, 404 ជាដើម)
+                    // ៣. អស់ឱកាស Retry
+                    if (!error.status || (error.status >= 400 && error.status < 500) || i === retries - 1) {
                         throw error;
                     }
+                    // បើជា error ផ្សេង (ឧ. 500) វានឹងរង់ចាំហើយសាកម្តងទៀត
                     await new Promise(res => setTimeout(res, delays[i]));
                 }
             }
@@ -231,7 +238,7 @@
         function handleErrorDisplay(error, elementId) {
             let errorMsg = `<strong class="text-red-600 text-lg">មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ (Server)៖ ${error.message}</strong>`;
             
-            if (error.message.includes('403') || error.message.includes('400') || error.message.includes('API key')) {
+            if (error.message.includes('403') || error.message.includes('400') || error.message.includes('API key') || !error.status) {
                 errorMsg += `<div class="mt-4 p-4 bg-red-50 rounded border border-red-200 text-gray-800 text-left">
                     <p class="font-bold mb-2">ដំណោះស្រាយបច្ចេកទេស៖</p>
                     <ul class="list-decimal ml-5 space-y-2">
@@ -275,7 +282,6 @@
 ៣. ចំណុចគួរឱ្យសង្ស័យនៅក្នុងអត្ថបទ (ឧទាហរណ៍៖ ការប្រើពាក្យរំជួលចិត្តខ្លាំង, គ្មានប្រភពច្បាស់លាស់, តំណភ្ជាប់ខុសប្រក្រតី)
 ៤. ដំបូន្មានសម្រាប់អ្នកអាន`;
 
-            // រៀបចំ Payload តាមទម្រង់ត្រឹមត្រូវបំផុតសម្រាប់ Gemini API stable version
             const payload = {
                 contents: [{ 
                     role: "user",
@@ -318,7 +324,6 @@
 ២. កំហុស ឬចំណុចដែលបញ្ជាក់ថាជា AI (ឧ. ម្រាមដៃ ខុសទម្រង់ធម្មជាតិ, ពន្លឺស្រមោលប្លែកៗ, ផ្ទៃខាងក្រោយរញ៉េរញ៉ៃ, អក្សរមិនច្បាស់លាស់) បើមាន។
 ៣. កម្រិតភាគរយនៃការជឿជាក់របស់អ្នកលើការសន្និដ្ឋាននេះ។`;
 
-            // រៀបចំ Payload គាំទ្ររូបភាពសម្រាប់ Gemini 2.5 Flash API stable version
             const payload = {
                 contents: [{
                     role: "user",
