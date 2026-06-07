@@ -469,9 +469,9 @@
 
     <!-- Script Section -->
     <script>
-        // API Configuration (យក API Key ពីបរិស្ថាន ឬកំណត់នៅទីនេះ)
-        // ប្រើប្រាស់ API key ផ្ទាល់ខ្លួនរបស់អ្នកនៅទីនេះ ប្រសិនបើអ្នកដំណើរការវានៅក្រៅបរិស្ថាននេះ
-        const apiKey = typeof __gemini_api_key !== 'undefined' ? __gemini_api_key : ""; 
+        // API Configuration 
+        // យើងគ្រាន់តែកំណត់វាជាអក្សរទទេ " " ប្រព័ន្ធនឹងរៀបចំ API Key ឱ្យដោយស្វ័យប្រវត្តិ
+        const apiKey = ""; 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'khmer-factcheck-detector';
 
         // Global state for uploaded image in base64
@@ -611,13 +611,6 @@
             if (!textInput) {
                 showAlert('ខ្វះទិន្នន័យ', 'សូមបញ្ចូលអត្ថបទព័ត៌មានដែលលោកគ្រូ/អ្នកគ្រូចង់ផ្ទៀងផ្ទាត់ជាមុនសិន។');
                 return;
-            }
-            
-            // Check if API key is empty
-            if (!apiKey) {
-                 showAlert('បញ្ហា API Key', 'សូមបញ្ជាក់ API Key របស់ Gemini នៅក្នុងកូដជាមុនសិន ដើម្បីអាចប្រើប្រាស់មុខងារនេះបាន។');
-                 return;
-                AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U
             }
 
             const loader = document.getElementById('loader-fact');
@@ -791,12 +784,6 @@
             if (!base64Image) {
                 showAlert('ខ្វះរូបភាព', 'សូមបង្ហោះរូបភាពជាមុនសិន។');
                 return;
-            }
-            
-            // Check if API key is empty
-            if (!apiKey) {
-                 showAlert('បញ្ហា API Key', 'សូមបញ្ជាក់ API Key របស់ Gemini នៅក្នុងកូដជាមុនសិន ដើម្បីអាចប្រើប្រាស់មុខងារនេះបាន។');
-                 return;
             }
 
             const loader = document.getElementById('loader-image');
