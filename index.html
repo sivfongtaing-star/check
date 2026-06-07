@@ -116,7 +116,7 @@
 
     <script>
         // --- API Configuration ---
-        // លោកគ្រូអាចរក្សាទុក ApiKey របស់លោកគ្រូនៅចន្លោះសញ្ញាសម្រង់ "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U" ខាងក្រោមនេះ៖
+        // លោកគ្រូអាចរក្សាទុក API Key របស់លោកគ្រូនៅចន្លោះសញ្ញាសម្រង់ "" ខាងក្រោមនេះ៖
         const localApiKey = ""; 
         
         // ប្រើប្រាស់ Model ជំនាន់ផ្លូវការ និងមានស្ថេរភាព (Stable Version) របស់ Gemini
@@ -190,7 +190,7 @@
             const btn = document.getElementById(btnId);
             if (isLoading) {
                 btn.disabled = true;
-                btn.innerHTML = '<div class="loader"></div> <span>កំពុងវិភាគ... សូមរង់ចាំ</span>';
+                btn.innerHTML = '<div class="loader"></div> <span>កំពុងដំណើរការ... អាចប្រើពេលពីរបីវិនាទី</span>';
             } else {
                 btn.disabled = false;
                 const text = btnId === 'btn-analyze-text' ? 'ចាប់ផ្តើមវិភាគអត្ថបទ' : 'ចាប់ផ្តើមវិភាគរូបភាព';
@@ -212,11 +212,16 @@
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({}));
                         const statusText = errorData.error?.message || response.statusText;
-                        throw new Error(`HTTP error! status: ${response.status} (${statusText})`);
+                        const err = new Error(`HTTP error! status: ${response.status} (${statusText})`);
+                        err.status = response.status;
+                        throw err;
                     }
                     return await response.json();
                 } catch (error) {
-                    if (i === retries - 1) throw error;
+                    // បញ្ឈប់ការរង់ចាំភ្លាមៗ ប្រសិនបើវាជាកំហុសប្រភេទ 4xx (400, 403)
+                    if ((error.status >= 400 && error.status < 500) || i === retries - 1) {
+                        throw error;
+                    }
                     await new Promise(res => setTimeout(res, delays[i]));
                 }
             }
@@ -271,7 +276,7 @@
 ៤. ដំបូន្មានសម្រាប់អ្នកអាន`;
 
             // រៀបចំ Payload តាមទម្រង់ត្រឹមត្រូវបំផុតសម្រាប់ Gemini API stable version
-            localApiKey = {
+            const payload = {
                 contents: [{ 
                     role: "user",
                     parts: [{ text: textInput }] 
