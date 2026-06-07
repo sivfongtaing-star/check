@@ -116,12 +116,12 @@
 
     <script>
         // --- API Configuration ---
-        // លោកគ្រូអាចរក្សាទុក API Key របស់លោកគ្រូនៅចន្លោះសញ្ញាសម្រង់ "" ខាងក្រោមនេះ៖
-        const localApiKey = ""; 
+        // លោកគ្រូត្រូវយក API Key របស់លោកគ្រូមកដាក់នៅចន្លោះសញ្ញាសម្រង់ "" ខាងក្រោមនេះមុនយកទៅ Vercel៖
+        const localApiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U"; 
         
         // ប្រើប្រាស់ Model ជំនាន់ Preview ដែលអនុញ្ញាតដោយប្រព័ន្ធ Canvas នេះ
         function getModelUrl() {
-            let activeKey = "";
+            let activeKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U";
             
             if (localApiKey && localApiKey.trim() !== "") {
                 activeKey = localApiKey;
@@ -189,7 +189,7 @@
             const btn = document.getElementById(btnId);
             if (isLoading) {
                 btn.disabled = true;
-                btn.innerHTML = '<div class="loader"></div> <span>កំពុងដំណើរការ... អាចប្រើពេលពីរបីវិនាទី</span>';
+                btn.innerHTML = '<div class="loader"></div> <span>កំពុងដំណើរការ... ភ្ជាប់ទៅកាន់ AI</span>';
             } else {
                 btn.disabled = false;
                 const text = btnId === 'btn-analyze-text' ? 'ចាប់ផ្តើមវិភាគអត្ថបទ' : 'ចាប់ផ្តើមវិភាគរូបភាព';
@@ -197,40 +197,29 @@
             }
         }
 
-        // --- Core API Function with Fast Fail on Critical Errors ---
-        async function callGeminiAPI(url, payload, retries = 5) {
-            const delays = [1000, 2000, 4000, 8000, 16000];
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
+        // --- Core API Function (បានលុបការរង់ចាំចេញ ដើម្បីឱ្យឆ្លើយតបលឿនបំផុត) ---
+        async function callGeminiAPI(url, payload) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    let errorMsg = response.statusText;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.error?.message || errorMsg;
+                    } catch(e) {}
                     
-                    if (!response.ok) {
-                        let errorMsg = response.statusText;
-                        try {
-                            const errorData = await response.json();
-                            errorMsg = errorData.error?.message || errorMsg;
-                        } catch(e) {}
-                        
-                        const err = new Error(`HTTP error! status: ${response.status} (${errorMsg})`);
-                        err.status = response.status;
-                        throw err;
-                    }
-                    return await response.json();
-                } catch (error) {
-                    // បញ្ឈប់ភ្លាមៗប្រសិនបើ៖
-                    // ១. អត់មាន status code (TypeError, Network Error)
-                    // ២. Status កូដជា 4xx (400, 403, 404 ជាដើម)
-                    // ៣. អស់ឱកាស Retry
-                    if (!error.status || (error.status >= 400 && error.status < 500) || i === retries - 1) {
-                        throw error;
-                    }
-                    // បើជា error ផ្សេង (ឧ. 500) វានឹងរង់ចាំហើយសាកម្តងទៀត
-                    await new Promise(res => setTimeout(res, delays[i]));
+                    const err = new Error(`HTTP error! status: ${response.status} (${errorMsg})`);
+                    err.status = response.status;
+                    throw err; // បោះ Error ភ្លាមៗមិនបាច់ចាំ
                 }
+                return await response.json();
+            } catch (error) {
+                throw error; // បោះ Error ភ្លាមៗមិនបាច់ចាំ
             }
         }
 
@@ -240,14 +229,11 @@
             
             if (error.message.includes('403') || error.message.includes('400') || error.message.includes('API key') || !error.status) {
                 errorMsg += `<div class="mt-4 p-4 bg-red-50 rounded border border-red-200 text-gray-800 text-left">
-                    <p class="font-bold mb-2">ដំណោះស្រាយបច្ចេកទេស៖</p>
+                    <p class="font-bold mb-2">ដំណោះស្រាយបច្ចេកទេស (សម្រាប់ Vercel)៖</p>
                     <ul class="list-decimal ml-5 space-y-2">
-                        <li><strong>ការប្រើប្រាស់នៅលើ Canvas៖</strong> ប្រសិនបើលោកគ្រូប្រើប្រាស់ផ្ទាល់នៅលើ Canvas នេះ សូមសាកល្បងចុច <strong>Refresh (F5)</strong> ទំព័រនេះម្តងទៀត។</li>
-                        <li><strong>ការប្រើប្រាស់នៅលើកុំព្យូទ័រ (Local)៖</strong> ប្រសិនបើលោកគ្រូទាញយកឯកសារនេះទៅប្រើ សូមប្រាកដថាបានបង្កើត API Key ថ្មីពី <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold" rel="noopener noreferrer">Google AI Studio</a> រួចយកទៅដាក់ក្នុងកូដត្រង់៖
-                            <div class="bg-gray-800 text-green-400 p-2 rounded mt-2 text-xs font-mono">
-                                const localApiKey = "API_KEY_របស់លោកគ្រូនៅទីនេះ";
-                            </div>
-                        </li>
+                        <li>សូមប្រាកដថាលោកគ្រូបានបញ្ចូល API Key ទៅក្នុងឯកសារនេះមុននឹង Deploy ទៅ Vercel។</li>
+                        <li>បើកឯកសារនេះ រកមើលបន្ទាត់ <code>const localApiKey = "";</code> ហើយដាក់ Key ចូលនៅចន្លោះសញ្ញា ""។</li>
+                        <li><a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold" rel="noopener noreferrer">ចុចទីនេះដើម្បីយក Google AI Studio API Key ថ្មី</a></li>
                     </ul>
                 </div>`;
             } else {
