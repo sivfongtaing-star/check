@@ -215,8 +215,9 @@
 
     <!-- Gemini API Integration Scripts -->
     <script>
-        // API Key (ទុករូបរាងទំនេរ ព្រោះបរិស្ថានរត់នឹងផ្តល់ឱ្យដោយស្វ័យប្រវត្តនៅ runtime)
-        const apiKey = "";
+        // API Key (ទុករូបរាងទំនេរ ព្រោះបរិស្ថាន Canvas នឹងផ្តល់ឱ្យដោយស្វ័យប្រវត្ត)
+        // ប្រសិនបើលោកគ្រូទាញយកកូដនេះទៅប្រើប្រាស់ក្រៅប្រព័ន្ធ Canvas សូមបញ្ចូល API Key ផ្ទាល់ខ្លួនចន្លោះសញ្ញា "" ខាងក្រោម៖
+        const apiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U";
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'fact-checker-kh';
 
         let activeTab = 'text';
@@ -338,6 +339,11 @@
                         const errorData = await response.json().catch(() => ({}));
                         const errMsg = errorData?.error?.message || `HTTP Error ${response.status} - មានបញ្ហាលើ Server`;
                         
+                        // បង្កើតសារកំហុសភាសាខ្មែរឱ្យចំបញ្ហា API Key
+                        if (errMsg.includes("unregistered callers") || errMsg.includes("API key not valid")) {
+                            throw new Error("ប្រព័ន្ធទាមទារ API Key។ ប្រសិនបើលោកគ្រូកំពុងដំណើរការកូដនេះនៅលើកុំព្យូទ័រផ្ទាល់ខ្លួន សូមបញ្ចូល Google Gemini API Key នៅក្នុងកូដ (កន្លែងអថេរ const apiKey = '...';)។");
+                        }
+
                         // ប្រសិនបើកំហុសនេះបណ្តាលមកពី Payload (4xx) យើងមិនបាច់ Retry ទេ
                         if (response.status >= 400 && response.status < 500) {
                             throw new Error(errMsg);
@@ -347,7 +353,7 @@
                     }
                 } catch (error) {
                     // ប្រសិនបើអស់ឱកាស Retry ឬកំហុសជាកំហុសផ្ទាល់ពី Server យើងទម្លាក់ Error ចោល
-                    if (i === maxRetries - 1 || error.message.includes('HTTP Error') || error.message.includes('API key')) {
+                    if (i === maxRetries - 1 || error.message.includes('HTTP Error') || error.message.includes('API Key')) {
                         throw error;
                     }
                 }
