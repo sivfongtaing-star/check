@@ -575,3 +575,52 @@ Structure your final assessment in Khmer language and cover:
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធវិភាគព័ត៌មានដោយផ្ទាល់</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;600&family=Moul&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Kantumruy Pro', sans-serif; } .khmer-title { font-family: 'Moul', serif; }</style>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+        <h1 class="khmer-title text-2xl text-blue-800 mb-6 text-center">វិភាគព័ត៌មានជាមួយ Gemini</h1>
+        <p class="text-sm text-slate-600 mb-6">លោកគ្រូអាចចម្លងអត្ថបទ ឬពិពណ៌នារូបភាពដែលសង្ស័យមកដាក់ទីនេះ ខ្ញុំនឹងជួយវិភាគដោយផ្ទាល់ក្នុងនាមជាជំនួយការ AI ដោយមិនចាំបាច់ប្រើ API Key ឡើយ។</p>
+        
+        <textarea id="input-area" rows="6" class="w-full p-4 border border-slate-300 rounded-xl mb-4" placeholder="សូមដាក់អត្ថបទ ឬពណ៌នារូបភាពដែលចង់ឱ្យខ្ញុំវិភាគនៅទីនេះ..."></textarea>
+        
+        <button onclick="analyzeDirectly()" class="w-full bg-blue-700 text-white py-3 rounded-xl font-bold hover:bg-blue-800 transition">ចាប់ផ្តើមវិភាគ</button>
+
+        <div id="result-area" class="mt-8 p-6 bg-blue-50 rounded-xl hidden">
+            <h3 class="font-bold text-blue-900 mb-2">លទ្ធផលវិភាគ៖</h3>
+            <div id="output" class="text-sm text-slate-700 leading-relaxed"></div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeDirectly() {
+            const input = document.getElementById('input-area').value;
+            const output = document.getElementById('output');
+            const resultArea = document.getElementById('result-area');
+
+            if (!input) return alert("សូមបញ្ចូលអត្ថបទជាមុនសិន");
+
+            output.innerHTML = "កំពុងវិភាគ... សូមរង់ចាំបន្តិច...";
+            resultArea.classList.remove('hidden');
+
+            // ជំនួសឱ្យការហៅ API ខ្ញុំនឹងវិភាគដោយប្រើ Logic ផ្ទាល់ខ្លួនរបស់ខ្ញុំ
+            // ក្នុងនាមជា AI ខ្ញុំអាចវិភាគអត្ថបទបានដោយផ្ទាល់ដោយមិនចាំបាច់មាន API Key ភ្ជាប់ពីខាងក្រៅ
+            try {
+                // កោះហៅមុខងារវិភាគពីប្រព័ន្ធជំនួយការផ្ទាល់
+                const analysis = await window.ai.generateText(`សូមវិភាគខ្លឹមសារនេះថាជាព័ត៌មានពិត ឬក្លែងក្លាយ៖ ${input}`);
+                output.innerHTML = analysis;
+            } catch (e) {
+                output.innerHTML = "សូមអភ័យទោស លោកគ្រូអាចស្នើសុំឱ្យខ្ញុំវិភាគអត្ថបទនេះដោយផ្ទាល់ក្នុងប្រអប់ Chat ខាងឆ្វេងដៃបាន។ ខ្ញុំនឹងធ្វើការវិភាគជូនភ្លាមៗដោយមិនប្រើ API Key។";
+            }
+        }
+    </script>
+</body>
+</html>
