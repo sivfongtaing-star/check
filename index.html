@@ -469,8 +469,9 @@
 
     <!-- Script Section -->
     <script>
-        // API Configuration (Empty string for Canvas runtime environment)
-        const apiKey = "";
+        // API Configuration (យក API Key ពីបរិស្ថាន ឬកំណត់នៅទីនេះ)
+        // ប្រើប្រាស់ API key ផ្ទាល់ខ្លួនរបស់អ្នកនៅទីនេះ ប្រសិនបើអ្នកដំណើរការវានៅក្រៅបរិស្ថាននេះ
+        const apiKey = typeof __gemini_api_key !== 'undefined' ? __gemini_api_key : ""; 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'khmer-factcheck-detector';
 
         // Global state for uploaded image in base64
@@ -579,16 +580,21 @@
         }
 
         // Exponential Backoff Fetch
-        async function fetchWithRetry(url, options, maxRetries = 5) {
+        async function fetchWithRetry(url, options, maxRetries = 3) {
             let delay = 1000;
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const response = await fetch(url, options);
-                    if (response.ok) return await response.json();
-                    if (response.status !== 429 && response.status < 500) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error("API Error details:", errorData);
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error?.message || 'Unknown error'}`);
                     }
+                    
+                    return await response.json();
                 } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
                     if (i === maxRetries - 1) throw error;
                 }
                 await new Promise(res => setTimeout(res, delay));
@@ -605,6 +611,13 @@
             if (!textInput) {
                 showAlert('ខ្វះទិន្នន័យ', 'សូមបញ្ចូលអត្ថបទព័ត៌មានដែលលោកគ្រូ/អ្នកគ្រូចង់ផ្ទៀងផ្ទាត់ជាមុនសិន។');
                 return;
+            }
+            
+            // Check if API key is empty
+            if (!apiKey) {
+                 showAlert('បញ្ហា API Key', 'សូមបញ្ជាក់ API Key របស់ Gemini នៅក្នុងកូដជាមុនសិន ដើម្បីអាចប្រើប្រាស់មុខងារនេះបាន។');
+                 return;
+                AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U
             }
 
             const loader = document.getElementById('loader-fact');
@@ -636,33 +649,23 @@
 
             // Prepare API body with Search Grounding if checked
             const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
+                contents: [{ role: "user", parts: [{ text: userQuery }] }],
                 systemInstruction: { parts: [{ text: systemPrompt }] },
                 generationConfig: {
                     responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            verdict: { type: "STRING" },
-                            confidence_score: { type: "NUMBER" },
-                            summary: { type: "STRING" },
-                            pros: { type: "ARRAY", items: { type: "STRING" } },
-                            cons: { type: "ARRAY", items: { type: "STRING" } },
-                            detailed_explanation: { type: "STRING" },
-                            verdict_type: { type: "STRING" }
-                        },
-                        required: ["verdict", "confidence_score", "summary", "pros", "cons", "detailed_explanation", "verdict_type"]
-                    }
+                    temperature: 0.2 // Lower temperature for more factual responses
                 }
             };
 
             // Add Google search tool for grounding if checked
             if (useSearch) {
-                payload.tools = [{ "google_search": {} }];
+                payload.tools = [{ "googleSearch": {} }]; // Corrected to googleSearch
             }
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                // Using stable version instead of preview if preview is down
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+                
                 const responseData = await fetchWithRetry(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -674,7 +677,15 @@
                     throw new Error("No data returned from AI engine.");
                 }
 
-                const result = JSON.parse(rawJsonText);
+                // Clean the response if the model wrapped it in markdown code blocks
+                let cleanedText = rawJsonText.trim();
+                if (cleanedText.startsWith('```json')) {
+                    cleanedText = cleanedText.substring(7, cleanedText.length - 3);
+                } else if (cleanedText.startsWith('```')) {
+                     cleanedText = cleanedText.substring(3, cleanedText.length - 3);
+                }
+
+                const result = JSON.parse(cleanedText);
                 
                 // Display Grounding Sources if any
                 const sourcesContainer = document.getElementById('sources-container');
@@ -766,8 +777,8 @@
                 resultDiv.scrollIntoView({ behavior: 'smooth' });
 
             } catch (err) {
-                console.error(err);
-                showAlert('កំហុសប្រព័ន្ធ', 'មិនអាចវិភាគព័ត៌មានបានឡើយនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត!');
+                console.error("Analyze Fact Error:", err);
+                showAlert('កំហុសប្រព័ន្ធ', `មិនអាចវិភាគព័ត៌មានបានឡើយនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត!\n\n${err.message}`);
             } finally {
                 loader.classList.add('hidden');
                 btn.removeAttribute('disabled');
@@ -780,6 +791,12 @@
             if (!base64Image) {
                 showAlert('ខ្វះរូបភាព', 'សូមបង្ហោះរូបភាពជាមុនសិន។');
                 return;
+            }
+            
+            // Check if API key is empty
+            if (!apiKey) {
+                 showAlert('បញ្ហា API Key', 'សូមបញ្ជាក់ API Key របស់ Gemini នៅក្នុងកូដជាមុនសិន ដើម្បីអាចប្រើប្រាស់មុខងារនេះបាន។');
+                 return;
             }
 
             const loader = document.getElementById('loader-image');
@@ -856,7 +873,8 @@
             };
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                 // Using stable version instead of preview if preview is down
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
                 const responseData = await fetchWithRetry(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -926,8 +944,8 @@
                 resultDiv.scrollIntoView({ behavior: 'smooth' });
 
             } catch (err) {
-                console.error(err);
-                showAlert('កំហុសការវិភាគ', 'មិនអាចវិភាគរូបភាពនេះបានឡើយនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត!');
+                console.error("Analyze Image Error:", err);
+                showAlert('កំហុសការវិភាគ', `មិនអាចវិភាគរូបភាពនេះបានឡើយនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត!\n\n${err.message}`);
             } finally {
                 loader.classList.add('hidden');
                 btn.removeAttribute('disabled');
