@@ -196,7 +196,7 @@
         <!-- Error Message Alert -->
         <div id="error-alert" class="mt-4 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm flex items-start gap-2 hidden">
             <i class="fa-solid fa-triangle-exclamation text-base mt-0.5"></i>
-            <div>
+            <div class="flex-1">
                 <span class="font-bold">កំហុសបច្ចេកទេស៖</span>
                 <span id="error-message-text">សូមព្យាយាមម្តងទៀត។</span>
             </div>
@@ -221,6 +221,7 @@
 
         let activeTab = 'text';
         let selectedBase64Image = null;
+        let selectedMimeType = 'image/png'; // កំណត់ប្រភេទរូបភាពលំនាំដើម
 
         // ប្តូរ Tab រវាង Text និង Image
         function switchTab(tab) {
@@ -232,6 +233,7 @@
 
             // លាក់លទ្ធផលចាស់សិនពេលប្តូរ Tab
             closeResults();
+            hideError();
 
             if (tab === 'text') {
                 textTab.classList.remove('hidden');
@@ -250,6 +252,7 @@
         function clearText() {
             document.getElementById('news-input').value = "";
             closeResults();
+            hideError();
         }
 
         // បង្ហាញរូបភាពជា Preview
@@ -262,6 +265,9 @@
                 showError("រូបភាពមានទំហំធំពេក។ សូមជ្រើសរើសរូបភាពដែលមានទំហំតូចជាង 5MB។");
                 return;
             }
+
+            // រក្សាទុក MimeType ពិតប្រាកដរបស់រូបភាព (ឧ. image/jpeg, image/png)
+            selectedMimeType = file.type || 'image/png';
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -289,6 +295,7 @@
             document.getElementById('upload-placeholder').classList.remove('hidden');
             selectedBase64Image = null;
             closeResults();
+            hideError();
         }
 
         // បង្ហាញផ្ទាំង Loading
@@ -318,7 +325,7 @@
             document.getElementById('results-section').classList.add('hidden');
         }
 
-        // អនុវត្តមុខងារ Exponential Backoff សម្រាប់ការហៅទៅកាន់ API
+        // អនុវត្តមុខងារ Exponential Backoff សម្រាប់ការហៅទៅកាន់ API ព្រមទាំងចាប់យក Error ជាក់លាក់
         async function fetchWithRetry(url, options, maxRetries = 5) {
             let delay = 1000;
             for (let i = 0; i < maxRetries; i++) {
@@ -326,9 +333,23 @@
                     const response = await fetch(url, options);
                     if (response.ok) {
                         return await response.json();
+                    } else {
+                        // ចាប់យកសារកំហុសពី Server ប្រសិនបើមានបញ្ហា Request
+                        const errorData = await response.json().catch(() => ({}));
+                        const errMsg = errorData?.error?.message || `HTTP Error ${response.status} - មានបញ្ហាលើ Server`;
+                        
+                        // ប្រសិនបើកំហុសនេះបណ្តាលមកពី Payload (4xx) យើងមិនបាច់ Retry ទេ
+                        if (response.status >= 400 && response.status < 500) {
+                            throw new Error(errMsg);
+                        }
+                        // បើមិនមែន 4xx ទេ ទុកឱ្យវាលោតទៅចាប់នៅ Catch ខាងក្រោមដើម្បីសាកល្បងម្តងទៀត
+                        throw new Error(errMsg);
                     }
                 } catch (error) {
-                    if (i === maxRetries - 1) throw error;
+                    // ប្រសិនបើអស់ឱកាស Retry ឬកំហុសជាកំហុសផ្ទាល់ពី Server យើងទម្លាក់ Error ចោល
+                    if (i === maxRetries - 1 || error.message.includes('HTTP Error') || error.message.includes('API key')) {
+                        throw error;
+                    }
                 }
                 await new Promise(resolve => setTimeout(resolve, delay));
                 delay *= 2; // ទ្វេដងពេលវេលារង់ចាំ
@@ -386,7 +407,8 @@ You MUST respond in Khmer language. Your evaluation must be objective, logical, 
                 displayResults(result, 'text');
             } catch (err) {
                 showLoading(false);
-                showError("មិនអាចទាក់ទងជាមួយម៉ាស៊ីនមេវិភាគបានទេ។ សូមពិនិត្យការតភ្ជាប់អ៊ីនធឺណិតរបស់អ្នក រួចព្យាយាមម្តងទៀត។");
+                // បង្ហាញកំហុសពិតប្រាកដទៅកាន់ UI
+                showError(`មិនអាចវិភាគបាន៖ ${err.message}`);
                 console.error(err);
             }
         }
@@ -416,7 +438,7 @@ Structure your final assessment in Khmer language and cover:
                     role: "user",
                     parts: [
                         { text: prompt },
-                        { inlineData: { mimeType: "image/png", data: selectedBase64Image } }
+                        { inlineData: { mimeType: selectedMimeType, data: selectedBase64Image } }
                     ]
                 }]
             };
@@ -434,7 +456,8 @@ Structure your final assessment in Khmer language and cover:
                 displayResults(result, 'image');
             } catch (err) {
                 showLoading(false);
-                showError("មិនអាចវិភាគរូបភាពបានទេ។ សូមប្រាកដថារូបភាពនោះច្បាស់ល្អ និងមិនមានបញ្ហាទ្រង់ទ្រាយឯកសារ។");
+                // បង្ហាញកំហុសពិតប្រាកដទៅកាន់ UI
+                showError(`មិនអាចវិភាគបាន៖ ${err.message}`);
                 console.error(err);
             }
         }
@@ -443,7 +466,7 @@ Structure your final assessment in Khmer language and cover:
         function displayResults(data, type) {
             const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
             if (!textResult) {
-                showError("មិនទទួលបានទិន្នន័យត្រឹមត្រូវពីប្រព័ន្ធវិភាគនោះទេ។");
+                showError("ប្រព័ន្ធមិនបានឆ្លើយតបទិន្នន័យត្រឡប់មកវិញទេ។ សូមព្យាយាមម្តងទៀត!");
                 return;
             }
 
