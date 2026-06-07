@@ -215,9 +215,9 @@
 
     <!-- Gemini API Integration Scripts -->
     <script>
-        // API Key (ទុករូបរាងទំនេរ ព្រោះបរិស្ថាន Canvas នឹងផ្តល់ឱ្យដោយស្វ័យប្រវត្ត)
-        // ប្រសិនបើលោកគ្រូទាញយកកូដនេះទៅប្រើប្រាស់ក្រៅប្រព័ន្ធ Canvas សូមបញ្ចូល API Key ផ្ទាល់ខ្លួនចន្លោះសញ្ញា "" ខាងក្រោម៖
-        const apiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U";
+        // API Key (សូមបញ្ចូល API Key ផ្ទាល់ខ្លួនរបស់លោកគ្រូនៅចន្លោះសញ្ញា "" ខាងក្រោមនេះ)
+        // លោកគ្រូអាចបង្កើត API Key បានដោយឥតគិតថ្លៃតាមរយៈ៖ https://aistudio.google.com/app/apikey
+        const apiKey = "";
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'fact-checker-kh';
 
         let activeTab = 'text';
@@ -338,10 +338,11 @@
                         // ចាប់យកសារកំហុសពី Server ប្រសិនបើមានបញ្ហា Request
                         const errorData = await response.json().catch(() => ({}));
                         const errMsg = errorData?.error?.message || `HTTP Error ${response.status} - មានបញ្ហាលើ Server`;
+                        const errLower = errMsg.toLowerCase();
                         
                         // បង្កើតសារកំហុសភាសាខ្មែរឱ្យចំបញ្ហា API Key
-                        if (errMsg.includes("unregistered callers") || errMsg.includes("API key not valid")) {
-                            throw new Error("ប្រព័ន្ធទាមទារ API Key។ ប្រសិនបើលោកគ្រូកំពុងដំណើរការកូដនេះនៅលើកុំព្យូទ័រផ្ទាល់ខ្លួន សូមបញ្ចូល Google Gemini API Key នៅក្នុងកូដ (កន្លែងអថេរ const apiKey = '...';)។");
+                        if (errLower.includes("unregistered callers") || errLower.includes("api key not valid") || errLower.includes("api key not found")) {
+                            throw new Error("ប្រព័ន្ធទាមទារ API Key ដើម្បីដំណើរការ! សូមលោកគ្រូបញ្ចូលកូនសោសម្ងាត់ (API Key) នៅចន្លោះសញ្ញា \"\" នៃអថេរ const apiKey នៅក្នុងកូដ។ លោកគ្រូអាចទៅយក API Key ឥតគិតថ្លៃនៅទីនេះ៖ https://aistudio.google.com/app/apikey");
                         }
 
                         // ប្រសិនបើកំហុសនេះបណ្តាលមកពី Payload (4xx) យើងមិនបាច់ Retry ទេ
