@@ -33,6 +33,7 @@
 <body class="min-h-screen p-4 md:p-8">
 
     <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        
         <!-- ផ្នែកខាងលើ Header -->
         <div class="bg-blue-600 text-white p-6 text-center">
             <h1 class="text-3xl font-bold mb-2">ប្រព័ន្ធជំនួយការវិភាគព័ត៌មាន និងរូបភាព</h1>
@@ -105,6 +106,7 @@
     </div>
 
     <script>
+        // API Key ត្រូវបានផ្តល់ដោយប្រព័ន្ធ Canvas ដោយស្វ័យប្រវត្តិនៅពេលចុច Preview
         const apiKey = ""; 
         let currentBase64Image = null;
 
@@ -150,7 +152,8 @@
                 try {
                     const response = await fetch(url, options);
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData?.error?.message || `HTTP error! status: ${response.status}`);
                     }
                     return await response.json();
                 } catch (error) {
@@ -161,6 +164,7 @@
         }
 
         async function callGeminiAPI(systemInstruction, userPrompt, base64Image = null, mimeType = "image/jpeg") {
+            // ប្រើប្រាស់ API Key ពីប្រព័ន្ធ
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             let parts = [{ text: userPrompt }];
@@ -252,7 +256,8 @@
                     showResult("សូមអភ័យទោស ប្រព័ន្ធមិនអាចទាញយកចម្លើយបានទេ។ សូមសាកល្បងម្តងទៀត។", true);
                 }
             } catch (error) {
-                showResult("មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមពិនិត្យមើលអ៊ីនធឺណិតរបស់អ្នក រួចសាកល្បងម្តងទៀត។", true);
+                console.error(error);
+                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message} ។ សូមពិនិត្យមើល API Key ឬ Network របស់អ្នក រួចសាកល្បងម្តងទៀត។`, true);
             }
         }
 
@@ -286,7 +291,8 @@
                     showResult("សូមអភ័យទោស ប្រព័ន្ធមិនអាចទាញយកចម្លើយបានទេ។ សូមសាកល្បងម្តងទៀត។", true);
                 }
             } catch (error) {
-                showResult("មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមពិនិត្យមើលអ៊ីនធឺណិតរបស់អ្នក រួចសាកល្បងម្តងទៀត។", true);
+                console.error(error);
+                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message} ។ សូមពិនិត្យមើល API Key ឬ Network របស់អ្នក រួចសាកល្បងម្តងទៀត។`, true);
             }
         }
     </script>
