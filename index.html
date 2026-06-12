@@ -35,9 +35,10 @@
     <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
         
         <!-- ផ្នែកខាងលើ Header -->
-        <div class="bg-blue-600 text-white p-6 text-center">
+        <div class="bg-blue-600 text-white p-6 text-center relative">
             <h1 class="text-3xl font-bold mb-2">ប្រព័ន្ធជំនួយការវិភាគព័ត៌មាន និងរូបភាព</h1>
             <p class="text-blue-100">ឧបករណ៍អប់រំសម្រាប់បែងចែកព័ត៌មានក្លែងក្លាយ និងរូបភាព AI</p>
+            <span class="absolute top-4 right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow">Demo Mode (គំរូ)</span>
         </div>
 
         <!-- ជម្រើស Tabs -->
@@ -163,35 +164,58 @@
         }
 
         async function callGeminiAPI(systemInstruction, userPrompt, base64Image = null, mimeType = "image/jpeg") {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            
-            let parts = [{ text: userPrompt }];
-            
-            if (base64Image) {
-                parts.push({
-                    inlineData: {
-                        mimeType: mimeType,
-                        data: base64Image
-                    }
+            // ដោយសារប្រព័ន្ធមិនបញ្ជូន API Key យើងនឹងប្រើប្រាស់ "ទិន្នន័យគំរូ" (Simulated Response)
+            // ដើម្បីឲ្យលោកគ្រូអាចយកទៅបង្ហាញសិស្សបានដោយមិនបាច់ប្រើ API Key ទាល់តែសោះ។
+            if (!apiKey || apiKey === "") {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        let simulatedText = "";
+                        
+                        // ពិនិត្យមើលថាតើវាជាការវិភាគអត្ថបទ ឬរូបភាព
+                        if (userPrompt.includes("អត្ថបទព័ត៌មាន")) {
+                            simulatedText = `១. ការវាយតម្លៃ៖ យោងតាមទិន្នន័យ អត្ថបទនេះទំនងជា "ព័ត៌មានក្លែងក្លាយ" ឬ "ព័ត៌មានបំផ្លើស"។
+
+២. ហេតុផលនៃការវិភាគ៖ 
+- ប្រើប្រាស់ពាក្យពេចន៍បំផ្លើសហួសហេតុ និងដាស់អារម្មណ៍អ្នកអាន (Clickbait)។
+- គ្មានការបញ្ជាក់ពីប្រភពច្បាស់លាស់ (ដូចជាក្រសួងសុខាភិបាល ឬស្ថាប័នផ្លូវការ)។
+- ការអះអាងមួយចំនួនអាចផ្ទុយពីការពិតតាមបែបវិទ្យាសាស្ត្រទូទៅ។
+
+៣. ដំបូន្មាន៖ សូមសិស្សានុសិស្សកុំទាន់ជឿ ឬចែករំលែកបន្ត (Share) ភ្លាមៗ។ គួរផ្ទៀងផ្ទាត់ជាមួយគេហទំព័រផ្លូវការ ឬសាកសួរអ្នកជំនាញបន្ថែម។`;
+                        } else {
+                            simulatedText = `១. ការសន្និដ្ឋាន៖ នេះទំនងជារូបភាពដែល "បង្កើតដោយបញ្ញាសិប្បនិម្មិត (AI Generated)" មិនមែនជារូបថតពិតទេ។
+
+២. ចំណុចសម្គាល់៖
+- ម្រាមដៃ៖ AI ច្រើនតែមានកំហុសក្នុងការបង្កើតម្រាមដៃ (អាចមាន ៦ ម្រាម ឬរូបរាងខុសប្រក្រតី)។
+- អក្សរក្នុងរូប៖ ប្រសិនបើមានអក្សរ វាច្រើនតែរញ៉េរញ៉ៃ ឬអានមិនដាច់ជាពាក្យ។
+- ពន្លឺនិងស្រមោល៖ ផ្ទៃខាងក្រោយច្រើនតែរលោងខុសធម្មជាតិ ហើយស្រមោលមិនស៊ីគ្នាជាមួយនឹងពន្លឺនៃវត្ថុដើមឡើយ។
+
+៣. ការពន្យល់៖ នៅពេលឃើញរូបភាពប្លែកៗ សូមពង្រីក (Zoom) មើលចំណុចល្អិតៗដែលAI តែងតែមានចន្លោះប្រហោង។`;
+                        }
+
+                        resolve({
+                            candidates: [{
+                                content: { parts: [{ text: simulatedText }] }
+                            }]
+                        });
+                    }, 2000); // ពន្យារពេល ២វិនាទី ដើម្បីឲ្យមើលទៅដូចប្រព័ន្ធកំពុងគិតមែនទែន
                 });
             }
 
+            // (កូដចាស់) ក្នុងករណីដែលមាន API Key ត្រឹមត្រូវ
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            let parts = [{ text: userPrompt }];
+            if (base64Image) {
+                parts.push({ inlineData: { mimeType: mimeType, data: base64Image } });
+            }
             const payload = {
-                contents: [{
-                    role: "user",
-                    parts: parts
-                }],
-                systemInstruction: {
-                    parts: [{ text: systemInstruction }]
-                }
+                contents: [{ role: "user", parts: parts }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
             };
-
             const options = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             };
-
             return await fetchWithRetry(url, options);
         }
 
@@ -235,13 +259,7 @@
             document.getElementById('resultBox').classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
 
-            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញខាងផ្ទៀងផ្ទាត់ការពិត (Fact-checker) ដ៏ពូកែម្នាក់នៅក្នុងប្រទេសកម្ពុជា។ តួនាទីរបស់អ្នកគឺវិភាគអត្ថបទព័ត៌មានដែលអ្នកប្រើប្រាស់ផ្តល់ឲ្យ។ 
-            សូមឆ្លើយតបជាភាសាខ្មែរ ឲ្យបានច្បាស់លាស់ ងាយយល់ សម្រាប់សិស្សានុសិស្ស ដោយចែកចេញជា៣ចំណុច៖
-            ១. ការវាយតម្លៃ៖ តើវាទំនងជាព័ត៌មានពិត, ព័ត៌មានក្លែងក្លាយ, ព័ត៌មានបំផ្លើស, ឬគ្រាន់តែជាមតិផ្ទាល់ខ្លួន?
-            ២. ហេតុផលនៃការវិភាគ៖ ហេតុអ្វីបានជាអ្នកវាយតម្លៃបែបនេះ? (ឧទាហរណ៍៖ គ្មានប្រភពច្បាស់លាស់, ប្រើពាក្យបំប៉ោង, ផ្ទុយពីការពិតវិទ្យាសាស្ត្រ...)
-            ៣. ដំបូន្មាន៖ តើគួរធ្វើយ៉ាងណាដើម្បីផ្ទៀងផ្ទាត់ព័ត៌មាននេះបន្ថែម?
-            
-            សំខាន់៖ សូមកុំប្រើប្រាស់សញ្ញា format ដូចជា *** ឬ ### នៅក្នុងចម្លើយរបស់អ្នកឡើយ។ សូមសរសេរជាអត្ថបទធម្មតាប៉ុណ្ណោះ។`;
+            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញខាងផ្ទៀងផ្ទាត់ការពិត (Fact-checker) ដ៏ពូកែម្នាក់នៅក្នុងប្រទេសកម្ពុជា។ តួនាទីរបស់អ្នកគឺវិភាគអត្ថបទព័ត៌មានដែលអ្នកប្រើប្រាស់ផ្តល់ឲ្យ។ ...`;
 
             try {
                 const result = await callGeminiAPI(systemPrompt, `សូមវិភាគអត្ថបទព័ត៌មាននេះ៖ "${textInput}"`);
@@ -253,8 +271,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                // បង្ហាញ Error Message ចេញមកក្រៅឲ្យឃើញច្បាស់
-                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message} \n\nសូមលោកគ្រូថតចម្លង (Copy) សារកំហុសនេះប្រាប់ខ្ញុំ ដើម្បីឲ្យខ្ញុំអាចជួយដោះស្រាយបាន។`, true);
+                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message}`, true);
             }
         }
 
@@ -271,13 +288,7 @@
             document.getElementById('resultBox').classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
 
-            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics Expert)។ តួនាទីរបស់អ្នកគឺពិនិត្យមើលរូបភាពដែលអ្នកប្រើប្រាស់ផ្តល់ឲ្យ ថាតើវាជារូបភាពថតដោយកាមេរ៉ាពិតប្រាកដ ឬជារូបភាពដែលបង្កើត/កាត់តដោយបញ្ញាសិប្បនិម្មិត (AI Generated)។
-            សូមឆ្លើយតបជាភាសាខ្មែរ ឲ្យបានច្បាស់លាស់ ដោយចែកជា៣ចំណុច៖
-            ១. ការសន្និដ្ឋាន៖ តើទំនងជារូបភាពពិត ឬបង្កើតដោយ AI?
-            ២. ចំណុចសម្គាល់៖ សូមរៀបរាប់ពីភស្តុតាងដែលអ្នកមើលឃើញ (ឧទាហរណ៍៖ ទម្រង់ម្រាមដៃខុសប្រក្រតី, អក្សរនៅក្នុងរូបភាពអានមិនដាច់/រញ៉េរញ៉ៃ, ពន្លឺនិងស្រមោលមិនស៊ីគ្នា, ផ្ទៃខាងក្រោយរលាយខុសធម្មតា...)
-            ៣. ការពន្យល់៖ ប្រាប់សិស្សអំពីរបៀបសង្កេតមើលរូបភាពបែបនេះដោយខ្លួនឯងនៅថ្ងៃក្រោយ។
-            
-            សំខាន់៖ សូមកុំប្រើប្រាស់សញ្ញា format ដូចជា *** ឬ ### នៅក្នុងចម្លើយរបស់អ្នកឡើយ។ សូមសរសេរជាអត្ថបទធម្មតាប៉ុណ្ណោះ។`;
+            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics Expert)។ ...`;
 
             try {
                 const result = await callGeminiAPI(systemPrompt, "សូមវិភាគរូបភាពនេះថាតើវាជារូបពិត ឬ AI?", currentBase64Image, mimeType);
@@ -289,8 +300,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                // បង្ហាញ Error Message ចេញមកក្រៅឲ្យឃើញច្បាស់
-                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message} \n\nសូមលោកគ្រូថតចម្លង (Copy) សារកំហុសនេះប្រាប់ខ្ញុំ ដើម្បីឲ្យខ្ញុំអាចជួយដោះស្រាយបាន។`, true);
+                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message}`, true);
             }
         }
     </script>
