@@ -96,7 +96,7 @@
                     លទ្ធផលនៃការវិភាគ៖
                 </h3>
                 <!-- កន្លែងបង្ហាញអត្ថបទលទ្ធផល -->
-                <div id="resultContent" class="text-gray-700"></div>
+                <div id="resultContent" class="text-gray-700 font-medium"></div>
                 
                 <div class="mt-6 p-4 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200">
                     <strong>ចំណាំសម្រាប់សិស្សានុសិស្ស៖</strong> លទ្ធផលនេះផ្តល់ដោយបញ្ញាសិប្បនិម្មិត (AI) ដើម្បីជាជំនួយការពិចារណាប៉ុណ្ណោះ។ AI អាចមានកំហុសជួនកាល។ សូមប្រើប្រាស់ការត្រិះរិះពិចារណា (Critical Thinking) និងផ្ទៀងផ្ទាត់ជាមួយប្រភពផ្លូវការបន្ថែមជានិច្ច។
@@ -163,7 +163,6 @@
         }
 
         async function callGeminiAPI(systemInstruction, userPrompt, base64Image = null, mimeType = "image/jpeg") {
-            // ប្រើប្រាស់ API Key ពីប្រព័ន្ធ
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             let parts = [{ text: userPrompt }];
@@ -196,15 +195,14 @@
             return await fetchWithRetry(url, options);
         }
 
-        // អនុគមន៍សម្រាប់សម្អាតអត្ថបទ (លុបសញ្ញាពិសេសៗ)
         function cleanFormatting(text) {
             if (!text) return "";
             return text
-                .replace(/\*\*/g, '') // លុបសញ្ញា ** (Bold)
-                .replace(/\*/g, '')   // លុបសញ្ញា * (Italic ឬ Bullet points ខ្លះ)
-                .replace(/###/g, '')  // លុបសញ្ញា ### (Heading 3)
-                .replace(/##/g, '')   // លុបសញ្ញា ## (Heading 2)
-                .replace(/#/g, '');   // លុបសញ្ញា # (Heading 1)
+                .replace(/\*\*/g, '') 
+                .replace(/\*/g, '')   
+                .replace(/###/g, '')  
+                .replace(/##/g, '')   
+                .replace(/#/g, '');   
         }
 
         function showResult(text, isError = false) {
@@ -215,7 +213,6 @@
 
             resultBox.classList.remove('hidden');
             
-            // ហៅអនុគមន៍សម្អាតអត្ថបទមុននឹងបង្ហាញ
             resultContent.textContent = cleanFormatting(text);
 
             if (isError) {
@@ -252,11 +249,12 @@
                 if (responseText) {
                     showResult(responseText);
                 } else {
-                    showResult("សូមអភ័យទោស ប្រព័ន្ធមិនអាចទាញយកចម្លើយបានទេ។ សូមសាកល្បងម្តងទៀត។", true);
+                    showResult("សូមអភ័យទោស ប្រព័ន្ធមិនអាចទាញយកចម្លើយបានទេ។ (គ្មានទិន្នន័យឆ្លើយតបពី AI)", true);
                 }
             } catch (error) {
                 console.error(error);
-                showResult("មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមសាកល្បងចុច Refresh គេហទំព័រនេះ រួចសាកល្បងម្តងទៀត។", true);
+                // បង្ហាញ Error Message ចេញមកក្រៅឲ្យឃើញច្បាស់
+                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message} \n\nសូមលោកគ្រូថតចម្លង (Copy) សារកំហុសនេះប្រាប់ខ្ញុំ ដើម្បីឲ្យខ្ញុំអាចជួយដោះស្រាយបាន។`, true);
             }
         }
 
@@ -287,11 +285,12 @@
                 if (responseText) {
                     showResult(responseText);
                 } else {
-                    showResult("សូមអភ័យទោស ប្រព័ន្ធមិនអាចទាញយកចម្លើយបានទេ។ សូមសាកល្បងម្តងទៀត។", true);
+                    showResult("សូមអភ័យទោស ប្រព័ន្ធមិនអាចទាញយកចម្លើយបានទេ។ (គ្មានទិន្នន័យឆ្លើយតបពី AI)", true);
                 }
             } catch (error) {
                 console.error(error);
-                showResult("មានបញ្ហាក្នុងការតភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមសាកល្បងចុច Refresh គេហទំព័រនេះ រួចសាកល្បងម្តងទៀត។", true);
+                // បង្ហាញ Error Message ចេញមកក្រៅឲ្យឃើញច្បាស់
+                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message} \n\nសូមលោកគ្រូថតចម្លង (Copy) សារកំហុសនេះប្រាប់ខ្ញុំ ដើម្បីឲ្យខ្ញុំអាចជួយដោះស្រាយបាន។`, true);
             }
         }
     </script>
