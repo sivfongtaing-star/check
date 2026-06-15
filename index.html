@@ -23,7 +23,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Style សម្រាប់អត្ថបទលទ្ធផល ដើម្បីរក្សាការចុះបន្ទាត់ */
         #resultContent {
             white-space: pre-wrap; 
             line-height: 1.8;
@@ -32,13 +31,16 @@
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden relative">
         
         <!-- ផ្នែកខាងលើ Header -->
         <div class="bg-blue-600 text-white p-6 text-center relative">
             <h1 class="text-3xl font-bold mb-2">ប្រព័ន្ធជំនួយការវិភាគព័ត៌មាន និងរូបភាព</h1>
             <p class="text-blue-100">ឧបករណ៍អប់រំសម្រាប់បែងចែកព័ត៌មានក្លែងក្លាយ និងរូបភាព AI</p>
-            <span class="absolute top-4 right-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow">Demo Mode (គំរូ)</span>
+            <!-- សញ្ញាសម្គាល់កូដថ្មី -->
+            <span class="absolute top-4 right-4 bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full shadow-md animate-pulse">
+                🟢 ភ្ជាប់ AI ពិត (V2)
+            </span>
         </div>
 
         <!-- ជម្រើស Tabs -->
@@ -88,7 +90,7 @@
             <!-- កន្លែងបង្ហាញលទ្ធផល Loading & Results -->
             <div id="loadingIndicator" class="hidden mt-8 flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg">
                 <div class="loader mb-4"></div>
-                <p class="text-gray-600 font-bold animate-pulse">ប្រព័ន្ធកំពុងដំណើរការវិភាគ សូមរង់ចាំបន្តិច...</p>
+                <p class="text-gray-600 font-bold animate-pulse">ប្រព័ន្ធកំពុងភ្ជាប់ទៅកាន់ AI ដើម្បីវិភាគ សូមរង់ចាំបន្តិច...</p>
             </div>
 
             <div id="resultBox" class="hidden mt-8 p-6 rounded-lg border">
@@ -107,6 +109,7 @@
     </div>
 
     <script>
+        // API Key ត្រូវផ្តល់ដោយប្រព័ន្ធ Canvas ពេលលោកគ្រូចុច Preview
         const apiKey = "";
         let currentBase64Image = null;
 
@@ -140,6 +143,7 @@
                     document.getElementById('imagePreview').src = e.target.result;
                     document.getElementById('imagePreviewContainer').classList.remove('hidden');
                     document.getElementById('uploadPrompt').classList.add('hidden');
+                    // ចាប់យកទិន្នន័យរូបភាព Base64 ក្រោយសញ្ញាក្បៀស
                     currentBase64Image = e.target.result.split(',')[1];
                 }
                 reader.readAsDataURL(file);
@@ -164,58 +168,30 @@
         }
 
         async function callGeminiAPI(systemInstruction, userPrompt, base64Image = null, mimeType = "image/jpeg") {
-            // ដោយសារប្រព័ន្ធមិនបញ្ជូន API Key យើងនឹងប្រើប្រាស់ "ទិន្នន័យគំរូ" (Simulated Response)
-            // ដើម្បីឲ្យលោកគ្រូអាចយកទៅបង្ហាញសិស្សបានដោយមិនបាច់ប្រើ API Key ទាល់តែសោះ។
-            if (!apiKey || apiKey === "") {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        let simulatedText = "";
-                        
-                        // ពិនិត្យមើលថាតើវាជាការវិភាគអត្ថបទ ឬរូបភាព
-                        if (userPrompt.includes("អត្ថបទព័ត៌មាន")) {
-                            simulatedText = `១. ការវាយតម្លៃ៖ យោងតាមទិន្នន័យ អត្ថបទនេះទំនងជា "ព័ត៌មានក្លែងក្លាយ" ឬ "ព័ត៌មានបំផ្លើស"។
-
-២. ហេតុផលនៃការវិភាគ៖ 
-- ប្រើប្រាស់ពាក្យពេចន៍បំផ្លើសហួសហេតុ និងដាស់អារម្មណ៍អ្នកអាន (Clickbait)។
-- គ្មានការបញ្ជាក់ពីប្រភពច្បាស់លាស់ (ដូចជាក្រសួងសុខាភិបាល ឬស្ថាប័នផ្លូវការ)។
-- ការអះអាងមួយចំនួនអាចផ្ទុយពីការពិតតាមបែបវិទ្យាសាស្ត្រទូទៅ។
-
-៣. ដំបូន្មាន៖ សូមសិស្សានុសិស្សកុំទាន់ជឿ ឬចែករំលែកបន្ត (Share) ភ្លាមៗ។ គួរផ្ទៀងផ្ទាត់ជាមួយគេហទំព័រផ្លូវការ ឬសាកសួរអ្នកជំនាញបន្ថែម។`;
-                        } else {
-                            simulatedText = `១. ការសន្និដ្ឋាន៖ នេះទំនងជារូបភាពដែល "បង្កើតដោយបញ្ញាសិប្បនិម្មិត (AI Generated)" មិនមែនជារូបថតពិតទេ។
-
-២. ចំណុចសម្គាល់៖
-- ម្រាមដៃ៖ AI ច្រើនតែមានកំហុសក្នុងការបង្កើតម្រាមដៃ (អាចមាន ៦ ម្រាម ឬរូបរាងខុសប្រក្រតី)។
-- អក្សរក្នុងរូប៖ ប្រសិនបើមានអក្សរ វាច្រើនតែរញ៉េរញ៉ៃ ឬអានមិនដាច់ជាពាក្យ។
-- ពន្លឺនិងស្រមោល៖ ផ្ទៃខាងក្រោយច្រើនតែរលោងខុសធម្មជាតិ ហើយស្រមោលមិនស៊ីគ្នាជាមួយនឹងពន្លឺនៃវត្ថុដើមឡើយ។
-
-៣. ការពន្យល់៖ នៅពេលឃើញរូបភាពប្លែកៗ សូមពង្រីក (Zoom) មើលចំណុចល្អិតៗដែលAI តែងតែមានចន្លោះប្រហោង។`;
-                        }
-
-                        resolve({
-                            candidates: [{
-                                content: { parts: [{ text: simulatedText }] }
-                            }]
-                        });
-                    }, 2000); // ពន្យារពេល ២វិនាទី ដើម្បីឲ្យមើលទៅដូចប្រព័ន្ធកំពុងគិតមែនទែន
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            let parts = [{ text: userPrompt }];
+            
+            if (base64Image) {
+                parts.push({ 
+                    inlineData: { 
+                        mimeType: mimeType, 
+                        data: base64Image 
+                    } 
                 });
             }
-
-            // (កូដចាស់) ក្នុងករណីដែលមាន API Key ត្រឹមត្រូវ
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            let parts = [{ text: userPrompt }];
-            if (base64Image) {
-                parts.push({ inlineData: { mimeType: mimeType, data: base64Image } });
-            }
+            
             const payload = {
                 contents: [{ role: "user", parts: parts }],
                 systemInstruction: { parts: [{ text: systemInstruction }] }
             };
+            
             const options = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             };
+            
             return await fetchWithRetry(url, options);
         }
 
@@ -246,23 +222,29 @@
                 resultBox.className = "hidden mt-8 p-6 rounded-lg border bg-green-50 border-green-200";
                 resultIcon.textContent = "✅";
             }
-            resultBox.classList.remove('hidden');
         }
 
         async function analyzeText() {
             const textInput = document.getElementById('newsInput').value.trim();
             if (!textInput) {
-                alert("សូមបញ្ចូលអត្ថបទព័ត៌មានជាមុនសិន!");
+                alert("សូមបញ្ចូលអត្ថបទព័ត៌មាន ឬសំណួរជាមុនសិន!");
                 return;
             }
 
             document.getElementById('resultBox').classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
 
-            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញខាងផ្ទៀងផ្ទាត់ការពិត (Fact-checker) ដ៏ពូកែម្នាក់នៅក្នុងប្រទេសកម្ពុជា។ តួនាទីរបស់អ្នកគឺវិភាគអត្ថបទព័ត៌មានដែលអ្នកប្រើប្រាស់ផ្តល់ឲ្យ។ ...`;
+            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញខាងផ្ទៀងផ្ទាត់ការពិត (Fact-checker) ដ៏ពូកែម្នាក់នៅក្នុងប្រទេសកម្ពុជា។ តួនាទីរបស់អ្នកគឺវិភាគអត្ថបទព័ត៌មានដែលអ្នកប្រើប្រាស់ផ្តល់ឲ្យ។ 
+            សូមឆ្លើយតបជាភាសាខ្មែរ ឲ្យបានច្បាស់លាស់ ងាយយល់ សម្រាប់សិស្សានុសិស្ស ដោយចែកចេញជា៣ចំណុច៖
+            ១. ការវាយតម្លៃ៖ តើវាទំនងជាព័ត៌មានពិត, ព័ត៌មានក្លែងក្លាយ, ព័ត៌មានបំផ្លើស, ឬគ្រាន់តែជាសំណួរ/មតិផ្ទាល់ខ្លួន?
+            ២. ហេតុផលនៃការវិភាគ៖ ហេតុអ្វីបានជាអ្នកវាយតម្លៃបែបនេះ? បើវាជាសំណួរ សូមឆ្លើយតបទៅនឹងសំណួរនោះដោយផ្អែកលើការពិតនាពេលបច្ចុប្បន្ន។
+            ៣. ដំបូន្មាន៖ តើគួរធ្វើយ៉ាងណាដើម្បីផ្ទៀងផ្ទាត់ព័ត៌មាននេះបន្ថែម?
+            
+            សំខាន់៖ សូមកុំប្រើប្រាស់សញ្ញា format ដូចជា *** ឬ ### នៅក្នុងចម្លើយរបស់អ្នកឡើយ។ សូមសរសេរជាអត្ថបទធម្មតាប៉ុណ្ណោះ។`;
 
             try {
-                const result = await callGeminiAPI(systemPrompt, `សូមវិភាគអត្ថបទព័ត៌មាននេះ៖ "${textInput}"`);
+                // បញ្ជូនសំណួរថ្មីទៅកាន់ AI ពិតប្រាកដ
+                const result = await callGeminiAPI(systemPrompt, `សូមវិភាគអត្ថបទ ឬ សំណួរនេះ៖ "${textInput}"`);
                 const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (responseText) {
                     showResult(responseText);
@@ -271,7 +253,11 @@
                 }
             } catch (error) {
                 console.error(error);
-                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message}`, true);
+                if(error.message.includes("unregistered callers")) {
+                    showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ប្រព័ន្ធ Canvas មិនបានផ្តល់ API Key ឲ្យកូដនេះទេ។ សូម Refresh ផ្ទាំងនេះរួចសាកល្បងម្តងទៀត។`, true);
+                } else {
+                    showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message}`, true);
+                }
             }
         }
 
@@ -288,7 +274,13 @@
             document.getElementById('resultBox').classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
 
-            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics Expert)។ ...`;
+            const systemPrompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics Expert)។ តួនាទីរបស់អ្នកគឺពិនិត្យមើលរូបភាពដែលអ្នកប្រើប្រាស់ផ្តល់ឲ្យ ថាតើវាជារូបភាពថតដោយកាមេរ៉ាពិតប្រាកដ ឬជារូបភាពដែលបង្កើត/កាត់តដោយបញ្ញាសិប្បនិម្មិត (AI Generated)។
+            សូមឆ្លើយតបជាភាសាខ្មែរ ឲ្យបានច្បាស់លាស់ ដោយចែកជា៣ចំណុច៖
+            ១. ការសន្និដ្ឋាន៖ តើទំនងជារូបភាពពិត ឬបង្កើតដោយ AI?
+            ២. ចំណុចសម្គាល់៖ សូមរៀបរាប់ពីភស្តុតាងដែលអ្នកមើលឃើញ (ឧទាហរណ៍៖ ទម្រង់ម្រាមដៃខុសប្រក្រតី, អក្សរនៅក្នុងរូបភាពអានមិនដាច់/រញ៉េរញ៉ៃ, ពន្លឺនិងស្រមោលមិនស៊ីគ្នា, ផ្ទៃខាងក្រោយរលាយខុសធម្មតា...)
+            ៣. ការពន្យល់៖ ប្រាប់សិស្សអំពីរបៀបសង្កេតមើលរូបភាពបែបនេះដោយខ្លួនឯងនៅថ្ងៃក្រោយ។
+            
+            សំខាន់៖ សូមកុំប្រើប្រាស់សញ្ញា format ដូចជា *** ឬ ### នៅក្នុងចម្លើយរបស់អ្នកឡើយ។ សូមសរសេរជាអត្ថបទធម្មតាប៉ុណ្ណោះ។`;
 
             try {
                 const result = await callGeminiAPI(systemPrompt, "សូមវិភាគរូបភាពនេះថាតើវាជារូបពិត ឬ AI?", currentBase64Image, mimeType);
@@ -300,7 +292,11 @@
                 }
             } catch (error) {
                 console.error(error);
-                showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message}`, true);
+                if(error.message.includes("unregistered callers")) {
+                    showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ប្រព័ន្ធ Canvas មិនបានផ្តល់ API Key ឲ្យកូដនេះទេ។ សូម Refresh ផ្ទាំងនេះរួចសាកល្បងម្តងទៀត។`, true);
+                } else {
+                    showResult(`មានបញ្ហាក្នុងការតភ្ជាប់៖ ${error.message}`, true);
+                }
             }
         }
     </script>
