@@ -14,7 +14,7 @@
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3b82f6;
-            border-radius: 50%;
+            border-radius: 50%;ា
             width: 30px;
             height: 30px;
             animation: spin 1s linear infinite;
@@ -77,7 +77,6 @@
                 <h2 class="text-xl font-bold mb-4 text-gray-800">ពិនិត្យមើលរូបភាព (AI ឬ រូបពិត?)</h2>
                 <p class="mb-4 text-gray-600">សូមបញ្ចូលរូបភាពដើម្បីពិនិត្យថាតើវាជារូបភាពថតពិតប្រាកដ ឬបង្កើតដោយ AI៖</p>
                 
-                <!-- កែប្រែ៖ ប្តូរទៅជា <label> វិញដើម្បីឲ្យការចុះស្វែងរករូបភាពដើរបានរឹងមាំបំផុត ដោយគ្មានការរាំងខ្ទប់ពី Browser -->
                 <label for="imageInput" class="block border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition cursor-pointer relative overflow-hidden" id="uploadArea">
                     <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="previewImage(event)">
                     
@@ -238,11 +237,10 @@
             const resultContent = document.getElementById('resultContent');
             const verdictBanner = document.getElementById('verdictBanner');
 
-            // កំណត់ទម្រង់ក្បឿងលទ្ធផលឡើងវិញ (ស្រោបពណ៌ និងផ្ទៃខាងក្រោយឡើងវិញ)
             resultContent.className = "text-gray-700 font-medium bg-gray-50 p-4 rounded-lg border border-gray-100";
 
             let verdict = 'suspicious'; 
-            let cleanText = String(text || ''); // ការពារកុំឲ្យ Error ក្នុងករណី Text មិនមែនជា String
+            let cleanText = String(text || '');
 
             if (cleanText.includes('[VERDICT: FAKE]')) {
                 verdict = 'fake';
@@ -282,7 +280,6 @@
             resultBox.classList.remove('hidden');
         }
 
-        // --- ប្រព័ន្ធវិភាគបម្រុងឆ្លាតវៃ Offline បែបក្បោះក្បាយ ---
         function smartLocalTextAnalysis(text) {
             const lowerText = text.toLowerCase();
             let result = "";
@@ -295,7 +292,7 @@
 
 ២. ហេតុផល និងការវិភាគបែបអប់រំ (សម្រាប់ការពន្យល់សិស្ស)៖
 - ល្បិចចិត្តសាស្ត្រដាស់កំហឹង៖ អ្នកបង្កើតព័ត៌មានក្លែងក្លាយតែងតែដឹងថា រឿងរ៉ាវរវាងជាតិសាសន៍ជិតខាង ងាយនឹងបង្កឱ្យមានការជជែកដេញដោល និងផ្ទុះកំហឹង។ ពួកគេប្រើប្រាស់រូបភាពចាស់ៗ ឬវីដេអូកាត់តមកបញ្ចូលគ្នា រួចសរសេរចំណងជើងបំផ្លើស ដើម្បីទាញយកការទស្សនា (View) និងការចែករំលែក (Share) យកប្រជាប្រិយភាពផ្ទាល់ខ្លួន។
-- <b>ការខ្វះប្រភពផ្លូវការ៖</b> ប្រសិនបើមានព្រឹត្តិការណ៍ការទូតធំៗណាមួយកើតឡើង ស្ថាប័នរដ្ឋាភិបាល ដូចជាក្រសួងការបរទេស ឬអ្នកនាំពាក្យរាជរដ្ឋាភិបាល នឹងចេញសេចក្តីថ្លែងការណ៍ជាផ្លូវការភ្លាមៗ។ ព័ត៌មានដែលនិយាយតៗគ្នាដោយគ្មានឯកសារយោងផ្លូវការ មិនអាចយកជាការបានឡើយ។
+- ការខ្វះប្រភពផ្លូវការ៖ ប្រសិនបើមានព្រឹត្តិការណ៍ការទូតធំៗណាមួយកើតឡើង ស្ថាប័នរដ្ឋាភិបាល ដូចជាក្រសួងការបរទេស ឬអ្នកនាំពាក្យរាជរដ្ឋាភិបាល នឹងចេញសេចក្តីថ្លែងការណ៍ជាផ្លូវការភ្លាមៗ។ ព័ត៌មានដែលនិយាយតៗគ្នាដោយគ្មានឯកសារយោងផ្លូវការ មិនអាចយកជាការបានឡើយ។
 
 ៣. វិធីសាស្ត្រក្នុងការផ្ទៀងផ្ទាត់ (Critical Thinking)៖
 - ជំហានទី១៖ ជៀសវាងការជឿភ្លាមៗទៅលើគណនីបុគ្គល ឬវីដេអូខ្លីនៅលើបណ្តាញសង្គម TikTok និង Facebook Reels។
@@ -346,7 +343,6 @@
             return result;
         }
 
-        // --- ប្រព័ន្ធអន្តរកម្មវិភាគរូបភាព Offline ថ្មីសន្លាង ---
         function renderInteractiveImageForensicWorksheet() {
             document.getElementById('loadingIndicator').classList.add('hidden');
             stopScanner();
@@ -355,21 +351,17 @@
             const verdictBanner = document.getElementById('verdictBanner');
             const resultContent = document.getElementById('resultContent');
 
-            // សម្អាត Background និង Border របស់ Content Box ដើម្បីកុំឲ្យជាន់គ្នាជាមួយរចនាបថ Worksheet
             resultContent.className = "text-gray-700 font-medium bg-transparent p-0 border-0";
 
-            // រៀបចំ Banner របៀបអប់រំគំរូ
             verdictBanner.className = "mb-6 p-4 rounded-xl text-center font-bold text-lg shadow-sm border bg-blue-100 text-blue-800 border-blue-300";
             verdictBanner.innerHTML = "🔍 សន្លឹកកិច្ចការសង្កេត និងវិភាគរូបភាពអន្តរកម្ម (Offline Mode)";
 
-            // បង្កើត Interface ថ្មីសម្រាប់សិស្សចូលរួមគ្រីសសង្កេតរូបភាព
             resultContent.innerHTML = `
                 <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 mb-6 text-sm text-yellow-800">
                     <strong>សេចក្តីណែនាំសម្រាប់លោកគ្រូ៖</strong> សូមនាំសិស្សានុសិស្សសម្លឹងមើលរូបភាពដែលបានបញ្ចូលខាងលើ រួចគូសគ្រីស (Check) ទៅលើចំណុចមិនប្រក្រតីដែលពួកគេបានរកឃើញជាក់ស្តែង។ ប្រព័ន្ធនឹងគណនាភាគរយ AI ដោយស្វ័យប្រវត្តិតាមរយៈការសង្កេតផ្ទាល់ភ្នែករបស់សិស្ស!
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- បញ្ជីសង្កេត Checkbox -->
                     <div class="space-y-3">
                         <h4 class="font-bold text-gray-800 mb-2">🔎 សូមជ្រើសរើសចំណុចខុសធម្មតាដែលរកឃើញ៖</h4>
                         
@@ -399,12 +391,10 @@
                         </label>
                     </div>
 
-                    <!-- របារគណនាភាគរយ -->
                     <div class="bg-gray-100 p-6 rounded-xl flex flex-col justify-center items-center border">
                         <div class="text-gray-500 font-bold mb-2">កម្រិតសង្ស័យជា រូបភាព AI៖</div>
                         <div id="suspicionPercentage" class="text-5xl font-bold text-gray-400 mb-4">0%</div>
                         
-                        <!-- Progress Bar -->
                         <div class="w-full bg-gray-300 rounded-full h-4 mb-4">
                             <div id="progressBar" class="bg-blue-500 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
                         </div>
@@ -413,7 +403,6 @@
                     </div>
                 </div>
 
-                <!-- របាយការណ៍បកស្រាយលម្អិត -->
                 <div id="interactiveReport" class="hidden mt-6 p-4 bg-white rounded-xl border border-gray-200">
                     <h4 class="font-bold text-gray-800 border-b pb-2 mb-3">📄 របាយការណ៍វិភាគបច្ចេកទេសផ្លូវការ៖</h4>
                     <div id="reportText" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
@@ -423,7 +412,6 @@
             resultBox.classList.remove('hidden');
         }
 
-        // មុខងារគណនាភាគរយ AI តាមការគ្រីសរបស់សិស្ស
         function updateForensicScore() {
             const chkFinger = document.getElementById('chkFinger').checked;
             const chkText = document.getElementById('chkText').checked;
@@ -464,7 +452,6 @@
             pctText.textContent = score + "%";
             progressBar.style.width = score + "%";
 
-            // ប្តូរពណ៌ទៅតាមកម្រិតភាគរយសង្ស័យ
             if (score === 0) {
                 pctText.className = "text-5xl font-bold text-gray-400 mb-4";
                 progressBar.className = "bg-gray-400 h-4 rounded-full transition-all duration-500";
@@ -487,13 +474,11 @@
                 interactiveReport.classList.remove('hidden');
             }
 
-            // សរសេររបាយការណ៍បកស្រាយលម្អិត
             if (score > 0) {
                 reportText.innerHTML = `ផ្អែកលើការសង្កេតជាក់ស្តែង យើងបានរកឃើញភស្តុតាងបច្ចេកទេសចំនួន <strong>${reportDetails.length} ចំណុច</strong> ដូចខាងក្រោម៖\n\n${reportDetails.join('\n\n')}\n\n<strong>💡 សេចក្តីសន្និដ្ឋានសម្រាប់មេរៀន៖</strong> នៅក្នុងការរស់នៅប្រចាំថ្ងៃ សិស្សានុសិស្សត្រូវចាំថា AI តែងតែមាន "ស្នាមជើងបច្ចេកវិទ្យា (Digital Artifacts)"។ ការយកចិត្តទុកដាក់សង្កេតចំណុចល្អិតៗទាំងនេះ នឹងជួយការពារយើងពីការបោកប្រាស់ដោយរូបភាពក្លែងក្លាយនៅលើអ៊ីនធឺណិតយ៉ាងមានប្រសិទ្ធភាព!`;
             }
         }
         
-        // ធានាការហៅដំណើរការ function updateForensicScore បានល្អគ្រប់ទីកន្លែង
         window.updateForensicScore = updateForensicScore;
 
         async function analyzeText() {
@@ -538,7 +523,6 @@
             document.getElementById('resultBox').classList.add('hidden');
             document.getElementById('loadingIndicator').classList.remove('hidden');
             
-            // បើកបន្ទាត់ស្កេនរូបភាព (Visual Scanner)
             startScanner();
 
             const systemPrompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics Expert)។ ...`;
@@ -558,7 +542,6 @@
             } catch (error) {
                 console.log("ប្រព័ន្ធកំពុងដំណើរការ Offline Image Forensic Interactive Worksheet...", error);
                 
-                // ពន្យារពេលស្កេន ២ វិនាទី ដើម្បីឲ្យមើលទៅរំភើប រួចបើកផ្ទាំងសន្លឹកកិច្ចការអន្តរកម្ម
                 setTimeout(() => {
                     renderInteractiveImageForensicWorksheet();
                 }, 2000);
