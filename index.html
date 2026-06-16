@@ -95,7 +95,7 @@
                     </div>
                 </label>
                 
-                <button id="btnAnalyzeImage" onclick="analyzeImage()" class="mt-4 w-full bg-blue-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center">
+                <button id="btnAnalyzeImage" onclick="analyzeImage()" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center">
                     🔍 ចាប់ផ្តើមវិភាគរូបភាព
                 </button>
             </div>
@@ -238,24 +238,27 @@
             const resultContent = document.getElementById('resultContent');
             const verdictBanner = document.getElementById('verdictBanner');
 
-            let verdict = 'suspicious'; 
-            let cleanText = text;
+            // កំណត់ទម្រង់ក្បឿងលទ្ធផលឡើងវិញ (ស្រោបពណ៌ និងផ្ទៃខាងក្រោយឡើងវិញ)
+            resultContent.className = "text-gray-700 font-medium bg-gray-50 p-4 rounded-lg border border-gray-100";
 
-            if (text.includes('[VERDICT: FAKE]')) {
+            let verdict = 'suspicious'; 
+            let cleanText = String(text || ''); // ការពារកុំឲ្យ Error ក្នុងករណី Text មិនមែនជា String
+
+            if (cleanText.includes('[VERDICT: FAKE]')) {
                 verdict = 'fake';
-                cleanText = text.replace('[VERDICT: FAKE]', '');
-            } else if (text.includes('[VERDICT: REAL]')) {
+                cleanText = cleanText.replace('[VERDICT: FAKE]', '');
+            } else if (cleanText.includes('[VERDICT: REAL]')) {
                 verdict = 'real';
-                cleanText = text.replace('[VERDICT: REAL]', '');
-            } else if (text.includes('[VERDICT: SUSPICIOUS]')) {
+                cleanText = cleanText.replace('[VERDICT: REAL]', '');
+            } else if (cleanText.includes('[VERDICT: SUSPICIOUS]')) {
                 verdict = 'suspicious';
-                cleanText = text.replace('[VERDICT: SUSPICIOUS]', '');
-            } else if (text.includes('[VERDICT: AI]')) {
+                cleanText = cleanText.replace('[VERDICT: SUSPICIOUS]', '');
+            } else if (cleanText.includes('[VERDICT: AI]')) {
                 verdict = 'ai';
-                cleanText = text.replace('[VERDICT: AI]', '');
-            } else if (text.includes('[VERDICT: REAL_IMAGE]')) {
+                cleanText = cleanText.replace('[VERDICT: AI]', '');
+            } else if (cleanText.includes('[VERDICT: REAL_IMAGE]')) {
                 verdict = 'real_image';
-                cleanText = text.replace('[VERDICT: REAL_IMAGE]', '');
+                cleanText = cleanText.replace('[VERDICT: REAL_IMAGE]', '');
             }
 
             if (verdict === 'fake') {
@@ -291,8 +294,8 @@
 - ការសន្និដ្ឋានបឋម៖ បច្ចុប្បន្នភាពរវាងរដ្ឋាភិបាលនៃប្រទេសទាំងពីរ (កម្ពុជា និងថៃ) គឺមានទំនាក់ទំនងការទូតល្អជាធម្មតា គ្មានជម្លោះប្រដាប់អាវុធ ឬការបិទព្រំដែនណាមួយឡើយ។ ដូចនេះ ការលើកឡើងអំពីជម្លោះធ្ងន់ធ្ងរណាមួយនៅលើ TikTok ឬ Facebook ភាគច្រើនជា «ព័ត៌មានក្លែងក្លាយ ឬបំផ្លើសការពិត»។
 
 ២. ហេតុផល និងការវិភាគបែបអប់រំ (សម្រាប់ការពន្យល់សិស្ស)៖
-- ល្បិចចិត្តសាស្ត្រដាស់កំហឹង៖ អ្នកបង្កើតព័ត៌មានក្លែងក្លាយតែងតែដឹងថា រឿងរ៉ាវរវាងជាតិសាសន៍ជិតខាង ងាយនឹងបង្កឱ្យមានការជជែកដេញដោល និងផ្ទុះកំហឹង。ពួកគេប្រើប្រាស់រូបភាពចាស់ៗ ឬវីដេអូកាត់តមកបញ្ចូលគ្នា រួចសរសេរចំណងជើងបំផ្លើស ដើម្បីទាញយកការទស្សនា (View) និងការចែករំលែក (Share) យកប្រជាប្រិយភាពផ្ទាល់ខ្លួន។
-- ការខ្វះប្រភពផ្លូវការ៖ ប្រសិនបើមានព្រឹត្តិការណ៍ការទូតធំៗណាមួយកើតឡើង ស្ថាប័នរដ្ឋាភិបាល ដូចជាក្រសួងការបរទេស ឬអ្នកនាំពាក្យរាជរដ្ឋាភិបាល នឹងចេញសេចក្តីថ្លែងការណ៍ជាផ្លូវការភ្លាមៗ។ ព័ត៌មានដែលនិយាយតៗគ្នាដោយគ្មានឯកសារយោងផ្លូវការ មិនអាចយកជាការបានឡើយ។
+- ល្បិចចិត្តសាស្ត្រដាស់កំហឹង៖ អ្នកបង្កើតព័ត៌មានក្លែងក្លាយតែងតែដឹងថា រឿងរ៉ាវរវាងជាតិសាសន៍ជិតខាង ងាយនឹងបង្កឱ្យមានការជជែកដេញដោល និងផ្ទុះកំហឹង។ ពួកគេប្រើប្រាស់រូបភាពចាស់ៗ ឬវីដេអូកាត់តមកបញ្ចូលគ្នា រួចសរសេរចំណងជើងបំផ្លើស ដើម្បីទាញយកការទស្សនា (View) និងការចែករំលែក (Share) យកប្រជាប្រិយភាពផ្ទាល់ខ្លួន។
+- <b>ការខ្វះប្រភពផ្លូវការ៖</b> ប្រសិនបើមានព្រឹត្តិការណ៍ការទូតធំៗណាមួយកើតឡើង ស្ថាប័នរដ្ឋាភិបាល ដូចជាក្រសួងការបរទេស ឬអ្នកនាំពាក្យរាជរដ្ឋាភិបាល នឹងចេញសេចក្តីថ្លែងការណ៍ជាផ្លូវការភ្លាមៗ។ ព័ត៌មានដែលនិយាយតៗគ្នាដោយគ្មានឯកសារយោងផ្លូវការ មិនអាចយកជាការបានឡើយ។
 
 ៣. វិធីសាស្ត្រក្នុងការផ្ទៀងផ្ទាត់ (Critical Thinking)៖
 - ជំហានទី១៖ ជៀសវាងការជឿភ្លាមៗទៅលើគណនីបុគ្គល ឬវីដេអូខ្លីនៅលើបណ្តាញសង្គម TikTok និង Facebook Reels។
@@ -351,6 +354,9 @@
             const resultBox = document.getElementById('resultBox');
             const verdictBanner = document.getElementById('verdictBanner');
             const resultContent = document.getElementById('resultContent');
+
+            // សម្អាត Background និង Border របស់ Content Box ដើម្បីកុំឲ្យជាន់គ្នាជាមួយរចនាបថ Worksheet
+            resultContent.className = "text-gray-700 font-medium bg-transparent p-0 border-0";
 
             // រៀបចំ Banner របៀបអប់រំគំរូ
             verdictBanner.className = "mb-6 p-4 rounded-xl text-center font-bold text-lg shadow-sm border bg-blue-100 text-blue-800 border-blue-300";
@@ -418,7 +424,7 @@
         }
 
         // មុខងារគណនាភាគរយ AI តាមការគ្រីសរបស់សិស្ស
-        window.updateForensicScore = function() {
+        function updateForensicScore() {
             const chkFinger = document.getElementById('chkFinger').checked;
             const chkText = document.getElementById('chkText').checked;
             const chkBg = document.getElementById('chkBg').checked;
@@ -485,7 +491,10 @@
             if (score > 0) {
                 reportText.innerHTML = `ផ្អែកលើការសង្កេតជាក់ស្តែង យើងបានរកឃើញភស្តុតាងបច្ចេកទេសចំនួន <strong>${reportDetails.length} ចំណុច</strong> ដូចខាងក្រោម៖\n\n${reportDetails.join('\n\n')}\n\n<strong>💡 សេចក្តីសន្និដ្ឋានសម្រាប់មេរៀន៖</strong> នៅក្នុងការរស់នៅប្រចាំថ្ងៃ សិស្សានុសិស្សត្រូវចាំថា AI តែងតែមាន "ស្នាមជើងបច្ចេកវិទ្យា (Digital Artifacts)"។ ការយកចិត្តទុកដាក់សង្កេតចំណុចល្អិតៗទាំងនេះ នឹងជួយការពារយើងពីការបោកប្រាស់ដោយរូបភាពក្លែងក្លាយនៅលើអ៊ីនធឺណិតយ៉ាងមានប្រសិទ្ធភាព!`;
             }
-        };
+        }
+        
+        // ធានាការហៅដំណើរការ function updateForensicScore បានល្អគ្រប់ទីកន្លែង
+        window.updateForensicScore = updateForensicScore;
 
         async function analyzeText() {
             const textInput = document.getElementById('newsInput').value.trim();
