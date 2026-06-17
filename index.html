@@ -278,6 +278,7 @@
 
         // Application State
         let base64Image = null;
+        let imageMimeType = "image/png";
         const apiKey = ""; // API key will be provided at runtime by the preview environment
 
         // Tab Switching Logic
@@ -349,8 +350,13 @@
 
                     if (response.ok) {
                         return await response.json();
+                    } else if (response.status === 400) {
+                        throw new Error("ទម្រង់ទិន្នន័យមានបញ្ហា (Bad Request)។ សូមពិនិត្យមើលរូបភាព ឬអត្ថបទម្តងទៀត។");
                     }
                 } catch (error) {
+                    if (error.message && error.message.includes("ទម្រង់ទិន្នន័យមានបញ្ហា")) {
+                        throw error;
+                    }
                     // Fail silently for console, handle delay inside loop
                 }
                 
@@ -390,10 +396,21 @@ Format your response as a valid JSON object strictly matching this schema. Do no
 }`;
 
             const payload = {
-                contents: [{ parts: [{ text: text }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ role: "user", parts: [{ text: text }] }],
+                systemInstruction: { role: "system", parts: [{ text: systemPrompt }] },
                 generationConfig: {
-                    responseMimeType: "application/json"
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            status: { type: "STRING" },
+                            confidenceScore: { type: "INTEGER" },
+                            khmerReasoning: { type: "STRING" },
+                            evidenceSources: { type: "ARRAY", items: { type: "STRING" } },
+                            educationalTakeaway: { type: "STRING" }
+                        },
+                        required: ["status", "confidenceScore", "khmerReasoning", "evidenceSources", "educationalTakeaway"]
+                    }
                 }
             };
 
@@ -404,7 +421,7 @@ Format your response as a valid JSON object strictly matching this schema. Do no
                 
                 renderTextResult(result, text);
             } catch (error) {
-                showAlert("កំហុសបច្គេកទេស", error.message || "មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមព្យាយាមឡើងវិញ។");
+                showAlert("កំហុសបច្ចេកទេស", error.message || "មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមព្យាយាមឡើងវិញ។");
             } finally {
                 loader.classList.add('hidden');
             }
@@ -512,6 +529,8 @@ Format your response as a valid JSON object strictly matching this schema. Do no
                 return;
             }
 
+            imageMimeType = file.type;
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 base64Image = e.target.result.split(',')[1];
@@ -568,12 +587,23 @@ Format your response as a valid JSON object strictly matching this schema. Do no
                     role: "user",
                     parts: [
                         { text: `Context about image from user: ${context || "No context provided"}` },
-                        { inlineData: { mimeType: "image/png", data: base64Image } }
+                        { inlineData: { mimeType: imageMimeType, data: base64Image } }
                     ]
                 }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
+                systemInstruction: { role: "system", parts: [{ text: systemPrompt }] },
                 generationConfig: {
-                    responseMimeType: "application/json"
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            status: { type: "STRING" },
+                            aiConfidence: { type: "INTEGER" },
+                            khmerExplanation: { type: "STRING" },
+                            detectionPoints: { type: "ARRAY", items: { type: "STRING" } },
+                            classroomExercise: { type: "STRING" }
+                        },
+                        required: ["status", "aiConfidence", "khmerExplanation", "detectionPoints", "classroomExercise"]
+                    }
                 }
             };
 
