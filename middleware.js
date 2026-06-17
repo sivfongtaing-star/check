@@ -1,11 +1,14 @@
-// កូដកែសម្រួលសម្រាប់ធានាដំណើរការដោយគ្មានបញ្ហាជាមួយប្រព័ន្ធ Compiler
-import { NextResponse } from 'next/server';
+import { next } from '@vercel/edge';
 
-export function middleware(request) {
-  // បន្តដំណើរការជាធម្មតា (Pass-through) ដោយគ្មានការរំខាន
-  return NextResponse.next();
+export default function middleware(req) {
+  return next({
+    headers: {
+      'Referrer-Policy': 'origin-when-cross-origin',
+      'X-Frame-Options': 'DENY',
+      'X-Content-Type-Options': 'nosniff',
+      'X-DNS-Prefetch-Control': 'on',
+      'Strict-Transport-Security':
+        'max-age=31536000; includeSubDomains; preload',
+    },
+  });
 }
-
-export const config = {
-  matcher: '/:path*',
-};
