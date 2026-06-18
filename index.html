@@ -26,7 +26,7 @@
         </div>
 
         <div id="loader" class="hidden text-center text-blue-600 mt-4">កំពុងដំណើរការ...</div>
-        <div id="result" class="hidden mt-6 p-4 bg-slate-100 rounded-lg whitespace-pre-line text-sm"></div>
+        <div id="result" class="hidden mt-6 p-4 bg-slate-100 rounded-lg whitespace-pre-line text-sm leading-relaxed"></div>
     </div>
 
     <script>
@@ -44,11 +44,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: `វិភាគព័ត៌មាននេះ៖ ${text}` }] }],
-                        systemInstruction: { parts: [{ text: "អ្នកគឺជាអ្នកត្រួតពិនិត្យព័ត៌មាន។ ឆ្លើយតបដោយសង្ខេប៖ ស្ថានភាព, ការវិភាគ, និងកម្រិតទំនុកចិត្ត ដោយមិនប្រើសញ្ញា '{' ឬ '}'។" }] }
+                        systemInstruction: { parts: [{ text: "អ្នកគឺជាអ្នកត្រួតពិនិត្យព័ត៌មាន។ ឆ្លើយតបដោយសង្ខេប៖ ស្ថានភាព, ការវិភាគ, និងកម្រិតទំនុកចិត្ត ដោយមិនប្រើសញ្ញា '{', '}' ឬសញ្ញាផ្កាយ '*' ឡើយ។" }] }
                     })
                 });
                 const data = await response.json();
-                document.getElementById('result').innerText = data.candidates[0].content.parts[0].text;
+                let rawText = data.candidates[0].content.parts[0].text;
+                
+                // លុបសញ្ញាផ្កាយ (*) និងសញ្ញាទ្រង់ទ្រាយផ្សេងៗដែលនៅសេសសល់
+                let cleanText = rawText.replace(/[*]/g, '');
+                
+                document.getElementById('result').innerText = cleanText.trim();
                 document.getElementById('result').classList.remove('hidden');
             } catch(e) { alert("មានកំហុស"); } finally { showLoading(false); }
         }
@@ -70,13 +75,18 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [
-                                { text: "តើរូបភាពនេះជាការកាត់ត ឬរូបភាព AI មែនទេ? ឆ្លើយតបដោយសង្ខេប៖ ស្ថានភាព, ការវិភាគ, និងកម្រិតទំនុកចិត្ត ដោយមិនប្រើសញ្ញា '{' ឬ '}'។" },
+                                { text: "តើរូបភាពនេះជាការកាត់ត ឬរូបភាព AI មែនទេ? ឆ្លើយតបដោយសង្ខេប៖ ស្ថានភាព, ការវិភាគ, និងកម្រិតទំនុកចិត្ត ដោយមិនប្រើសញ្ញា '{', '}' ឬសញ្ញាផ្កាយ '*' ឡើយ។" },
                                 { inlineData: { mimeType: file.type, data: base64Image } }
                             ] }]
                         })
                     });
                     const data = await response.json();
-                    document.getElementById('result').innerText = data.candidates[0].content.parts[0].text;
+                    let rawText = data.candidates[0].content.parts[0].text;
+                    
+                    // លុបសញ្ញាផ្កាយ (*) និងសញ្ញាទ្រង់ទ្រាយផ្សេងៗដែលនៅសេសសល់
+                    let cleanText = rawText.replace(/[*]/g, '');
+
+                    document.getElementById('result').innerText = cleanText.trim();
                     document.getElementById('result').classList.remove('hidden');
                 } catch(e) { alert("មានកំហុសក្នុងការវិភាគរូបភាព"); } finally { showLoading(false); }
             };
