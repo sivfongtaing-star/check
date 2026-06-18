@@ -36,18 +36,6 @@
 
     <!-- Main Workspace -->
     <main class="flex-grow max-w-3xl w-full mx-auto p-4 md:py-8 space-y-6">
-        
-        <!-- Smart API Key Section (Hidden by default, shown only on 403 Error) -->
-        <div id="api-key-section" class="hidden bg-amber-50 p-4 rounded-xl shadow-sm border border-amber-200 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="flex items-start gap-3">
-                <i data-lucide="key" class="w-6 h-6 text-amber-600 mt-0.5"></i>
-                <div>
-                    <h3 class="text-sm font-bold text-amber-900">ប្រព័ន្ធទាមទារ API Key (អ្នកកំពុងប្រើក្រៅប្រព័ន្ធ)</h3>
-                    <p class="text-xs text-amber-800 mt-1 leading-relaxed">ដើម្បីអាចដំណើរការកម្មវិធីនេះនៅលើកុំព្យូទ័រផ្ទាល់ខ្លួន សូមបញ្ចូល Gemini API Key របស់អ្នកនៅទីនេះ។ វាឥតគិតថ្លៃទេ លោកគ្រូអាចបង្កើតបាននៅ <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline font-bold text-amber-900 hover:text-amber-950">Google AI Studio</a>។</p>
-                </div>
-            </div>
-            <input type="password" id="api-key-input" oninput="saveApiKey(this.value)" class="w-full md:w-64 p-2.5 border border-amber-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none bg-white" placeholder="ឧទាហរណ៍៖ AIzaSy...">
-        </div>
 
         <!-- Navigation Tabs -->
         <div class="bg-white p-1 rounded-xl shadow-sm border border-slate-200 flex">
@@ -118,7 +106,7 @@
             </div>
             <div class="space-y-1">
                 <h4 class="font-bold text-rose-800 text-sm">កំហុសបច្ចេកទេស</h4>
-                <p id="error-message" class="text-xs text-rose-700 leading-relaxed">សារលម្អិតពីកំហុស</p>
+                <p id="error-message" class="text-xs text-rose-700 leading-relaxed"></p>
             </div>
         </div>
 
@@ -147,20 +135,7 @@
         let activeTab = 'text';
         let base64Image = null;
         let imageMimeType = '';
-        const apiKey = ""; // The execution environment provides the key at runtime (if in Canvas)
-        let userApiKey = localStorage.getItem('factchecker_api_key') || "";
-
-        // On load, populate the API key if it was saved previously
-        window.onload = () => {
-            if (userApiKey) {
-                document.getElementById('api-key-input').value = userApiKey;
-            }
-        };
-
-        function saveApiKey(val) {
-            userApiKey = val.trim();
-            localStorage.setItem('factchecker_api_key', userApiKey);
-        }
+        const apiKey = "";
 
         function switchTab(tab) {
             activeTab = tab;
@@ -243,9 +218,8 @@
 
         // Fetch wrapper supporting exponential backoff
         async function callGeminiAPI(payload) {
-            const finalKey = userApiKey || apiKey;
             const model = "gemini-2.5-flash-preview-09-2025";
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${finalKey}`;
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             
             let delay = 1000;
             const maxRetries = 5;
@@ -262,20 +236,12 @@
                     
                     if (response.ok) {
                         return data;
-                    } else if (response.status === 403 || response.status === 400) {
-                        if(data.error && data.error.message.includes('API key not valid') || data.error.message.includes('Method doesn\'t allow unregistered callers')){
-                            // Unhide the API key section so the user can fix the issue
-                            document.getElementById('api-key-section').classList.remove('hidden');
-                            throw new Error("សូមបញ្ចូល API Key នៅខាងលើសិន មុនពេលបន្ត ដោយសារប្រព័ន្ធដឹងថាអ្នកកំពុងដំណើរការនៅក្រៅបរិស្ថានដើម។");
-                        }
-                        const errMsg = data.error?.message || response.statusText || "កំហុសពីម៉ាស៊ីនមេ (Server Error)";
-                        throw new Error(`${errMsg} (កូដកំហុស៖ ${response.status})`);
                     } else {
                         const errMsg = data.error?.message || response.statusText || "កំហុសពីម៉ាស៊ីនមេ (Server Error)";
                         throw new Error(`${errMsg} (កូដកំហុស៖ ${response.status})`);
                     }
                 } catch (error) {
-                    if (i === maxRetries - 1 || error.message.includes("សូមបញ្ចូល API Key")) {
+                    if (i === maxRetries - 1) {
                         throw error;
                     }
                 }
