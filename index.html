@@ -135,7 +135,7 @@
         let activeTab = 'text';
         let base64Image = null;
         let imageMimeType = '';
-        const apiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U"; // The execution environment provides the key at runtime (if in Canvas)
+        const apiKey = ""; // The execution environment provides the key at runtime (if in Canvas)
 
         function switchTab(tab) {
             activeTab = tab;
@@ -236,17 +236,13 @@
                     
                     if (response.ok) {
                         return data;
-                    } else if (response.status === 403) {
-                        // Custom Error specifically for API Key Missing (403 Forbidden)
-                        throw new Error("ប្រព័ន្ធទាមទារ API Key សម្ងាត់! ដោយសារលោកគ្រូមិនចង់ប្រើប្រាស់ API Key លោកគ្រូអាចដំណើរការ និងតេស្តកម្មវិធីនេះបានតែនៅក្នុងផ្ទាំង Preview ខាងស្តាំដៃនេះតែប៉ុណ្ណោះ។ សូមកុំដំណើរការវានៅខាងក្រៅ (ឧទាហរណ៍៖ ទាញយកទៅកុំព្យូទ័រ) ប្រសិនបើគ្មាន API Key ផ្ទាល់ខ្លួន។");
                     } else {
                         // Extract precise error message if available
                         const errMsg = data.error?.message || response.statusText || "កំហុសពីម៉ាស៊ីនមេ (Server Error)";
                         throw new Error(`${errMsg} (កូដកំហុស៖ ${response.status})`);
                     }
                 } catch (error) {
-                    if (i === maxRetries - 1 || error.message.includes("ប្រព័ន្ធទាមទារ API Key")) {
-                        // Throw immediately if it's a 403 error, no need to retry
+                    if (i === maxRetries - 1) {
                         throw error;
                     }
                 }
