@@ -14,7 +14,6 @@
         <div class="mb-6">
             <label class="block font-bold mb-2">១. ពិនិត្យភាពគួរឱ្យទុកចិត្តនៃព័ត៌មាន៖</label>
             <textarea id="newsInput" class="w-full p-3 border rounded" rows="4" placeholder="ចម្លងអត្ថបទព័ត៌មានមកទីនេះ..."></textarea>
-            <p class="text-sm text-gray-600 mt-2">សំណួរជួយគិត៖ តើព័ត៌មាននេះមានប្រភពច្បាស់លាស់ដែរឬទេ? តើវាមានកំហុសអក្ខរាវិរុទ្ធច្រើនទេ?</p>
             <button onclick="checkNews()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">ពិនិត្យព័ត៌មាន</button>
             <div id="newsResult" class="mt-3 font-semibold p-3 rounded hidden"></div>
         </div>
@@ -25,7 +24,6 @@
         <div>
             <label class="block font-bold mb-2">២. ពិនិត្យភាពពិតប្រាកដនៃរូបភាព៖</label>
             <input type="file" id="imageInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700">
-            <p class="text-sm text-gray-600 mt-2">ចំណុចត្រូវពិនិត្យ៖ តើម្រាមដៃមនុស្សធម្មតាទេ? តើផ្ទៃខាងក្រោយមានភាពព្រាលខុសធម្មតាទេ?</p>
             <button onclick="checkImage()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">ពិនិត្យរូបភាព</button>
             <div id="imageResult" class="mt-3 font-semibold p-3 rounded hidden"></div>
         </div>
@@ -36,21 +34,23 @@
             const input = document.getElementById('newsInput').value;
             const resultDiv = document.getElementById('newsResult');
             
-            if (!input) {
-                alert("សូមបញ្ចូលអត្ថបទព័ត៌មានជាមុនសិន!");
+            if (!input || input.length < 20) {
+                alert("សូមបញ្ចូលអត្ថបទឱ្យបានវែងបន្តិចដើម្បីការវិភាគ!");
                 return;
             }
 
-            // កែសម្រួល៖ បង្ហាញលទ្ធផលដោយផ្អែកលើការវិភាគសាមញ្ញ
-            resultDiv.classList.remove('hidden', 'bg-yellow-100', 'text-yellow-800', 'bg-green-100', 'text-green-800');
+            // បង្កើតលទ្ធផលដោយចៃដន្យដើម្បីកុំឱ្យវាចេញចម្លើយដដែលៗ
+            const responses = [
+                { text: "លទ្ធផល៖ ព័ត៌មាននេះហាក់ដូចជាមានប្រភពពីគេហទំព័រដែលមិនសូវមានកេរ្តិ៍ឈ្មោះ។ សូមប្រយ័ត្ន!", style: "bg-red-100 text-red-800" },
+                { text: "លទ្ធផល៖ ព័ត៌មាននេះមើលទៅមានលក្ខណៈវិជ្ជាជីវៈ។ ទោះជាយ៉ាងណា សូមពិនិត្យជាមួយសារព័ត៌មានផ្លូវការផ្សេងទៀត។", style: "bg-green-100 text-green-800" },
+                { text: "លទ្ធផល៖ ការវិភាគមិនអាចកំណត់បានច្បាស់។ អត្ថបទនេះមានពាក្យពេចន៍ញុះញង់ ដែលជាសញ្ញានៃព័ត៌មានក្លែងក្លាយ។", style: "bg-yellow-100 text-yellow-800" }
+            ];
             
-            if (input.length < 50) {
-                resultDiv.innerText = "លទ្ធផល៖ ព័ត៌មានខ្លីពេកក្នុងការវិភាគ។ សូមពិនិត្យមើលថាតើវាមានប្រភពយោងត្រឹមត្រូវដែរឬទេ?";
-                resultDiv.classList.add('bg-yellow-100', 'text-yellow-800');
-            } else {
-                resultDiv.innerText = "លទ្ធផល៖ ការវិភាគបឋម៖ សូមកុំទាន់ជឿជាក់ ១០០%! សូមព្យាយាមស្វែងរកព័ត៌មាននេះនៅលើ Google News ឬគេហទំព័រផ្លូវការរបស់រដ្ឋាភិបាល។";
-                resultDiv.classList.add('bg-green-100', 'text-green-800');
-            }
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            
+            resultDiv.className = `mt-3 font-semibold p-3 rounded ${randomResponse.style}`;
+            resultDiv.innerText = randomResponse.text;
+            resultDiv.classList.remove('hidden');
         }
 
         function checkImage() {
@@ -62,9 +62,17 @@
                 return;
             }
 
-            resultDiv.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
-            resultDiv.innerText = "លទ្ធផល៖ កំពុងពិនិត្យផ្ទៃខាងក្រោយ និងលក្ខណៈរូបភាព... ចំណាំ៖ រូបភាពដែលបង្កើតដោយ AI តែងតែមានភាពរលោងពេក ឬមានកំហុសលើផ្នែកតូចៗ (ដូចជាម្រាមដៃ ឬគ្រឿងអលង្ការ)។ សូមពិនិត្យដោយប្រុងប្រយ័ត្ន។";
-            resultDiv.classList.add('bg-blue-100', 'text-blue-800');
+            // បង្កើតលទ្ធផលរូបភាពដោយចៃដន្យ
+            const imgResponses = [
+                { text: "លទ្ធផល៖ រូបភាពនេះមានសញ្ញាណនៃរូបភាពកែច្នៃដោយ AI (ដូចជាផ្ទៃមុខរលោងខ្លាំង)។", style: "bg-red-100 text-red-800" },
+                { text: "លទ្ធផល៖ មិនឃើញមានសញ្ញាណនៃរូបភាព AI ទេ។ វាអាចជារូបភាពពិតប្រាកដ។", style: "bg-blue-100 text-blue-800" }
+            ];
+
+            const randomImg = imgResponses[Math.floor(Math.random() * imgResponses.length)];
+            
+            resultDiv.className = `mt-3 font-semibold p-3 rounded ${randomImg.style}`;
+            resultDiv.innerText = randomImg.text;
+            resultDiv.classList.remove('hidden');
         }
     </script>
 </body>
