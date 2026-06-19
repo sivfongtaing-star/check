@@ -1,93 +1,69 @@
 import React, { useState } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { Upload, FileText, CheckCircle, XCircle, Bot, Camera, RefreshCw } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('text');
+  const [activeTab, setActiveTab] = useState('news');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleAnalyze = async () => {
+  const analyzeNews = (e) => {
+    e.preventDefault();
     setLoading(true);
-    setResult(null);
-    
-    // បង្កើតការវិភាគលម្អិត (Simulation)
+    // ចំណាំ៖ កន្លែងនេះគឺជាកន្លែងដែលត្រូវភ្ជាប់ទៅនឹង AI Backend API
     setTimeout(() => {
+      setResult({ status: 'fake', confidence: 85, reason: 'ព័ត៌មាននេះមិនមានប្រភពយោងច្បាស់លាស់' });
       setLoading(false);
-      const isFake = Math.random() > 0.5;
-      setResult({
-        isFake,
-        confidence: (Math.random() * 30 + 70).toFixed(2),
-        reason: isFake 
-          ? [
-              "រកឃើញពាក្យស្លោកមានចរិតញុះញង់អារម្មណ៍អ្នកអាន។",
-              "មិនមានប្រភពយោងពីស្ថាប័នព័ត៌មានផ្លូវការ។",
-              "ទម្រង់អត្ថបទមានភាពមិនប្រក្រតីក្នុងវេយ្យាករណ៍។"
-            ]
-          : [
-              "ប្រភពព័ត៌មានមានការបញ្ជាក់ត្រឹមត្រូវ។",
-              "ព័ត៌មានត្រូវបានផ្សព្វផ្សាយដោយស្ថាប័នច្បាស់លាស់។",
-              "ទិន្នន័យមានការយោងទៅតាមការពិតដែលមានស្រាប់។"
-            ]
-      });
     }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-blue-600 p-6 text-white text-center">
-          <h1 className="text-2xl font-bold">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
-        </div>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
+      <header className="max-w-4xl mx-auto mb-8 text-center">
+        <h1 className="text-3xl font-bold text-blue-900 mb-2">ប្រព័ន្ធពិនិត្យភាពត្រឹមត្រូវនៃព័ត៌មាន និងរូបភាព</h1>
+        <p className="text-gray-600">ជួយការពារអ្នកពីព័ត៌មានក្លែងក្លាយ និងរូបភាពដែលបង្កើតដោយ AI</p>
+      </header>
 
-        <div className="flex border-b">
+      <main className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex space-x-4 mb-6 border-b pb-4">
           <button 
-            className={`flex-1 py-4 font-semibold ${activeTab === 'text' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('text')}
+            onClick={() => { setActiveTab('news'); setResult(null); }}
+            className={`flex items-center px-4 py-2 rounded-lg ${activeTab === 'news' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
           >
-            <FileText className="inline mr-2" /> អត្ថបទ
+            <FileText size={20} className="mr-2" /> ពិនិត្យព័ត៌មាន
           </button>
           <button 
-            className={`flex-1 py-4 font-semibold ${activeTab === 'image' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('image')}
+            onClick={() => { setActiveTab('image'); setResult(null); }}
+            className={`flex items-center px-4 py-2 rounded-lg ${activeTab === 'image' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
           >
-            <ImageIcon className="inline mr-2" /> រូបភាព
+            <Camera size={20} className="mr-2" /> ពិនិត្យរូបភាព
           </button>
         </div>
 
-        <div className="p-6">
-          {activeTab === 'text' ? (
-            <div className="space-y-4">
-              <textarea className="w-full h-32 p-4 border rounded-lg" placeholder="វាយបញ្ចូលអត្ថបទ..."></textarea>
-              <button onClick={handleAnalyze} className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">វិភាគ</button>
-            </div>
-          ) : (
-            <div className="space-y-4 border-2 border-dashed p-8 text-center rounded-lg">
-              <Upload className="mx-auto text-gray-400" size={48} />
-              <button onClick={handleAnalyze} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">ជ្រើសរើសរូបភាព</button>
-            </div>
-          )}
+        {activeTab === 'news' ? (
+          <form onSubmit={analyzeNews} className="space-y-4">
+            <textarea className="w-full h-32 p-4 border rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="សូមដាក់អត្ថបទព័ត៌មាននៅទីនេះ..."></textarea>
+            <button className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">វិភាគឥឡូវនេះ</button>
+          </form>
+        ) : (
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
+            <Upload className="mx-auto text-gray-400 mb-4" size={48} />
+            <p>អូស ឬចុចដើម្បីបង្ហោះរូបភាព</p>
+          </div>
+        )}
 
-          {loading && <div className="mt-6 text-center text-blue-600">កំពុងវិភាគ...</div>}
-          
-          {result && (
-            <div className={`mt-6 p-6 rounded-lg ${result.isFake ? 'bg-red-50' : 'bg-green-50'}`}>
-              <div className="flex items-center gap-3">
-                {result.isFake ? <AlertTriangle className="text-red-600" /> : <CheckCircle className="text-green-600" />}
-                <h2 className={`font-bold ${result.isFake ? 'text-red-700' : 'text-green-700'}`}>
-                  {result.isFake ? 'ព័ត៌មានមិនពិត' : 'ព័ត៌មានពិត'}
-                </h2>
-              </div>
-              <p className="mt-2 text-gray-700"><strong>កម្រិតភាពជឿជាក់:</strong> {result.confidence}%</p>
-              <div className="mt-3">
-                <p className="text-sm font-bold text-gray-800">ហេតុផលវិភាគ៖</p>
-                <ul className="list-disc pl-5 mt-1 text-sm text-gray-600">
-                  {result.reason.map((r, index) => <li key={index}>{r}</li>)}
-                </ul>
-              </div>
+        {loading && <div className="mt-6 text-center animate-pulse flex items-center justify-center"><RefreshCw className="mr-2 animate-spin" /> កំពុងវិភាគ...</div>}
+
+        {result && (
+          <div className={`mt-6 p-6 rounded-xl border-l-8 ${result.status === 'fake' ? 'bg-red-50 border-red-500' : 'bg-green-50 border-green-500'}`}>
+            <div className="flex items-center mb-2">
+              {result.status === 'fake' ? <XCircle className="text-red-600 mr-2" /> : <CheckCircle className="text-green-600 mr-2" />}
+              <h3 className="font-bold text-lg">{result.status === 'fake' ? 'ព័ត៌មានក្លែងក្លាយ' : 'ព័ត៌មានពិត'}</h3>
             </div>
-          )}
-        </div>
-      </div>
+            <p className="text-gray-700">{result.reason}</p>
+            <p className="text-sm mt-2 font-mono text-gray-500">កម្រិតភាពជឿជាក់៖ {result.confidence}%</p>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
