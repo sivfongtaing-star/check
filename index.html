@@ -3,76 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាននិងរូបភាព</title>
+    <title>ប្រព័ន្ធត្រួតពិនិត្យព័ត៌មាន និងរូបភាព</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-5">
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h1 class="text-2xl font-bold mb-4 text-blue-800">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-blue-800 mb-6 text-center">ប្រព័ន្ធបែងចែកព័ត៌មាន និងរូបភាព AI</h1>
         
-        <!-- ផ្នែកព័ត៌មាន -->
-        <div class="mb-6">
-            <label class="block font-bold mb-2">១. ពិនិត្យភាពគួរឱ្យទុកចិត្តនៃព័ត៌មាន៖</label>
-            <textarea id="newsInput" class="w-full p-3 border rounded" rows="4" placeholder="ចម្លងអត្ថបទព័ត៌មានមកទីនេះ..."></textarea>
-            <button onclick="checkNews()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">ពិនិត្យព័ត៌មាន</button>
-            <div id="newsResult" class="mt-3 font-semibold p-3 rounded hidden"></div>
+        <!-- Tab Navigation -->
+        <div class="flex border-b mb-6">
+            <button onclick="showTab('news')" class="flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600" id="tab-news">ត្រួតពិនិត្យព័ត៌មាន</button>
+            <button onclick="showTab('image')" class="flex-1 py-2 font-bold text-gray-500" id="tab-image">ត្រួតពិនិត្យរូបភាព</button>
         </div>
 
-        <hr class="my-6">
+        <!-- News Section -->
+        <div id="news-section">
+            <textarea id="news-input" class="w-full h-32 p-4 border rounded-lg mb-4" placeholder="ចម្លងខ្លឹមសារព័ត៌មានមកទីនេះ..."></textarea>
+            <button onclick="checkNews()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">វិភាគព័ត៌មាន</button>
+            <div id="news-result" class="mt-6 p-4 rounded-lg hidden"></div>
+        </div>
 
-        <!-- ផ្នែករូបភាព -->
-        <div>
-            <label class="block font-bold mb-2">២. ពិនិត្យភាពពិតប្រាកដនៃរូបភាព៖</label>
-            <input type="file" id="imageInput" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700">
-            <button onclick="checkImage()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">ពិនិត្យរូបភាព</button>
-            <div id="imageResult" class="mt-3 font-semibold p-3 rounded hidden"></div>
+        <!-- Image Section -->
+        <div id="image-section" class="hidden">
+            <input type="file" id="image-input" class="w-full p-4 border rounded-lg mb-4">
+            <button onclick="checkImage()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700">វិភាគរូបភាព</button>
+            <div id="image-result" class="mt-6 p-4 rounded-lg hidden"></div>
         </div>
     </div>
 
     <script>
+        function showTab(tab) {
+            document.getElementById('news-section').classList.toggle('hidden', tab !== 'news');
+            document.getElementById('image-section').classList.toggle('hidden', tab !== 'image');
+            document.getElementById('tab-news').className = tab === 'news' ? 'flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-2 font-bold text-gray-500';
+            document.getElementById('tab-image').className = tab === 'image' ? 'flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-2 font-bold text-gray-500';
+        }
+
         function checkNews() {
-            const input = document.getElementById('newsInput').value;
-            const resultDiv = document.getElementById('newsResult');
+            const input = document.getElementById('news-input').value;
+            const resultDiv = document.getElementById('news-result');
+            resultDiv.classList.remove('hidden');
             
-            if (!input || input.length < 20) {
-                alert("សូមបញ្ចូលអត្ថបទឱ្យបានវែងបន្តិចដើម្បីការវិភាគ!");
+            if (input.length < 20) {
+                resultDiv.className = "mt-6 p-4 rounded-lg bg-yellow-100 text-yellow-800";
+                resultDiv.innerHTML = "សូមបញ្ចូលខ្លឹមសារព័ត៌មានឱ្យបានគ្រប់គ្រាន់ដើម្បីធ្វើការវិភាគ។";
                 return;
             }
 
-            // បង្កើតលទ្ធផលដោយចៃដន្យដើម្បីកុំឱ្យវាចេញចម្លើយដដែលៗ
-            const responses = [
-                { text: "លទ្ធផល៖ ព័ត៌មាននេះហាក់ដូចជាមានប្រភពពីគេហទំព័រដែលមិនសូវមានកេរ្តិ៍ឈ្មោះ។ សូមប្រយ័ត្ន!", style: "bg-red-100 text-red-800" },
-                { text: "លទ្ធផល៖ ព័ត៌មាននេះមើលទៅមានលក្ខណៈវិជ្ជាជីវៈ។ ទោះជាយ៉ាងណា សូមពិនិត្យជាមួយសារព័ត៌មានផ្លូវការផ្សេងទៀត។", style: "bg-green-100 text-green-800" },
-                { text: "លទ្ធផល៖ ការវិភាគមិនអាចកំណត់បានច្បាស់។ អត្ថបទនេះមានពាក្យពេចន៍ញុះញង់ ដែលជាសញ្ញានៃព័ត៌មានក្លែងក្លាយ។", style: "bg-yellow-100 text-yellow-800" }
-            ];
-            
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            
-            resultDiv.className = `mt-3 font-semibold p-3 rounded ${randomResponse.style}`;
-            resultDiv.innerText = randomResponse.text;
-            resultDiv.classList.remove('hidden');
+            // នេះគឺជាកូដសាកល្បងឡូហ្សិក (Simulation)
+            resultDiv.className = "mt-6 p-4 rounded-lg bg-blue-100 text-blue-800";
+            resultDiv.innerHTML = "<strong>លទ្ធផលវិភាគ៖</strong> ប្រព័ន្ធរកឃើញថានេះជាការសាកល្បង។ ដើម្បីឱ្យប្រព័ន្ធពិតប្រាកដ លោកគ្រូអាចបន្ថែមមុខងារភ្ជាប់ទៅកាន់ API ពិនិត្យព័ត៌មានក្លែងក្លាយ (Fact-Checking API)។";
         }
 
         function checkImage() {
-            const input = document.getElementById('imageInput');
-            const resultDiv = document.getElementById('imageResult');
-            
-            if (input.files.length === 0) {
-                alert("សូមជ្រើសរើសរូបភាពជាមុនសិន!");
-                return;
-            }
-
-            // បង្កើតលទ្ធផលរូបភាពដោយចៃដន្យ
-            const imgResponses = [
-                { text: "លទ្ធផល៖ រូបភាពនេះមានសញ្ញាណនៃរូបភាពកែច្នៃដោយ AI (ដូចជាផ្ទៃមុខរលោងខ្លាំង)។", style: "bg-red-100 text-red-800" },
-                { text: "លទ្ធផល៖ មិនឃើញមានសញ្ញាណនៃរូបភាព AI ទេ។ វាអាចជារូបភាពពិតប្រាកដ។", style: "bg-blue-100 text-blue-800" }
-            ];
-
-            const randomImg = imgResponses[Math.floor(Math.random() * imgResponses.length)];
-            
-            resultDiv.className = `mt-3 font-semibold p-3 rounded ${randomImg.style}`;
-            resultDiv.innerText = randomImg.text;
+            const resultDiv = document.getElementById('image-result');
             resultDiv.classList.remove('hidden');
+            resultDiv.className = "mt-6 p-4 rounded-lg bg-purple-100 text-purple-800";
+            resultDiv.innerHTML = "<strong>លទ្ធផលវិភាគ៖</strong> ការវិភាគរូបភាព AI ទាមទារការប្រើប្រាស់បច្ចេកវិទ្យា Computer Vision (ដូចជា Google Cloud Vision API) ដើម្បីរកមើលលក្ខណៈពិសេសនៃរូបភាពដែលបង្កើតដោយ AI (ឧទាហរណ៍៖ ស្នាមព្រិលខុសប្រក្រតី ឬការរៀបចំម្រាមដៃមនុស្ស)។";
         }
     </script>
 </body>
