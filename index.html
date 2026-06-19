@@ -128,7 +128,7 @@
     </footer>
 
     <script>
-        const apiKey = ""; 
+        const apiKey = "AIzaSyDQ2ImdG4jEr8UrnNRarpWkPoFLJzrK_3U"; 
         
         // Initialize Lucide Icons
         lucide.createIcons();
@@ -145,7 +145,6 @@
             const textTab = document.getElementById('tab-text');
             const imageTab = document.getElementById('tab-image');
 
-            // Hide results and errors when switching
             hideResultAndError();
 
             if (tab === 'text') {
@@ -185,7 +184,6 @@
             document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Preview local image selection
         function previewSelectedImage(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -217,7 +215,6 @@
             hideResultAndError();
         }
 
-        // Fetch wrapper supporting exponential backoff
         async function callGeminiAPI(payload) {
             const model = "gemini-2.5-flash-preview-09-2025";
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -251,7 +248,6 @@
             }
         }
 
-        // Analyze Text Action
         async function analyzeText() {
             const text = document.getElementById('text-input').value.trim();
             if (!text) {
@@ -282,7 +278,6 @@
             }
         }
 
-        // Analyze Image Action
         async function analyzeImage() {
             if (!base64Image) {
                 showError("សូមជ្រើសរើសរូបភាពមួយជាមុនសិន។");
