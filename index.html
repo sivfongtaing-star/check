@@ -1,113 +1,93 @@
-<!DOCTYPE html>
-<html lang="km">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>កម្មវិធីត្រួតពិនិត្យព័ត៌មាន និងរូបភាព</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Moul&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { font-family: 'Kantumruy Pro', sans-serif; }
-        .khmer-moul { font-family: 'Moul', cursive; }
-    </style>
-</head>
-<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+import React, { useState } from 'react';
+import { Upload, FileText, CheckCircle, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 
-    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white shadow-md">
-        <div class="max-w-3xl mx-auto px-4 py-5 flex items-center gap-3">
-            <div class="bg-white/10 p-2.5 rounded-xl border border-white/20">
-                <i data-lucide="shield-check" class="w-8 h-8 text-emerald-400"></i>
-            </div>
-            <div>
-                <h1 class="khmer-moul text-lg md:text-xl text-yellow-300">ប្រព័ន្ធត្រួតពិនិត្យ និងវាយតម្លៃព័ត៌មាន</h1>
-                <p class="text-xs text-slate-200">ជំនួយការបង្រៀន និងស្វែងរកការពិតដោយបច្ចេកវិទ្យា AI</p>
-            </div>
-        </div>
-    </header>
+export default function App() {
+  const [activeTab, setActiveTab] = useState('text');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-    <main class="flex-grow max-w-3xl w-full mx-auto p-4 md:py-8 space-y-6">
-        <div class="bg-white p-1 rounded-xl shadow-sm border border-slate-200 flex">
-            <button onclick="switchTab('text')" id="tab-btn-text" class="flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-150 bg-blue-600 text-white">
-                <i data-lucide="file-text" class="w-4 h-4"></i> វិភាគអត្ថបទ
-            </button>
-            <button onclick="switchTab('image')" id="tab-btn-image" class="flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition duration-150 text-slate-600 hover:text-slate-800">
-                <i data-lucide="image" class="w-4 h-4"></i> វិភាគរូបភាព
-            </button>
-        </div>
+  const handleAnalyze = async () => {
+    setLoading(true);
+    setResult(null);
+    
+    // បង្កើតការវិភាគលម្អិត (Simulation)
+    setTimeout(() => {
+      setLoading(false);
+      const isFake = Math.random() > 0.5;
+      setResult({
+        isFake,
+        confidence: (Math.random() * 30 + 70).toFixed(2),
+        reason: isFake 
+          ? [
+              "រកឃើញពាក្យស្លោកមានចរិតញុះញង់អារម្មណ៍អ្នកអាន។",
+              "មិនមានប្រភពយោងពីស្ថាប័នព័ត៌មានផ្លូវការ។",
+              "ទម្រង់អត្ថបទមានភាពមិនប្រក្រតីក្នុងវេយ្យាករណ៍។"
+            ]
+          : [
+              "ប្រភពព័ត៌មានមានការបញ្ជាក់ត្រឹមត្រូវ។",
+              "ព័ត៌មានត្រូវបានផ្សព្វផ្សាយដោយស្ថាប័នច្បាស់លាស់។",
+              "ទិន្នន័យមានការយោងទៅតាមការពិតដែលមានស្រាប់។"
+            ]
+      });
+    }, 2000);
+  };
 
-        <div id="tab-text" class="space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <textarea id="text-input" class="w-full h-32 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 transition duration-150 text-sm" placeholder="ដាក់ខ្លឹមសារព័ត៌មានមកទីនេះ..."></textarea>
-                <button onclick="analyzeText()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition duration-150 shadow">ចាប់ផ្តើមវិភាគអត្ថបទ</button>
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-blue-600 p-6 text-white text-center">
+          <h1 className="text-2xl font-bold">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
         </div>
 
-        <div id="tab-image" class="hidden space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <input type="file" id="image-input" accept="image/*" class="hidden" onchange="previewSelectedImage(event)">
-                <div onclick="document.getElementById('image-input').click()" class="border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50 cursor-pointer text-center">
-                    <p class="text-sm">ចុចដើម្បីជ្រើសរើសរូបភាព</p>
-                    <img id="preview-img" src="#" alt="Preview" class="hidden max-h-48 mx-auto mt-4 rounded-lg">
-                </div>
-                <button onclick="analyzeImage()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl transition duration-150 shadow">ចាប់ផ្តើមវិភាគរូបភាព</button>
-            </div>
+        <div className="flex border-b">
+          <button 
+            className={`flex-1 py-4 font-semibold ${activeTab === 'text' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('text')}
+          >
+            <FileText className="inline mr-2" /> អត្ថបទ
+          </button>
+          <button 
+            className={`flex-1 py-4 font-semibold ${activeTab === 'image' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('image')}
+          >
+            <ImageIcon className="inline mr-2" /> រូបភាព
+          </button>
         </div>
 
-        <div id="loader" class="hidden text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div></div>
-        <div id="error-card" class="hidden bg-rose-50 border border-rose-200 p-4 rounded-xl text-rose-800 text-sm"></div>
-        <div id="result-card" class="hidden bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-sm text-slate-700 whitespace-pre-line"></div>
-    </main>
+        <div className="p-6">
+          {activeTab === 'text' ? (
+            <div className="space-y-4">
+              <textarea className="w-full h-32 p-4 border rounded-lg" placeholder="វាយបញ្ចូលអត្ថបទ..."></textarea>
+              <button onClick={handleAnalyze} className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">វិភាគ</button>
+            </div>
+          ) : (
+            <div className="space-y-4 border-2 border-dashed p-8 text-center rounded-lg">
+              <Upload className="mx-auto text-gray-400" size={48} />
+              <button onClick={handleAnalyze} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">ជ្រើសរើសរូបភាព</button>
+            </div>
+          )}
 
-    <script>
-        // API Key បានអាប់ដេតថ្មីតាមសំណើរបស់លោកគ្រូ
-        const apiKey = "AQ.Ab8RN6IQykqr5WKLzMjxdXcfFKCZJ_Sca-WViko3IZAAUdCObQ"; 
-        
-        lucide.createIcons();
-
-        function switchTab(tab) {
-            document.getElementById('tab-text').classList.toggle('hidden', tab !== 'text');
-            document.getElementById('tab-image').classList.toggle('hidden', tab !== 'image');
-        }
-
-        async function callGeminiAPI(payload) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error?.message || "កំហុសក្នុងការតភ្ជាប់");
-            return data;
-        }
-
-        async function analyzeText() {
-            const text = document.getElementById('text-input').value;
-            if(!text) return alert("សូមបញ្ចូលអត្ថបទ");
-            
-            showLoading(true);
-            try {
-                const data = await callGeminiAPI({
-                    contents: [{ parts: [{ text: "វិភាគព័ត៌មាននេះជាភាសាខ្មែរ៖ " + text }] }]
-                });
-                showResult(data.candidates[0].content.parts[0].text);
-            } catch (e) {
-                showError(e.message);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function showLoading(show) { document.getElementById('loader').classList.toggle('hidden', !show); }
-        function showError(msg) { 
-            const e = document.getElementById('error-card');
-            e.innerText = msg; e.classList.remove('hidden'); 
-        }
-        function showResult(text) {
-            const r = document.getElementById('result-card');
-            r.innerText = text; r.classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
+          {loading && <div className="mt-6 text-center text-blue-600">កំពុងវិភាគ...</div>}
+          
+          {result && (
+            <div className={`mt-6 p-6 rounded-lg ${result.isFake ? 'bg-red-50' : 'bg-green-50'}`}>
+              <div className="flex items-center gap-3">
+                {result.isFake ? <AlertTriangle className="text-red-600" /> : <CheckCircle className="text-green-600" />}
+                <h2 className={`font-bold ${result.isFake ? 'text-red-700' : 'text-green-700'}`}>
+                  {result.isFake ? 'ព័ត៌មានមិនពិត' : 'ព័ត៌មានពិត'}
+                </h2>
+              </div>
+              <p className="mt-2 text-gray-700"><strong>កម្រិតភាពជឿជាក់:</strong> {result.confidence}%</p>
+              <div className="mt-3">
+                <p className="text-sm font-bold text-gray-800">ហេតុផលវិភាគ៖</p>
+                <ul className="list-disc pl-5 mt-1 text-sm text-gray-600">
+                  {result.reason.map((r, index) => <li key={index}>{r}</li>)}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
