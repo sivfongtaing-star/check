@@ -3,85 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធត្រួតពិនិត្យព័ត៌មាន និងរូបភាព</title>
+    <title>ឧបករណ៍វាយតម្លៃព័ត៌មាន និងរូបភាព</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
-        <h1 class="text-2xl font-bold text-blue-800 mb-2 text-center">ប្រព័ន្ធបែងចែកព័ត៌មាន និងរូបភាព AI</h1>
-        <p class="text-center text-gray-600 mb-6 text-sm">ឧបករណ៍សម្រាប់អប់រំសិស្សក្នុងការវិភាគព័ត៌មានឌីជីថល</p>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4 max-w-2xl">
+        <header class="bg-blue-600 text-white p-6 rounded-t-lg text-center">
+            <h1 class="text-2xl font-bold">ឧបករណ៍បង្រៀន៖ ការពិត vs ព័ត៌មានក្លែងក្លាយ</h1>
+            <p>ជួយសិស្សឱ្យចេះបែងចែកព័ត៌មាន និងរូបភាព AI</p>
+        </header>
         
-        <!-- Tab Navigation -->
-        <div class="flex border-b mb-6">
-            <button onclick="showTab('news')" class="flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600" id="tab-news">ត្រួតពិនិត្យព័ត៌មាន</button>
-            <button onclick="showTab('image')" class="flex-1 py-2 font-bold text-gray-500" id="tab-image">ត្រួតពិនិត្យរូបភាព</button>
-        </div>
+        <main class="bg-white p-6 rounded-b-lg shadow-md">
+            <!-- ផ្នែកវិភាគព័ត៌មាន -->
+            <section class="mb-8">
+                <h2 class="text-lg font-semibold mb-2">ពិនិត្យភាពត្រឹមត្រូវនៃព័ត៌មាន</h2>
+                <input type="text" id="newsInput" placeholder="បញ្ចូលចំណងជើងព័ត៌មាន..." class="w-full p-2 border rounded mb-2">
+                <button onclick="checkNews()" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">វិភាគព័ត៌មាន</button>
+                <div id="newsResult" class="mt-4 p-4 bg-gray-50 rounded hidden"></div>
+            </section>
 
-        <!-- News Section -->
-        <div id="news-section">
-            <textarea id="news-input" class="w-full h-32 p-4 border rounded-lg mb-4" placeholder="ចម្លងខ្លឹមសារព័ត៌មានមកទីនេះ..."></textarea>
-            <button onclick="checkNews()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700">វិភាគព័ត៌មាន</button>
-            <div id="news-result" class="mt-6 p-4 rounded-lg hidden"></div>
-        </div>
-
-        <!-- Image Section -->
-        <div id="image-section" class="hidden">
-            <input type="file" id="image-input" class="w-full p-4 border rounded-lg mb-4">
-            <button onclick="checkImage()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700">វិភាគរូបភាព</button>
-            <div id="image-result" class="mt-6 p-4 rounded-lg hidden"></div>
-        </div>
+            <!-- ផ្នែកវិភាគរូបភាព -->
+            <section>
+                <h2 class="text-lg font-semibold mb-2">វិភាគរូបភាព (AI ឬ ពិត)</h2>
+                <div class="border-2 border-dashed p-6 text-center cursor-pointer hover:bg-gray-50">
+                    <p>ទាញរូបភាពមកដាក់ទីនេះ ឬចុចដើម្បីជ្រើសរើស</p>
+                    <input type="file" id="imageInput" class="hidden">
+                </div>
+                <button onclick="checkImage()" class="w-full mt-2 bg-green-500 text-white py-2 rounded hover:bg-green-600">ពិនិត្យរូបភាព</button>
+                <div id="imageResult" class="mt-4 p-4 bg-gray-50 rounded hidden"></div>
+            </section>
+        </main>
     </div>
 
     <script>
-        function showTab(tab) {
-            document.getElementById('news-section').classList.toggle('hidden', tab !== 'news');
-            document.getElementById('image-section').classList.toggle('hidden', tab !== 'image');
-            document.getElementById('tab-news').className = tab === 'news' ? 'flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-2 font-bold text-gray-500';
-            document.getElementById('tab-image').className = tab === 'image' ? 'flex-1 py-2 font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-2 font-bold text-gray-500';
-        }
-
         function checkNews() {
-            const input = document.getElementById('news-input').value;
-            const resultDiv = document.getElementById('news-result');
+            const resultDiv = document.getElementById('newsResult');
             resultDiv.classList.remove('hidden');
-            
-            if (input.length < 20) {
-                resultDiv.className = "mt-6 p-4 rounded-lg bg-yellow-100 text-yellow-800";
-                resultDiv.innerHTML = "<strong>សូមអភ័យទោស៖</strong> សូមបញ្ចូលខ្លឹមសារឱ្យបានគ្រប់គ្រាន់។ លោកគ្រូអាចណែនាំសិស្សឱ្យពិនិត្យ៖ ១. ប្រភពព័ត៌មាន, ២. កាលបរិច្ឆេទ, និង ៣. ពិនិត្យមើលគេហទំព័រផ្លូវការផ្សេងទៀត។";
-                return;
-            }
-
-            resultDiv.className = "mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-900";
-            resultDiv.innerHTML = `
-                <h3 class="font-bold mb-2">លទ្ធផលវិភាគបឋម៖</h3>
-                <p class="text-sm mb-3">ប្រព័ន្ធកំពុងដំណើរការវិភាគតាមគំរូសាកល្បង។ សូមចងចាំថា៖</p>
-                <div class="space-y-2">
-                    <div class="bg-white p-3 rounded border border-blue-300">
-                        <p class="font-bold text-blue-700 text-sm">គន្លឹះសំខាន់សម្រាប់សិស្ស៖</p>
-                        <ul class="list-disc ml-5 text-sm mt-1 space-y-1 text-gray-700">
-                            <li><strong>ប្រភព៖</strong> តើព័ត៌មាននេះមកពីស្ថាប័នផ្លូវការ ឬប្រភពដែលគួរឱ្យទុកចិត្តដែរឬទេ?</li>
-                            <li><strong>ភាពស្របគ្នា៖</strong> តើបណ្ដាញព័ត៌មានធំៗដទៃទៀតចុះផ្សាយដូចគ្នានេះដែរឬទេ?</li>
-                            <li><strong>ចេតនា៖</strong> តើព័ត៌មាននេះបង្កើតឡើងដើម្បីបង្កឱ្យមានការភ័យខ្លាច ឬបែងចែកសង្គមដែរឬទេ?</li>
-                        </ul>
-                    </div>
-                    <p class="text-xs text-gray-500 italic mt-2">*សម្គាល់៖ ការវិភាគនេះជាការណែនាំបឋម សូមពិនិត្យជាមួយប្រភពព័ត៌មានពិតប្រាកដជានិច្ច។</p>
-                </div>
-            `;
+            resultDiv.innerHTML = `<p class="text-yellow-600 font-bold">កំពុងវិភាគ... យោងតាមលក្ខណៈវិនិច្ឆ័យ៖ តើព័ត៌មាននេះមានប្រភពច្បាស់លាស់ដែរឬទេ? តើគេហទំព័រគួរឱ្យទុកចិត្តដែរឬទេ?</p>`;
         }
 
         function checkImage() {
-            const resultDiv = document.getElementById('image-result');
+            const resultDiv = document.getElementById('imageResult');
             resultDiv.classList.remove('hidden');
-            resultDiv.className = "mt-6 p-4 rounded-lg bg-purple-50 border border-purple-200 text-purple-900";
-            resultDiv.innerHTML = `
-                <h3 class="font-bold mb-2">ការវិភាគរូបភាព៖</h3>
-                <p class="text-sm mb-3">សម្រាប់ការត្រួតពិនិត្យរូបភាពដែលបង្កើតដោយ AI សូមណែនាំសិស្សឱ្យពិនិត្យចំណុចទាំងនេះ៖</p>
-                <ul class="list-disc ml-5 text-sm text-gray-700 space-y-1">
-                    <li><strong>ម្រាមដៃ និងសន្លាក់៖</strong> AI ច្រើនតែមានកំហុសក្នុងការបង្កើតម្រាមដៃឱ្យមានភាពដូចធម្មជាតិ។</li>
-                    <li><strong>ផ្ទៃខាងក្រោយ និងពន្លឺ៖</strong> ពិនិត្យមើលថា តើស្រមោល និងពន្លឺមានភាពស្របគ្នានឹងវត្ថុក្នុងរូបភាពដែរឬទេ។</li>
-                    <li><strong>ភាពមិនប្រក្រតី៖</strong> ពិនិត្យរកមើលចំណុចដែលមើលទៅ "ព្រិលៗ" ឬមិនស៊ីសង្វាក់គ្នានៅតាមគែមវត្ថុ។</li>
-                </ul>
-            `;
+            resultDiv.innerHTML = `<p class="text-purple-600 font-bold">កំពុងស្វែងរកលក្ខណៈពិសេសរបស់ AI៖ ពិនិត្យភាពមិនប្រក្រតីនៃម្រាមដៃ ផ្ទៃខាងក្រោយ ឬពន្លឺខុសធម្មតា។</p>`;
         }
     </script>
 </body>
