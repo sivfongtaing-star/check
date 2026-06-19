@@ -54,14 +54,17 @@
             resultDiv.className = "mt-6 p-4 rounded-lg bg-blue-50 border border-blue-200 text-blue-900";
             resultDiv.innerHTML = `
                 <h3 class="font-bold mb-2">លទ្ធផលវិភាគបឋម៖</h3>
-                <p class="text-sm mb-3">នេះគឺជាប្រព័ន្ធសាកល្បង។ ដើម្បីទទួលបានលទ្ធផលពិតប្រាកដ លោកគ្រូត្រូវភ្ជាប់ជាមួយ Fact-Checking API។</p>
-                <div class="bg-white p-3 rounded border">
-                    <p class="font-semibold text-xs text-gray-500 uppercase">គន្លឹះសម្រាប់សិស្ស៖</p>
-                    <ul class="list-disc ml-5 text-sm mt-1">
-                        <li>តើព័ត៌មាននេះមកពីប្រភពដែលទុកចិត្តបានដែរឬទេ?</li>
-                        <li>តើមានការចុះផ្សាយដូចគ្នានៅតាមបណ្ដាញព័ត៌មានធំៗដែរឬទេ?</li>
-                        <li>ជៀសវាងការចែកចាយព័ត៌មានដែលបង្កឱ្យមានការភ័យខ្លាចដោយមិនទាន់ផ្ទៀងផ្ទាត់។</li>
-                    </ul>
+                <p class="text-sm mb-3">ប្រព័ន្ធកំពុងដំណើរការវិភាគតាមគំរូសាកល្បង។ សូមចងចាំថា៖</p>
+                <div class="space-y-2">
+                    <div class="bg-white p-3 rounded border border-blue-300">
+                        <p class="font-bold text-blue-700 text-sm">គន្លឹះសំខាន់សម្រាប់សិស្ស៖</p>
+                        <ul class="list-disc ml-5 text-sm mt-1 space-y-1 text-gray-700">
+                            <li><strong>ប្រភព៖</strong> តើព័ត៌មាននេះមកពីស្ថាប័នផ្លូវការ ឬប្រភពដែលគួរឱ្យទុកចិត្តដែរឬទេ?</li>
+                            <li><strong>ភាពស្របគ្នា៖</strong> តើបណ្ដាញព័ត៌មានធំៗដទៃទៀតចុះផ្សាយដូចគ្នានេះដែរឬទេ?</li>
+                            <li><strong>ចេតនា៖</strong> តើព័ត៌មាននេះបង្កើតឡើងដើម្បីបង្កឱ្យមានការភ័យខ្លាច ឬបែងចែកសង្គមដែរឬទេ?</li>
+                        </ul>
+                    </div>
+                    <p class="text-xs text-gray-500 italic mt-2">*សម្គាល់៖ ការវិភាគនេះជាការណែនាំបឋម សូមពិនិត្យជាមួយប្រភពព័ត៌មានពិតប្រាកដជានិច្ច។</p>
                 </div>
             `;
         }
@@ -72,11 +75,11 @@
             resultDiv.className = "mt-6 p-4 rounded-lg bg-purple-50 border border-purple-200 text-purple-900";
             resultDiv.innerHTML = `
                 <h3 class="font-bold mb-2">ការវិភាគរូបភាព៖</h3>
-                <p class="text-sm mb-3">ការរកឃើញរូបភាព AI គឺទាមទារការពិនិត្យមើលលក្ខណៈពិសេស៖</p>
-                <ul class="list-disc ml-5 text-sm">
-                    <li>ពិនិត្យមើលម្រាមដៃ ឬផ្នែកដែលស្មុគស្មាញ (AI ច្រើនតែធ្វើខុសនៅចំណុចនេះ)។</li>
-                    <li>ពិនិត្យពន្លឺ និងស្រមោលថាមានភាពសមហេតុផលដែរឬទេ។</li>
-                    <li>ប្រើប្រាស់កម្មវិធី Reverse Image Search ដើម្បីរកប្រភពដើមនៃរូបភាព។</li>
+                <p class="text-sm mb-3">សម្រាប់ការត្រួតពិនិត្យរូបភាពដែលបង្កើតដោយ AI សូមណែនាំសិស្សឱ្យពិនិត្យចំណុចទាំងនេះ៖</p>
+                <ul class="list-disc ml-5 text-sm text-gray-700 space-y-1">
+                    <li><strong>ម្រាមដៃ និងសន្លាក់៖</strong> AI ច្រើនតែមានកំហុសក្នុងការបង្កើតម្រាមដៃឱ្យមានភាពដូចធម្មជាតិ។</li>
+                    <li><strong>ផ្ទៃខាងក្រោយ និងពន្លឺ៖</strong> ពិនិត្យមើលថា តើស្រមោល និងពន្លឺមានភាពស្របគ្នានឹងវត្ថុក្នុងរូបភាពដែរឬទេ។</li>
+                    <li><strong>ភាពមិនប្រក្រតី៖</strong> ពិនិត្យរកមើលចំណុចដែលមើលទៅ "ព្រិលៗ" ឬមិនស៊ីសង្វាក់គ្នានៅតាមគែមវត្ថុ។</li>
                 </ul>
             `;
         }
