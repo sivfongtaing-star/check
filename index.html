@@ -1,52 +1,363 @@
-<!DOCTYPE html>
-<html lang="km">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ឧបករណ៍វាយតម្លៃព័ត៌មាន និងរូបភាព</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans">
-    <div class="container mx-auto p-4 max-w-2xl">
-        <header class="bg-blue-600 text-white p-6 rounded-t-lg text-center">
-            <h1 class="text-2xl font-bold">ឧបករណ៍បង្រៀន៖ ការពិត vs ព័ត៌មានក្លែងក្លាយ</h1>
-            <p>ជួយសិស្សឱ្យចេះបែងចែកព័ត៌មាន និងរូបភាព AI</p>
-        </header>
-        
-        <main class="bg-white p-6 rounded-b-lg shadow-md">
-            <!-- ផ្នែកវិភាគព័ត៌មាន -->
-            <section class="mb-8">
-                <h2 class="text-lg font-semibold mb-2">ពិនិត្យភាពត្រឹមត្រូវនៃព័ត៌មាន</h2>
-                <input type="text" id="newsInput" placeholder="បញ្ចូលចំណងជើងព័ត៌មាន..." class="w-full p-2 border rounded mb-2">
-                <button onclick="checkNews()" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">វិភាគព័ត៌មាន</button>
-                <div id="newsResult" class="mt-4 p-4 bg-gray-50 rounded hidden"></div>
-            </section>
+import React, { useState, useEffect, useRef } from 'react';
+import { ShieldCheck, AlertTriangle, Image as ImageIcon, FileText, Upload, CheckCircle, Info, Loader2 } from 'lucide-react';
 
-            <!-- ផ្នែកវិភាគរូបភាព -->
-            <section>
-                <h2 class="text-lg font-semibold mb-2">វិភាគរូបភាព (AI ឬ ពិត)</h2>
-                <div class="border-2 border-dashed p-6 text-center cursor-pointer hover:bg-gray-50">
-                    <p>ទាញរូបភាពមកដាក់ទីនេះ ឬចុចដើម្បីជ្រើសរើស</p>
-                    <input type="file" id="imageInput" class="hidden">
-                </div>
-                <button onclick="checkImage()" class="w-full mt-2 bg-green-500 text-white py-2 rounded hover:bg-green-600">ពិនិត្យរូបភាព</button>
-                <div id="imageResult" class="mt-4 p-4 bg-gray-50 rounded hidden"></div>
-            </section>
-        </main>
+// API Key នឹងត្រូវបានផ្តល់ដោយប្រព័ន្ធដោយស្វ័យប្រវត្តិ
+const apiKey = ""; 
+
+// មុខងារសម្រាប់ធ្វើការហៅ API ជាមួយការចុះខ្សោយតាមលំដាប់ (Exponential Backoff) ក្នុងករណីបរាជ័យ
+const fetchWithRetry = async (url, options, maxRetries = 5) => {
+  const delays = [1000, 2000, 4000, 8000, 16000];
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delays[i]));
+    }
+  }
+};
+
+// មុខងារកណ្តាលសម្រាប់បញ្ជូនទិន្នន័យទៅ Gemini API
+const analyzeWithGemini = async (promptText, base64Image = null, isTextAnalysis = true) => {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+  
+  const parts = [{ text: promptText }];
+  
+  if (base64Image) {
+    // ដកយកក្បាល (data:image/jpeg;base64,) ចេញ
+    const base64Data = base64Image.split(',')[1];
+    const mimeType = base64Image.split(';')[0].split(':')[1];
+    parts.push({
+      inlineData: {
+        mimeType: mimeType,
+        data: base64Data
+      }
+    });
+  }
+
+  const systemInstruction = isTextAnalysis 
+    ? "អ្នកគឺជាអ្នកជំនាញត្រួតពិនិត្យព័ត៌មានពិត ឬក្លែងក្លាយនៅកម្ពុជា។ សូមវិភាគអត្ថបទនេះដោយប្រុងប្រយ័ត្ន។"
+    : "អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics)។ សូមពិនិត្យរកមើលកំហុស ឬភាពមិនប្រក្រតីដែលបញ្ជាក់ថារូបភាពនេះបង្កើតដោយ AI (ដូចជា ម្រាមដៃខុសប្រក្រតី, អក្សរមិនច្បាស់, ពន្លឺមិនស៊ីគ្នា)។";
+
+  const payload = {
+    contents: [{ parts: parts }],
+    systemInstruction: { parts: [{ text: systemInstruction }] },
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          classification: { 
+            type: "STRING", 
+            description: isTextAnalysis ? "MUST BE exactly 'real', 'fake', or 'suspicious'" : "MUST BE exactly 'real', 'ai_generated', or 'suspicious'" 
+          },
+          confidence_score: { 
+            type: "INTEGER", 
+            description: "Score from 0 to 100 representing confidence in the classification" 
+          },
+          analysis_reasoning: { 
+            type: "STRING", 
+            description: "Detailed reasoning in Khmer language explaining why it is classified this way." 
+          }
+        }
+      }
+    }
+  };
+
+  const result = await fetchWithRetry(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!textResponse) throw new Error("មិនមានការឆ្លើយតបពី AI");
+  
+  return JSON.parse(textResponse);
+};
+
+
+// កម្មវិធីចម្បង
+export default function App() {
+  const [activeTab, setActiveTab] = useState('text');
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* ផ្នែកក្បាល (Header) */}
+      <header className="bg-blue-800 text-white shadow-md">
+        <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-8 h-8 text-blue-300" />
+            <h1 className="text-2xl font-bold">ប្រព័ន្ធបែងចែកព័ត៌មាន និងរូបភាព AI</h1>
+          </div>
+          <p className="text-blue-200 mt-2 md:mt-0 text-sm">គម្រោងសម្រាប់វិស័យអប់រំនៅកម្ពុជា</p>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        {/* ប៊ូតុងរុករក (Tabs) */}
+        <div className="flex bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+          <button
+            onClick={() => setActiveTab('text')}
+            className={`flex-1 flex items-center justify-center gap-2 py-4 font-semibold transition-colors ${
+              activeTab === 'text' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            វិភាគព័ត៌មាន (Fake News)
+          </button>
+          <button
+            onClick={() => setActiveTab('image')}
+            className={`flex-1 flex items-center justify-center gap-2 py-4 font-semibold transition-colors ${
+              activeTab === 'image' 
+                ? 'bg-blue-600 text-white' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            <ImageIcon className="w-5 h-5" />
+            វិភាគរូបភាព (AI Image)
+          </button>
+        </div>
+
+        {/* ផ្នែកបង្ហាញខ្លឹមសារតាម Tab */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+          {activeTab === 'text' ? <TextAnalyzer /> : <ImageAnalyzer />}
+        </div>
+      </main>
     </div>
+  );
+}
 
-    <script>
-        function checkNews() {
-            const resultDiv = document.getElementById('newsResult');
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = `<p class="text-yellow-600 font-bold">កំពុងវិភាគ... យោងតាមលក្ខណៈវិនិច្ឆ័យ៖ តើព័ត៌មាននេះមានប្រភពច្បាស់លាស់ដែរឬទេ? តើគេហទំព័រគួរឱ្យទុកចិត្តដែរឬទេ?</p>`;
-        }
+// ផ្នែកវិភាគអត្ថបទ
+function TextAnalyzer() {
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
 
-        function checkImage() {
-            const resultDiv = document.getElementById('imageResult');
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = `<p class="text-purple-600 font-bold">កំពុងស្វែងរកលក្ខណៈពិសេសរបស់ AI៖ ពិនិត្យភាពមិនប្រក្រតីនៃម្រាមដៃ ផ្ទៃខាងក្រោយ ឬពន្លឺខុសធម្មតា។</p>`;
-        }
-    </script>
-</body>
-</html>
+  const handleAnalyze = async () => {
+    if (!text.trim()) {
+      setError("សូមបញ្ចូលអត្ថបទព័ត៌មានមុននឹងធ្វើការវិភាគ។");
+      return;
+    }
+    setError('');
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const prompt = `សូមវិភាគអត្ថបទព័ត៌មានខាងក្រោមថាតើវាជាព័ត៌មានពិត (real), ព័ត៌មានក្លែងក្លាយ (fake) ឬគួរឱ្យសង្ស័យ (suspicious)។
+      អត្ថបទ៖ "${text}"`;
+      
+      const response = await analyzeWithGemini(prompt, null, true);
+      setResult(response);
+    } catch (err) {
+      setError("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមព្យាយាមម្តងទៀត។");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">ពិនិត្យអត្ថបទព័ត៌មាន</h2>
+        <p className="text-gray-600">សូមចម្លងអត្ថបទព័ត៌មានដែលលោកអ្នកសង្ស័យ ហើយដាក់ចូលក្នុងប្រអប់ខាងក្រោម។</p>
+      </div>
+
+      <textarea
+        className="w-full h-48 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700"
+        placeholder="បញ្ចូលអត្ថបទព័ត៌មាននៅទីនេះ..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      ></textarea>
+
+      {error && <p className="text-red-500 text-sm flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> {error}</p>}
+
+      <button
+        onClick={handleAnalyze}
+        disabled={loading}
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-xl transition flex justify-center items-center gap-2"
+      >
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+        {loading ? 'កំពុងវិភាគអត្ថបទ...' : 'ចាប់ផ្តើមវិភាគ'}
+      </button>
+
+      {result && <ResultCard result={result} type="text" />}
+    </div>
+  );
+}
+
+// ផ្នែកវិភាគរូបភាព
+function ImageAnalyzer() {
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const fileInputRef = useRef(null);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("ទំហំរូបភាពធំពេក (អនុញ្ញាតត្រឹមតែ 5MB)។");
+        return;
+      }
+      setImageFile(file);
+      setError('');
+      setResult(null);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!imagePreview) {
+      setError("សូមជ្រើសរើសរូបភាពមុននឹងធ្វើការវិភាគ។");
+      return;
+    }
+    setError('');
+    setLoading(true);
+    setResult(null);
+
+    try {
+      const prompt = `សូមវិភាគរូបភាពនេះ ថាតើវាជារូបភាពថតពិតប្រាកដ (real), ជារូបភាពបង្កើតដោយ AI (ai_generated) ឬគួរឱ្យសង្ស័យមានការកាត់ត (suspicious)។ សូមរកមើលកំហុសរបស់ AI ដូចជាទម្រង់មុខ ដៃជើង ខុសប្រក្រតី ឬអក្សរមិនច្បាស់។`;
+      
+      const response = await analyzeWithGemini(prompt, imagePreview, false);
+      setResult(response);
+    } catch (err) {
+      setError("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI។ សូមព្យាយាមម្តងទៀត។");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">ពិនិត្យរូបភាព</h2>
+        <p className="text-gray-600">សូមបញ្ចូលរូបភាពដែលអ្នកចង់ដឹងថា វាត្រូវបានបង្កើតដោយបញ្ញាសិប្បនិម្មិត (AI) ឬអត់។</p>
+      </div>
+
+      {/* កន្លែងបញ្ចូលរូបភាព */}
+      <div 
+        className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition cursor-pointer"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleImageUpload} 
+          accept="image/jpeg, image/png, image/webp" 
+          className="hidden" 
+        />
+        
+        {imagePreview ? (
+          <div className="relative w-full max-w-sm">
+             <img src={imagePreview} alt="Preview" className="rounded-lg max-h-64 mx-auto object-contain" />
+             <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition flex items-center justify-center rounded-lg">
+                <p className="text-white font-semibold">ចុចដើម្បីប្តូររូបភាព</p>
+             </div>
+          </div>
+        ) : (
+          <>
+            <Upload className="w-12 h-12 text-gray-400 mb-4" />
+            <p className="text-gray-700 font-semibold mb-1">ចុចទីនេះដើម្បីជ្រើសរើសរូបភាព</p>
+            <p className="text-gray-500 text-sm">គាំទ្រទម្រង់: JPG, PNG, WEBP (អតិបរមា 5MB)</p>
+          </>
+        )}
+      </div>
+
+      {error && <p className="text-red-500 text-sm flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> {error}</p>}
+
+      <button
+        onClick={handleAnalyze}
+        disabled={loading || !imagePreview}
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-xl transition flex justify-center items-center gap-2"
+      >
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
+        {loading ? 'កំពុងវិភាគរូបភាព...' : 'ចាប់ផ្តើមវិភាគ'}
+      </button>
+
+      {result && <ResultCard result={result} type="image" />}
+    </div>
+  );
+}
+
+// កាតបង្ហាញលទ្ធផល
+function ResultCard({ result, type }) {
+  const getStatusInfo = () => {
+    const cls = result.classification.toLowerCase();
+    if (cls === 'fake') {
+      return {
+        label: 'ព័ត៌មានក្លែងក្លាយ',
+        color: 'text-red-600',
+        bg: 'bg-red-50',
+        border: 'border-red-200',
+        icon: <AlertTriangle className="w-8 h-8 text-red-600" />
+      };
+    } else if (cls === 'ai_generated') {
+      return {
+        label: 'រូបភាពបង្កើតដោយ AI',
+        color: 'text-red-600',
+        bg: 'bg-red-50',
+        border: 'border-red-200',
+        icon: <AlertTriangle className="w-8 h-8 text-red-600" />
+      };
+    } else if (cls === 'suspicious') {
+      return {
+        label: 'គួរឱ្យសង្ស័យ',
+        color: 'text-yellow-600',
+        bg: 'bg-yellow-50',
+        border: 'border-yellow-200',
+        icon: <Info className="w-8 h-8 text-yellow-600" />
+      };
+    } else {
+      return {
+        label: type === 'text' ? 'ព័ត៌មានពិត (គួរឱ្យទុកចិត្ត)' : 'រូបភាពថតពិតប្រាកដ',
+        color: 'text-green-600',
+        bg: 'bg-green-50',
+        border: 'border-green-200',
+        icon: <CheckCircle className="w-8 h-8 text-green-600" />
+      };
+    }
+  };
+
+  const status = getStatusInfo();
+
+  return (
+    <div className={`mt-8 p-6 rounded-xl border ${status.bg} ${status.border} animate-fade-in`}>
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+        <div className="p-3 bg-white rounded-full shadow-sm">
+          {status.icon}
+        </div>
+        <div className="flex-1 text-center md:text-left">
+          <h3 className={`text-2xl font-bold ${status.color} mb-1`}>
+            {status.label}
+          </h3>
+          <p className="text-gray-700 font-medium mb-4">
+            កម្រិតជឿជាក់នៃការវិភាគ៖ <span className="font-bold">{result.confidence_score}%</span>
+          </p>
+          <div className="bg-white bg-opacity-60 rounded-lg p-4 text-gray-800 text-sm leading-relaxed border border-gray-100 text-left">
+            <h4 className="font-bold mb-2 flex items-center gap-2">
+              <Info className="w-4 h-4 text-blue-500" /> ហេតុផលនៃការវាយតម្លៃ៖
+            </h4>
+            <p className="whitespace-pre-wrap">{result.analysis_reasoning}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
