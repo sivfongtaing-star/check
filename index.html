@@ -1,7 +1,23 @@
 import React, { useState, useRef } from 'react';
 
-// ការកំណត់ស្វ័យប្រវត្តិនៃ API Key
-const apiKey = ""; 
+// បង្កើត Function ដើម្បីទាញយក API Key ដោយសុវត្ថិភាព 
+// ជៀសវាងកំហុសពេល Compile លើ Target Environment ចាស់ៗ (ដូចជា es2015)
+const getApiKey = () => {
+  try {
+    // ប្រើប្រាស់វិធីសាស្ត្រដោះស្រាយបញ្ហាដើម្បីកុំឱ្យ Bundler (ដូចជា esbuild) ឆែកឃើញពាក្យ 'import.meta' ផ្ទាល់នៅពេល Compile
+    const meta = Function('return import.meta')();
+    return meta?.env?.VITE_GEMINI_API_KEY || "";
+  } catch (e) {
+    try {
+      // ករណីជំនួស (Fallback) សម្រាប់ប្រព័ន្ធចាស់ៗ ឬ Webpack/Node.js
+      return process.env.VITE_GEMINI_API_KEY || "";
+    } catch (err) {
+      return "";
+    }
+  }
+};
+
+const apiKey = getApiKey();
 
 // មុខងារហៅទៅកាន់ Gemini API ជាមួយនឹងការសាកល្បងឡើងវិញ (Exponential Backoff)
 const fetchWithRetry = async (url, options, maxRetries = 5) => {
@@ -166,9 +182,8 @@ function TextAnalyzer() {
       return;
     }
     setError('');
-    setLoading(false);
-    setResult(null);
     setLoading(true);
+    setResult(null);
 
     try {
       const prompt = `សូមវិភាគអត្ថបទព័ត៌មានខាងក្រោមថាតើវាជាព័ត៌មានពិត (real), ព័ត៌មានក្លែងក្លាយ (fake) ឬគួរឱ្យសង្ស័យ (suspicious)។ អត្ថបទ៖ "${text}"`;
