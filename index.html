@@ -116,7 +116,7 @@
 
                         <div class="bg-white p-5 rounded-lg border border-gray-200 space-y-3">
                             <h5 class="font-bold text-gray-800 border-b pb-2 text-sm md:text-base"><i class="fas fa-clipboard-check text-blue-600 mr-2"></i> ការវាយតម្លៃស៊ីជម្រៅពីប្រព័ន្ធ AI៖</h5>
-                            <div id="diagnosisDetails" class="space-y-2 text-sm text-gray-700 leading-relaxed"></div>
+                            <div id="diagnosisDetails" class="space-y-2 text-sm text-gray-700 leading-relaxed text-slate-700"></div>
                         </div>
 
                         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -188,21 +188,52 @@
             document.getElementById('section-image').className = tab === 'image' ? 'block space-y-6' : 'hidden';
         }
 
-        // Helper to call Gemini AI (Returns JSON)
+        // Helper to call Gemini AI with Exponential Backoff
         async function fetchGeminiAI(payload) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const maxRetries = 5;
+            const delays = [1000, 2000, 4000, 8000, 16000];
 
-            if (!response.ok) {
-                throw new Error("ប្រព័ន្ធមានបញ្ហាក្នុងការតភ្ជាប់ ឬ API Key មិនដំណើរការ។");
+            for (let i = 0; i <= maxRetries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!textResult) {
+                        throw new Error("គ្មានលទ្ធផលត្រឡប់មកវិញពីប្រព័ន្ធ AI ឡើយ។");
+                    }
+
+                    // Strict sanitization of JSON response from AI
+                    let cleanText = textResult.trim();
+                    if (cleanText.startsWith("```json")) {
+                        cleanText = cleanText.substring(7);
+                    } else if (cleanText.startsWith("```")) {
+                        cleanText = cleanText.substring(3);
+                    }
+                    if (cleanText.endsWith("```")) {
+                        cleanText = cleanText.slice(0, -3);
+                    }
+                    cleanText = cleanText.trim();
+
+                    return JSON.parse(cleanText);
+                } catch (error) {
+                    if (i === maxRetries) {
+                        throw error; // Propagate error if all retries fail
+                    }
+                    // Wait before retrying (Exponential Backoff)
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
             }
-            const data = await response.json();
-            const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            return JSON.parse(textResult);
         }
 
         // --- TRUE AI TEXT ANALYSIS ---
@@ -230,22 +261,32 @@
             3. សញ្ញានៃការឆបោក (បោកលុយ ឬបោកទិន្នន័យ)
             4. ទម្រង់សរសេរសង្ស័យ (សញ្ញាឧទានច្រើន លីងមិនច្បាស់លាស់)
 
-            អត្ថបទ៖ "${text}"
-            
-            អ្នកត្រូវតែឆ្លើយតបជាទម្រង់ JSON សុទ្ធ (គ្មានអក្សរផ្សេង) តាមទម្រង់នេះ៖
-            {
-                "emotional": 80,
-                "scientific": 20,
-                "financial": 0,
-                "format": 50,
-                "risk": "High Risk",
-                "diagnosis": ["ហេតុផលទី១...", "ហេតុផលទី២..."],
-                "advice": ["ដំបូន្មានទី១...", "ដំបូន្មានទី២..."]
-            }`;
+            អត្ថបទ៖ "${text}"`;
 
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
+                generationConfig: { 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            emotional: { type: "INTEGER" },
+                            scientific: { type: "INTEGER" },
+                            financial: { type: "INTEGER" },
+                            format: { type: "INTEGER" },
+                            risk: { type: "STRING" },
+                            diagnosis: {
+                                type: "ARRAY",
+                                items: { type: "STRING" }
+                            },
+                            advice: {
+                                type: "ARRAY",
+                                items: { type: "STRING" }
+                            }
+                        },
+                        required: ["emotional", "scientific", "financial", "format", "risk", "diagnosis", "advice"]
+                    }
+                }
             };
 
             try {
@@ -266,11 +307,11 @@
                 const header = document.getElementById('reportHeader');
                 const riskLabel = document.getElementById('riskLabel');
                 
-                if (aiResult.risk.includes("High")) {
+                if (aiResult.risk.toLowerCase().includes("high")) {
                     header.className = "px-6 py-4 border-b flex justify-between items-center text-white bg-red-600 border-red-700 rounded-t-xl";
                     riskLabel.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-white text-red-600";
                     riskLabel.textContent = "ហានិភ័យខ្ពស់ (High Risk)";
-                } else if (aiResult.risk.includes("Medium")) {
+                } else if (aiResult.risk.toLowerCase().includes("medium") || aiResult.risk.toLowerCase().includes("moderate")) {
                     header.className = "px-6 py-4 border-b flex justify-between items-center text-white bg-yellow-500 border-yellow-600 rounded-t-xl";
                     riskLabel.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-white text-yellow-600";
                     riskLabel.textContent = "ហានិភ័យមធ្យម (Medium Risk)";
@@ -288,7 +329,14 @@
                 reportDiv.scrollIntoView({ behavior: 'smooth' });
 
             } catch (error) {
-                document.getElementById('diagnosisDetails').innerHTML = `<p class="text-red-600"><i class="fas fa-exclamation-triangle"></i> ប្រព័ន្ធ AI មានបញ្ហា៖ សូមប្រាកដថាអ្នកកំពុងដំណើរការក្នុងបរិស្ថានត្រឹមត្រូវ ឬមានអ៊ីនធឺណិត។</p>`;
+                console.error("AI Error Details:", error);
+                document.getElementById('diagnosisDetails').innerHTML = `
+                    <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                        <p class="text-red-700 font-bold mb-1"><i class="fas fa-exclamation-triangle mr-2"></i> ប្រព័ន្ធ AI មានបញ្ហាក្នុងការដំណើរការ៖</p>
+                        <p class="text-xs text-red-600">មូលហេតុ៖ ${error.message}</p>
+                        <p class="text-xs text-gray-500 mt-2">* សូមប្រាកដថា លោកគ្រូ/អ្នកគ្រូ កំពុងដំណើរការកម្មវិធីនេះនៅក្នុងប្រព័ន្ធ Canvas ដែលមានការតភ្ជាប់អ៊ីនធឺណិតធម្មតា។</p>
+                    </div>
+                `;
                 reportDiv.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
@@ -330,13 +378,7 @@
             btnScan.disabled = true;
             icon.className = "fas fa-spinner fa-spin mr-2";
 
-            const prompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព។ សូមពិនិត្យមើលរូបភាពនេះយ៉ាងលម្អិត ហើយវាយតម្លៃថាតើវាជារូបពិត ឬជារូប AI កាត់ត។
-            អ្នកត្រូវតែឆ្លើយតបជាទម្រង់ JSON សុទ្ធ៖
-            {
-                "is_ai_generated": true/false,
-                "confidence_percentage": 90,
-                "analysis": ["ការពន្យល់ចំណុចសង្ស័យទី១ (ឧ. ម្រាមដៃ, ផ្ទៃខាងក្រោយ)", "ការពន្យល់ចំណុចសង្ស័យទី២"]
-            }`;
+            const prompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព។ សូមពិនិត្យមើលរូបភាពនេះយ៉ាងលម្អិត ហើយវាយតម្លៃថាតើវាជារូបពិត ឬជារូប AI កាត់ត។`;
 
             const payload = {
                 contents: [{ 
@@ -346,7 +388,21 @@
                         { inlineData: { mimeType: imageMimeType, data: base64ImageData } }
                     ] 
                 }],
-                generationConfig: { responseMimeType: "application/json" }
+                generationConfig: { 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            is_ai_generated: { type: "BOOLEAN" },
+                            confidence_percentage: { type: "INTEGER" },
+                            analysis: {
+                                type: "ARRAY",
+                                items: { type: "STRING" }
+                            }
+                        },
+                        required: ["is_ai_generated", "confidence_percentage", "analysis"]
+                    }
+                }
             };
 
             try {
@@ -366,7 +422,13 @@
                 report.scrollIntoView({ behavior: 'smooth' });
 
             } catch (error) {
-                document.getElementById('imgDiagnosisDetails').innerHTML = `<p class="text-red-600">ប្រព័ន្ធ AI បរាជ័យក្នុងការវិភាគរូបភាពពេលនេះ។</p>`;
+                console.error("AI Image Error:", error);
+                document.getElementById('imgDiagnosisDetails').innerHTML = `
+                    <div class="p-2 text-red-600">
+                        <p class="font-bold">មិនអាចស្កេនរូបភាពបានទេ៖</p>
+                        <p class="text-xs">${error.message}</p>
+                    </div>
+                `;
                 report.classList.remove('hidden');
             } finally {
                 scanner.classList.add('hidden');
