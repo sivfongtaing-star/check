@@ -3,438 +3,405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ប្រព័ន្ធវិភាគព័ត៌មាន និងរូបភាព AI</title>
+    <title>ប្រព័ន្ធវាយតម្លៃព័ត៌មាន និងរូបភាព AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap');
         body {
             font-family: 'Battambang', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #f0f2f5;
         }
         .title-font {
             font-family: 'Moul', serif;
         }
-        .loader {
-            border-top-color: #3b82f6;
-            -webkit-animation: spinner 1.5s linear infinite;
-            animation: spinner 1.5s linear infinite;
-        }
-        @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Custom scrollbar for result box */
-        .result-content::-webkit-scrollbar {
-            width: 8px;
-        }
-        .result-content::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-            border-radius: 4px;
-        }
-        .result-content::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        .result-content::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
     </style>
 </head>
-<body class="min-h-screen text-gray-800">
+<body class="min-h-screen text-gray-800 flex flex-col justify-between">
 
     <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-6 relative">
-            <div class="flex flex-col items-center justify-center text-center">
-                <i class="fas fa-shield-halved text-4xl mb-2"></i>
-                <h1 class="text-2xl md:text-3xl title-font">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
-                <p class="text-blue-200 text-sm md:text-base mt-2">ឧបករណ៍ជំនួយអប់រំសម្រាប់បែងចែកព័ត៌មានក្លែងក្លាយ និងរូបភាព AI</p>
-            </div>
-            <!-- Settings Button -->
-            <button onclick="toggleSettingsModal()" class="absolute top-6 right-4 text-white hover:text-blue-200 text-2xl transition focus:outline-none" title="ការកំណត់ API Key">
-                <i class="fas fa-cog"></i>
-            </button>
+    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white shadow-lg py-6">
+        <div class="container mx-auto px-4 text-center">
+            <i class="fas fa-user-shield text-5xl mb-3 text-yellow-400"></i>
+            <h1 class="text-2xl md:text-3xl title-font">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
+            <p class="text-blue-100 text-sm md:text-base mt-2 font-light">ឧបករណ៍បណ្តុះបណ្តាល «ការគិតពិចារណា» សម្រាប់សិស្សានុសិស្ស (ដំណើរការដោយមិនប្រើអ៊ីនធឺណិត)</p>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <main class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
         
-        <!-- Tab Navigation -->
-        <div class="flex border-b border-gray-300 mb-6 bg-white rounded-t-lg overflow-hidden shadow-sm">
-            <button onclick="switchTab('text')" id="tab-text" class="flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-2 border-blue-600 transition duration-300">
-                <i class="fas fa-file-lines mr-2"></i> វិភាគអត្ថបទព័ត៌មាន
+        <!-- Navigation Tab -->
+        <div class="flex border-b border-gray-300 mb-6 bg-white rounded-t-xl overflow-hidden shadow-sm">
+            <button onclick="switchTab('text')" id="tab-text" class="flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-600 transition duration-200">
+                <i class="fas fa-file-invoice mr-2"></i> វាយតម្លៃអត្ថបទព័ត៌មាន
             </button>
-            <button onclick="switchTab('image')" id="tab-image" class="flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-300">
-                <i class="fas fa-image mr-2"></i> វិភាគរូបភាព
+            <button onclick="switchTab('image')" id="tab-image" class="flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-200 border-b-4 border-transparent">
+                <i class="fas fa-eye mr-2"></i> វិភាគរូបភាព AI / រូបពិត
             </button>
         </div>
 
-        <!-- Content Areas -->
-        <div class="bg-white rounded-b-lg shadow-md p-6">
-            
-            <!-- Text Analysis Section -->
-            <div id="section-text" class="block">
-                <label for="newsInput" class="block text-gray-700 font-bold mb-2">សូមបញ្ចូលអត្ថបទព័ត៌មាន ឬតំណរភ្ជាប់ (Link) ដែលអ្នកសង្ស័យទីនេះ៖</label>
-                <textarea id="newsInput" rows="6" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="ឧទាហរណ៍៖ មានការចែករំលែកថា ការផឹកទឹកក្តៅលាយក្រូចឆ្មាអាចព្យាបាលជំងឺគ្រប់ប្រភេទ..."></textarea>
+        <!-- Tab Content 1: Text Analysis -->
+        <div id="section-text" class="space-y-6">
+            <!-- Part A: Auto Text Scanner -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-blue-800 mb-3"><i class="fas fa-robot mr-2"></i> ១. ម៉ាស៊ីនស្កេនរកពាក្យគន្លឹះសង្ស័យ (Auto Heuristic Scanner)</h3>
+                <p class="text-gray-500 text-xs mb-4">បញ្ចូលអត្ថបទដើម្បីស្វែងរកពាក្យបោកប្រាស់ ឬការបំផ្លើសហួសហេតុដែលឧស្សាហ៍មានក្នុងព័ត៌មានក្លែងក្លាយ។</p>
                 
-                <button onclick="analyzeText()" id="btn-analyze-text" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex justify-center items-center">
-                    <i class="fas fa-search mr-2"></i> ចាប់ផ្តើមវិភាគអត្ថបទ
+                <textarea id="newsInput" rows="5" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="ឧទាហរណ៍៖ ចែករំលែកបន្ទាន់! ថ្នាំទិព្វអាចព្យាបាលជា១០០%..."></textarea>
+                
+                <button onclick="scanText()" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center">
+                    <i class="fas fa-radar mr-2"></i> ចាប់ផ្តើមស្កេនអត្ថបទ
                 </button>
+
+                <!-- Scan Result Area -->
+                <div id="scanResult" class="hidden mt-4 p-4 rounded-lg border">
+                    <!-- Dynamic scan output here -->
+                </div>
             </div>
 
-            <!-- Image Analysis Section -->
-            <div id="section-image" class="hidden">
-                <label class="block text-gray-700 font-bold mb-2">សូមបង្ហោះរូបភាពដែលអ្នកចង់ត្រួតពិនិត្យ៖</label>
-                
-                <div class="flex items-center justify-center w-full mt-2">
-                    <label for="imageInput" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6" id="upload-prompt">
-                            <i class="fas fa-cloud-arrow-up text-4xl text-gray-400 mb-3"></i>
-                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">ចុចទីនេះដើម្បីបង្ហោះ</span> ឬទាញទម្លាក់រូបភាព (Drag & Drop)</p>
-                            <p class="text-xs text-gray-500">គាំទ្រឯកសារ: PNG, JPG, JPEG</p>
+            <!-- Part B: Credibility Evaluation Wizard -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-blue-800 mb-3"><i class="fas fa-clipboard-question mr-2"></i> ២. តេស្តវាយតម្លៃភាពជឿជាក់ ៥ ជំហាន (5-Step Credibility Quiz)</h3>
+                <p class="text-gray-500 text-xs mb-4">សូមឱ្យសិស្សឆ្លើយសំណួរខាងក្រោមដោយស្មោះត្រង់ ផ្អែកលើអត្ថបទព័ត៌មានដែលពួកគេបានឃើញ៖</p>
+
+                <div class="space-y-4">
+                    <!-- Q1 -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <span class="font-bold text-sm text-blue-600">សំណួរទី ១៖</span>
+                        <label class="block text-gray-700 text-sm font-semibold mt-1">តើព័ត៌មាននេះចេញពីស្ថាប័នផ្លូវការ ឬគណនីមានសញ្ញាគ្រីពណ៌ខៀវ (Verified) ដែរឬទេ?</label>
+                        <select id="q-source" class="mt-2 w-full p-2 border border-gray-300 rounded bg-white text-sm">
+                            <option value="10">បាទ/ចាស! ចេញពីស្ថាប័នផ្លូវការច្បាស់លាស់ (ក្រសួង ឬសារព័ត៌មានល្បីៗ)</option>
+                            <option value="5">មិនច្បាស់ទេ (គណនីផ្ទាល់ខ្លួន ប៉ុន្តែជាមនុស្សល្បីល្បាញ)</option>
+                            <option value="0">ទេ! គណនីទើបបង្កើតថ្មី ឬគ្មានប្រភពច្បាស់លាស់</option>
+                        </select>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <span class="font-bold text-sm text-blue-600">សំណួរទី ២៖</span>
+                        <label class="block text-gray-700 text-sm font-semibold mt-1">តើមានរូបភាព វីដេអូ ឬឯកសារយោងជាភស្តុតាងច្បាស់លាស់ទេ?</label>
+                        <select id="q-evidence" class="mt-2 w-full p-2 border border-gray-300 rounded bg-white text-sm">
+                            <option value="10">មានភស្តុតាងរឹងមាំ និងមានឯកសារយោងច្បាស់លាស់</option>
+                            <option value="3">មានរូបភាពតែមើលទៅមិនសូវពាក់ព័ន្ធ ឬមើលទៅកាត់ត</option>
+                            <option value="0">គ្មានទាល់តែសោះ (មានតែអត្ថបទសរសេរទទេៗ)</option>
+                        </select>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <span class="font-bold text-sm text-blue-600">សំណួរទី ៣៖</span>
+                        <label class="block text-gray-700 text-sm font-semibold mt-1">តើស្ថាប័នព័ត៌មានផ្សេងទៀត (យ៉ាងហោចណាស់ ២-៣ ស្ថាប័ន) បានចុះផ្សាយរឿងនេះដូចគ្នាដែរឬទេ?</label>
+                        <select id="q-others" class="mt-2 w-full p-2 border border-gray-300 rounded bg-white text-sm">
+                            <option value="10">បាទ/ចាស! ចុះផ្សាយព្រោងព្រាតដូចៗគ្នា</option>
+                            <option value="3">មានតែគណនីមួយនេះចុះផ្សាយមុនគេ និងដាច់ដោយឡែក</option>
+                            <option value="0">គ្មានគណនីណាផ្សេងចុះផ្សាយទាល់តែសោះ</option>
+                        </select>
+                    </div>
+
+                    <!-- Q4 -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <span class="font-bold text-sm text-blue-600">សំណួរទី ៤៖</span>
+                        <label class="block text-gray-700 text-sm font-semibold mt-1">តើចំណងជើង និងការសរសេរមានលក្ខណៈញុះញង់ បង្កការភ័យខ្លាច ឬបង្ខំឱ្យគេ Share ដែរឬទេ?</label>
+                        <select id="q-emotion" class="mt-2 w-full p-2 border border-gray-300 rounded bg-white text-sm">
+                            <option value="10">ទេ! សរសេរក្នុងទម្រង់រៀបរាប់ធម្មតា និងផ្តល់ការអប់រំ</option>
+                            <option value="5">មានការបំផ្លើសខ្លះ ប៉ុន្តែមិនទាន់ដល់ថ្នាក់បង្ខំឱ្យស៊ែរ</option>
+                            <option value="0">បាទ/ចាស! ប្រើភាសាញុះញង់ខ្លាំង ឬសរសេរថា «ស៊ែរជាបន្ទាន់បើស្រឡាញ់គ្រួសារ»</option>
+                        </select>
+                    </div>
+
+                    <!-- Q5 -->
+                    <div class="p-3 bg-gray-50 rounded-lg">
+                        <span class="font-bold text-sm text-blue-600">សំណួរទី ៥៖</span>
+                        <label class="block text-gray-700 text-sm font-semibold mt-1">តើកាលបរិច្ឆេទនៃការផ្សាយជាព្រឹត្តិការណ៍បច្ចុប្បន្ន ឬជាព័ត៌មានចាស់យកមកបង្ហោះឡើងវិញ?</label>
+                        <select id="q-date" class="mt-2 w-full p-2 border border-gray-300 rounded bg-white text-sm">
+                            <option value="10">ជាព័ត៌មានថ្មីស្រឡាង និងពាក់ព័ន្ធនឹងសភាពការណ៍បច្ចុប្បន្ន</option>
+                            <option value="2">ជាព័ត៌មានចាស់កាលពីច្រើនឆ្នាំមុន តែទើបយកមកបង្ហោះឡើងវិញ</option>
+                            <option value="0">មិនមានដាក់ថ្ងៃខែឆ្នាំផ្សព្វផ្សាយច្បាស់លាស់ទេ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="calculateCredibility()" class="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center">
+                    <i class="fas fa-square-poll-vertical mr-2"></i> គណនាពិន្ទុភាពជឿជាក់
+                </button>
+
+                <!-- Credibility Quiz Result -->
+                <div id="quizResult" class="hidden mt-6 p-6 rounded-lg border text-center space-y-3">
+                    <h4 class="font-bold text-lg" id="quizStatus">លទ្ធផល</h4>
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div id="quizProgress" class="bg-blue-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-2xl font-bold text-blue-800" id="quizPercentage">0%</p>
+                    <p class="text-sm text-gray-600 leading-relaxed" id="quizFeedback">ចំណាត់ថ្នាក់</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content 2: Image AI Detector (Manual Inspection Expert System) -->
+        <div id="section-image" class="hidden space-y-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-blue-800 mb-3"><i class="fas fa-magnifying-glass mr-2"></i> ប្រព័ន្ធត្រួតពិនិត្យរូបភាព AI ដោយការសង្កេតផ្ទាល់</h3>
+                <p class="text-gray-500 text-xs mb-4">សូមឱ្យសិស្សមើលរូបភាពដែលពួកគេសង្ស័យ រួចបំពេញចំណុចសង្កេតខាងក្រោម។ ប្រព័ន្ធនឹងគណនាភាគរយដែលជារូបភាពបង្កើតដោយ AI៖</p>
+
+                <!-- Image Upload Preview (Local Only) -->
+                <div class="flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-lg p-6 bg-gray-50 hover:bg-gray-100 cursor-pointer transition mb-6" onclick="document.getElementById('imageLoader').click()">
+                    <input type="file" id="imageLoader" class="hidden" accept="image/*" onchange="loadLocalImage(event)">
+                    <div id="imgPlaceholder" class="text-center">
+                        <i class="fas fa-file-image text-5xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-500">បង្ហោះរូបភាពដែលចង់វិភាគនៅទីនេះ (ដើម្បីស្រួលផ្ទៀងផ្ទាត់)</p>
+                    </div>
+                    <img id="localImgPreview" class="hidden max-h-64 rounded-lg shadow-sm" alt="Preview">
+                </div>
+
+                <!-- Guided Inspection Checklist -->
+                <div class="space-y-4">
+                    <!-- Feature 1 -->
+                    <div class="flex items-start p-4 bg-gray-50 rounded-lg space-x-3">
+                        <input type="checkbox" id="chk-fingers" class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500" onchange="updateAIProbability()">
+                        <div>
+                            <label for="chk-fingers" class="font-bold text-gray-800 text-sm md:text-base">១. ម្រាមដៃ និងក្រចក (Hands & Fingers)</label>
+                            <p class="text-gray-500 text-xs mt-1">តើម្រាមដៃមានលើសពី៥ ម្រាមដៃខ្លីវែងខុសធម្មតា រលាយចូលគ្នា ឬក្រចកដៃមើលទៅខូចទ្រង់ទ្រាយដែរឬទេ?</p>
                         </div>
-                        <img id="imagePreview" src="" alt="Image Preview" class="hidden max-h-60 rounded-lg object-contain p-2">
-                    </label>
-                    <input id="imageInput" type="file" class="hidden" accept="image/png, image/jpeg, image/jpg" onchange="previewImage(event)" />
-                </div>
-                
-                <button onclick="analyzeImage()" id="btn-analyze-image" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    <i class="fas fa-robot mr-2"></i> ចាប់ផ្តើមវិភាគរូបភាព
-                </button>
-            </div>
+                    </div>
 
-            <!-- Loading Indicator -->
-            <div id="loading" class="hidden mt-8 flex flex-col items-center justify-center bg-blue-50 p-6 rounded-lg border border-blue-100">
-                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-                <p class="text-blue-600 font-semibold animate-pulse text-center">ប្រព័ន្ធកំពុងធ្វើការវិភាគ សូមរង់ចាំបន្តិច...</p>
-                <p class="text-gray-500 text-xs text-center mt-1">ការវិភាគអាចប្រើពេលពី ៥ ទៅ ១៥ វិនាទី</p>
-                <button onclick="cancelAnalysis()" class="mt-4 px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 text-sm font-semibold rounded-lg transition duration-200">
-                    <i class="fas fa-circle-xmark mr-1"></i> បោះបង់ការវិភាគ
-                </button>
-            </div>
+                    <!-- Feature 2 -->
+                    <div class="flex items-start p-4 bg-gray-50 rounded-lg space-x-3">
+                        <input type="checkbox" id="chk-bg" class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500" onchange="updateAIProbability()">
+                        <div>
+                            <label for="chk-bg" class="font-bold text-gray-800 text-sm md:text-base">២. ផ្ទៃខាងក្រោយរញ៉េរញ៉ៃ (Distorted Background)</label>
+                            <p class="text-gray-500 text-xs mt-1">តើវត្ថុនៅខាងក្រោយរលាយវៀចវេរមិនសមហេតុផល (ដូចជា បង្គោលភ្លើងវៀច ផ្លូវកោងខុសធម្មតា ឬអក្សរមិនច្បាស់លាស់) ដែរឬទេ?</p>
+                        </div>
+                    </div>
 
-            <!-- Result Section -->
-            <div id="resultBox" class="hidden mt-8 border rounded-lg overflow-hidden shadow-sm">
-                <div id="resultHeader" class="bg-gray-100 px-4 py-3 border-b flex justify-between items-center">
-                    <h3 class="font-bold text-gray-800"><i class="fas fa-clipboard-check text-green-600 mr-2"></i> លទ្ធផលនៃការវិភាគ</h3>
-                    <button onclick="closeResult()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times"></i></button>
+                    <!-- Feature 3 -->
+                    <div class="flex items-start p-4 bg-gray-50 rounded-lg space-x-3">
+                        <input type="checkbox" id="chk-symmetry" class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500" onchange="updateAIProbability()">
+                        <div>
+                            <label for="chk-symmetry" class="font-bold text-gray-800 text-sm md:text-base">៣. គ្រឿងលម្អមិនស៊ីគ្នា (Asymmetric Accessories)</label>
+                            <p class="text-gray-500 text-xs mt-1">តើក្រវិលត្រចៀកសងខាងមានរាងខុសគ្នាទាំងស្រុង វ៉ែនតារលាយចូលសាច់ ឬឡេវអាវនៅទីតាំងប្លែកៗដែរឬទេ?</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="flex items-start p-4 bg-gray-50 rounded-lg space-x-3">
+                        <input type="checkbox" id="chk-skin" class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500" onchange="updateAIProbability()">
+                        <div>
+                            <label for="chk-skin" class="font-bold text-gray-800 text-sm md:text-base">៤. ស្បែករលោងពេកដូចជ័រ (Plastic Skin Textures)</label>
+                            <p class="text-gray-500 text-xs mt-1">តើស្បែកមុខរបស់មនុស្សរលោងខុសពីធម្មជាតិពេក គ្មានស្នាមជ្រួញ ឬរន្ធញើសសូម្បីតែបន្តិចដែរឬទេ?</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="flex items-start p-4 bg-gray-50 rounded-lg space-x-3">
+                        <input type="checkbox" id="chk-text" class="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500" onchange="updateAIProbability()">
+                        <div>
+                            <label for="chk-text" class="font-bold text-gray-800 text-sm md:text-base">៥. អក្សរមិនពិតប្រាកដ (Gibberish Text)</label>
+                            <p class="text-gray-500 text-xs mt-1">ប្រសិនបើក្នុងរូបមានអក្សរ ឬស្លាកសញ្ញា តើអក្សរទាំងនោះមើលទៅដូចអក្សរក្រៅភព វៀចវេរ និងអានមិនចេញដែរឬទេ?</p>
+                        </div>
+                    </div>
                 </div>
-                <div id="resultContent" class="p-6 bg-white text-gray-700 leading-relaxed result-content max-h-96 overflow-y-auto whitespace-pre-line">
-                    <!-- Result will appear here -->
+
+                <!-- Probability Calculator Output -->
+                <div id="aiDetectorResult" class="mt-6 p-6 rounded-lg border text-center space-y-4 bg-gray-50">
+                    <h4 class="font-bold text-gray-700 text-lg">លទ្ធភាពដែលអាចជារូបភាពបង្កើតដោយ AI</h4>
+                    <div class="w-full bg-gray-200 rounded-full h-6 overflow-hidden relative shadow-inner">
+                        <div id="probabilityBar" class="bg-gradient-to-r from-blue-500 to-red-500 h-6 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-4xl font-extrabold text-blue-800" id="probabilityText">0%</p>
+                    <p class="text-sm font-semibold leading-relaxed" id="aiInterpretation">សូមចុចចំណុចសង្កេតខាងលើដើម្បីមើលការវិភាគ</p>
                 </div>
             </div>
-
         </div>
+
     </main>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
-            <button onclick="toggleSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-            <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4">
-                <i class="fas fa-key text-yellow-500 mr-2"></i> កំណត់ API Key ផ្ទាល់ខ្លួន
-            </h3>
-            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
-                ប្រសិនបើលោកគ្រូដំណើរការកម្មវិធីនេះនៅលើទូរសព្ទ ឬកុំព្យូទ័រផ្ទាល់ខ្លួន (ក្រៅបរិស្ថាន Canvas) លោកគ្រូត្រូវបញ្ចូល <strong>Gemini API Key</strong> ដើម្បីឱ្យប្រព័ន្ធ AI ដំណើរការបាន។
-            </p>
-            <div class="mb-4">
-                <label for="userApiKey" class="block text-gray-700 text-sm font-bold mb-2">Gemini API Key៖</label>
-                <input id="userApiKey" type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="AIzaSy...">
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="saveApiKey()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
-                    រក្សាទុក
-                </button>
-                <button onclick="clearApiKey()" class="bg-red-100 hover:bg-red-200 text-red-600 font-bold py-2 px-4 rounded-lg transition duration-200">
-                    លុបចោល
-                </button>
-            </div>
-            <p class="text-xs text-gray-400 mt-3 text-center">
-                * កូដនេះនឹងត្រូវរក្សាទុកដោយសុវត្ថិភាពនៅក្នុងកម្មវិធីរុករករបស់អ្នក (Local Storage)។
-            </p>
-        </div>
-    </div>
-
-    <footer class="text-center text-gray-500 text-sm mt-8 pb-8">
-        <p>បង្កើតឡើងសម្រាប់គោលបំណងអប់រំនៅប្រទេសកម្ពុជា &copy; 2026</p>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-6 text-sm">
+        <p class="text-gray-400">មេរៀន និងកម្មវិធីអភិវឌ្ឍដោយក្តីស្រឡាញ់ សម្រាប់លោកគ្រូ អ្នកគ្រូ និងសិស្សានុសិស្សនៅកម្ពុជា &copy; 2026</p>
     </footer>
 
     <script>
-        // API Key given by the execution environment
-        const apiKey = ""; 
-
-        // State variables
-        let currentTab = 'text';
-        let base64ImageData = null;
-        let imageMimeType = null;
-        let abortController = null;
-
-        // Initialize Settings Input on Load
-        window.onload = function() {
-            const savedKey = localStorage.getItem('gemini_api_key');
-            if (savedKey) {
-                document.getElementById('userApiKey').value = savedKey;
-            }
-        };
-
-        // UI Functions
+        // Tab switching logic
         function switchTab(tab) {
-            currentTab = tab;
-            
-            // Tab styling
             document.getElementById('tab-text').className = tab === 'text' 
-                ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-2 border-blue-600 transition duration-300' 
-                : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-300 border-b border-transparent';
+                ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-600 transition duration-200' 
+                : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-200 border-b-4 border-transparent';
             
             document.getElementById('tab-image').className = tab === 'image' 
-                ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-2 border-blue-600 transition duration-300' 
-                : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-300 border-b border-transparent';
+                ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-600 transition duration-200' 
+                : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-200 border-b-4 border-transparent';
 
-            // Section visibility
-            document.getElementById('section-text').style.display = tab === 'text' ? 'block' : 'none';
-            document.getElementById('section-image').style.display = tab === 'image' ? 'block' : 'none';
-            
-            // Hide result and loading when switching tabs
-            document.getElementById('resultBox').classList.add('hidden');
-            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('section-text').className = tab === 'text' ? 'block space-y-6' : 'hidden';
+            document.getElementById('section-image').className = tab === 'image' ? 'block space-y-6' : 'hidden';
         }
 
-        function previewImage(event) {
+        // 1. Text Scanner - Local Heuristics
+        function scanText() {
+            const text = document.getElementById('newsInput').value.trim();
+            const resultDiv = document.getElementById('scanResult');
+
+            if (!text) {
+                alert("សូមបញ្ចូលអត្ថបទព័ត៌មានដើម្បីស្កេន!");
+                return;
+            }
+
+            // Word library with weights
+            const suspiciousWords = [
+                { word: "ស៊ែរជាបន្ទាន់", reason: "ពាក្យបំផ្លើសបង្ខំឱ្យចែកចាយបន្តដោយគ្មានប្រភព" },
+                { word: "ចែករំលែកម្នាក់មួយ", reason: "ការស្វែងរកការ Like/Share ដើម្បីប្រយោជន៍គណនី" },
+                { word: "ថ្នាំទិព្វ", reason: "ការផ្សាយលក់ថ្នាំពេទ្យគ្មានការអនុញ្ញាតពីក្រសួងសុខាភិបាល" },
+                { word: "ព្យាបាលជា១០០%", reason: "ការអះអាងបំផ្លើសហួសពីការពិតខាងវេជ្ជសាស្ត្រ" },
+                { word: "មិនគួរឱ្យជឿ", reason: "ចំណងជើងបែប Clickbait ទាក់ទាញឱ្យមនុស្សចុចមើល" },
+                { word: "ហួសចិត្ត", reason: "ការលេងអារម្មណ៍ទាក់ទាញចំណាប់អារម្មណ៍" },
+                { word: "ស្លាប់", reason: "ជារឿយៗព័ត៌មានក្លែងក្លាយចូលចិត្តបំផ្លើសពីសេចក្តីស្លាប់ដើម្បីឱ្យល្បី" },
+                { word: "កើតមហារីក", reason: "ការបង្កភាពភ័យខ្លាចខ្លាំងដល់អ្នកអាន" }
+            ];
+
+            let detected = [];
+            let score = 0;
+
+            // Search matches
+            suspiciousWords.forEach(item => {
+                if (text.includes(item.word)) {
+                    detected.push(item);
+                    score += 25; // Increase suspicious score
+                }
+            });
+
+            // Check Exclamation Marks
+            const exclamationCount = (text.match(/!|！/g) || []).length;
+            if (exclamationCount > 3) {
+                detected.push({ word: "ប្រើប្រាស់សញ្ញាឧទាន (!) ច្រើនហួសហេតុ", reason: "ជាសញ្ញានៃការសរសេរបែបដាស់អារម្មណ៍ភ័យខ្លាច ឬរំភើបខ្លាំងហួសហេតុ" });
+                score += 15;
+            }
+
+            // Check suspicious URL extensions
+            if (text.includes("blogspot.com") || text.includes(".xyz") || text.includes(".tk")) {
+                detected.push({ word: "តំណភ្ជាប់មិនមានសុវត្ថិភាព (.blogspot, .xyz...)", reason: "ការប្រើប្រាស់វេបសាយឥតគិតថ្លៃដើម្បីផ្សព្វផ្សាយព័ត៌មានមិនផ្លូវការ" });
+                score += 20;
+            }
+
+            resultDiv.classList.remove('hidden');
+
+            if (detected.length > 0) {
+                resultDiv.className = "mt-4 p-4 rounded-lg border border-red-200 bg-red-50 text-red-900";
+                
+                let detectedHtml = detected.map(item => `
+                    <div class="mt-2 text-sm">
+                        <strong class="bg-red-200 px-1 rounded">⚠️ រកឃើញ៖ "${item.word}"</strong> 
+                        <span class="text-xs text-red-700">(${item.reason})</span>
+                    </div>
+                `).join('');
+
+                resultDiv.innerHTML = `
+                    <h4 class="font-bold text-red-800"><i class="fas fa-triangle-exclamation mr-1"></i> រកឃើញសញ្ញាគួរឱ្យសង្ស័យ៖</h4>
+                    ${detectedHtml}
+                    <p class="mt-3 text-xs text-red-700 italic border-t pt-2 border-red-200">
+                        * ការរកឃើញទាំងនេះបង្ហាញថាអត្ថបទមានលក្ខណៈស្រដៀងនឹងព័ត៌មានក្លែងក្លាយ ៧០%។ សូមចូលរួមឆ្លើយតេស្តខាងក្រោមបន្ថែមដើម្បីវាយតម្លៃឱ្យបានជាក់លាក់។
+                    </p>
+                `;
+            } else {
+                resultDiv.className = "mt-4 p-4 rounded-lg border border-green-200 bg-green-50 text-green-900";
+                resultDiv.innerHTML = `
+                    <h4 class="font-bold text-green-800"><i class="fas fa-circle-check mr-1"></i> មិនទាន់រកឃើញពាក្យគន្លឹះសង្ស័យទូទៅឡើយ៖</h4>
+                    <p class="text-sm mt-1">ប្រព័ន្ធស្កេនបឋមមិនបានរកឃើញពាក្យបំផ្លើស ឬសញ្ញា Clickbait ឡើយ។ ទោះជាយ៉ាងណា សូមបន្តការវាយតម្លៃជាមួយតេស្ត ៥ ជំហានខាងក្រោមដើម្បីសុវត្ថិភាព។</p>
+                `;
+            }
+        }
+
+        // 2. Interactive Credibility Quiz
+        function calculateCredibility() {
+            const qSource = parseInt(document.getElementById('q-source').value);
+            const qEvidence = parseInt(document.getElementById('q-evidence').value);
+            const qOthers = parseInt(document.getElementById('q-others').value);
+            const qEmotion = parseInt(document.getElementById('q-emotion').value);
+            const qDate = parseInt(document.getElementById('q-date').value);
+
+            // Calculate score (Max = 50) -> convert to percentage
+            const totalScore = qSource + qEvidence + qOthers + qEmotion + qDate;
+            const percentage = (totalScore / 50) * 100;
+
+            const quizResult = document.getElementById('quizResult');
+            const quizProgress = document.getElementById('quizProgress');
+            const quizPercentage = document.getElementById('quizPercentage');
+            const quizStatus = document.getElementById('quizStatus');
+            const quizFeedback = document.getElementById('quizFeedback');
+
+            quizResult.classList.remove('hidden');
+            quizProgress.style.width = percentage + "%";
+            quizPercentage.textContent = percentage + "%";
+
+            if (percentage >= 80) {
+                quizResult.className = "mt-6 p-6 rounded-lg border border-green-200 bg-green-50 text-center space-y-3";
+                quizProgress.className = "bg-green-600 h-4 rounded-full transition-all duration-500";
+                quizStatus.innerHTML = "<i class='fas fa-shield-halved text-green-600 text-xl mr-2'></i> ព័ត៌មានមានកម្រិតជឿជាក់ខ្ពស់";
+                quizFeedback.innerHTML = "<strong>ការវិភាគ៖</strong> ប្រភពមានតម្លាភាព ភស្តុតាងរឹងមាំ និងមានការចុះផ្សាយជាសាធារណៈ។ សិស្សានុសិស្សអាចប្រើប្រាស់ព័ត៌មាននេះជាឯកសារយោងបានដោយមានទំនុកចិត្តខ្ពស់។";
+            } else if (percentage >= 50) {
+                quizResult.className = "mt-6 p-6 rounded-lg border border-yellow-200 bg-yellow-50 text-center space-y-3";
+                quizProgress.className = "bg-yellow-500 h-4 rounded-full transition-all duration-500";
+                quizStatus.innerHTML = "<i class='fas fa-triangle-exclamation text-yellow-600 text-xl mr-2'></i> ព័ត៌មានគួរឱ្យសង្ស័យ (កម្រិតមធ្យម)";
+                quizFeedback.innerHTML = "<strong>ការវិភាគ៖</strong> ទោះបីជាមានប្រភពខ្លះៗ តែព័ត៌មានខ្វះភស្តុតាងច្បាស់លាស់ ឬគ្មានការចុះផ្សាយព្រោងព្រាតពីរដ្ឋឡើយ។ សូមណែនាំសិស្សកុំទាន់អាលជឿ ឬចែកចាយបន្តរហូតទាល់តែមានការបញ្ជាក់បន្ថែមពីអ្នកជំនាញ។";
+            } else {
+                quizResult.className = "mt-6 p-6 rounded-lg border border-red-200 bg-red-50 text-center space-y-3";
+                quizProgress.className = "bg-red-600 h-4 rounded-full transition-all duration-500";
+                quizStatus.innerHTML = "<i class='fas fa-skull-crossbones text-red-600 text-xl mr-2'></i> ប្រុងប្រយ័ត្ន! ទំនងជាព័ត៌មានក្លែងក្លាយ";
+                quizFeedback.innerHTML = "<strong>ការវិភាគ៖</strong> ព័ត៌មាននេះគ្មានប្រភពច្បាស់លាស់ គ្មានភស្តុតាង និងប្រើប្រាស់ភាសាញុះញង់ខ្លាំង។ នេះជាទម្រង់ព័ត៌មានក្លែងក្លាយពិតប្រាកដ! ហាមចែករំលែកជាដាច់ខាត ព្រោះអាចបង្កការយល់ច្រឡំក្នុងសង្គម។";
+            }
+        }
+
+        // 3. Image Analysis Setup
+        function loadLocalImage(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const imgPreview = document.getElementById('imagePreview');
-                const uploadPrompt = document.getElementById('upload-prompt');
-                const btnAnalyze = document.getElementById('btn-analyze-image');
-
-                imgPreview.src = e.target.result;
-                imgPreview.classList.remove('hidden');
-                uploadPrompt.classList.add('hidden');
-                
-                // Extract base64 data and mime type
-                const resultStr = e.target.result;
-                imageMimeType = resultStr.split(';')[0].split(':')[1];
-                base64ImageData = resultStr.split(',')[1];
-
-                btnAnalyze.disabled = false;
+                const img = document.getElementById('localImgPreview');
+                const placeholder = document.getElementById('imgPlaceholder');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
             }
             reader.readAsDataURL(file);
         }
 
-        function closeResult() {
-            document.getElementById('resultBox').classList.add('hidden');
-        }
-
-        function showLoading() {
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('resultBox').classList.add('hidden');
-            document.getElementById('btn-analyze-text').disabled = true;
-            document.getElementById('btn-analyze-image').disabled = true;
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('btn-analyze-text').disabled = false;
-            document.getElementById('btn-analyze-image').disabled = false;
-        }
-
-        // Abort analysis function
-        function cancelAnalysis() {
-            if (abortController) {
-                abortController.abort();
-            }
-            hideLoading();
-        }
-
-        // Settings Modal Functions
-        function toggleSettingsModal() {
-            const modal = document.getElementById('settingsModal');
-            modal.classList.toggle('hidden');
-        }
-
-        function saveApiKey() {
-            const userKey = document.getElementById('userApiKey').value.trim();
-            if (userKey) {
-                localStorage.setItem('gemini_api_key', userKey);
-                alert("រក្សាទុក API Key ទទួលបានជោគជ័យ!");
-                toggleSettingsModal();
-            } else {
-                alert("សូមបញ្ចូល API Key មុននឹងរក្សាទុក!");
-            }
-        }
-
-        function clearApiKey() {
-            localStorage.removeItem('gemini_api_key');
-            document.getElementById('userApiKey').value = "";
-            alert("បានលុប API Key រួចរាល់!");
-            toggleSettingsModal();
-        }
-
-        function displayResult(text) {
-            const resultBox = document.getElementById('resultBox');
-            const resultContent = document.getElementById('resultContent');
-            const resultHeader = document.getElementById('resultHeader');
-
-            // Simple formatting: make **text** bold
-            const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-800">$1</strong>');
-            
-            resultContent.innerHTML = formattedText;
-            resultBox.classList.remove('hidden');
-
-            // Determine if it looks highly fake or real based on keywords (simple heuristic for UI color)
-            if(text.includes('ក្លែងក្លាយ') || text.includes('បង្កើតដោយ AI') || text.includes('សង្ស័យ')) {
-                resultHeader.className = "bg-red-50 px-4 py-3 border-b border-red-200 flex justify-between items-center";
-                resultHeader.querySelector('h3').innerHTML = '<i class="fas fa-exclamation-circle text-red-600 mr-2"></i> រកឃើញចំណុចសង្ស័យ';
-            } else {
-                resultHeader.className = "bg-green-50 px-4 py-3 border-b border-green-200 flex justify-between items-center";
-                resultHeader.querySelector('h3').innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i> លទ្ធផលនៃការវិភាគ';
-            }
-        }
-
-        function showError(message) {
-            const resultContent = document.getElementById('resultContent');
-            const resultBox = document.getElementById('resultBox');
-            const resultHeader = document.getElementById('resultHeader');
-
-            resultHeader.className = "bg-red-100 px-4 py-3 border-b border-red-300 flex justify-between items-center";
-            resultHeader.querySelector('h3').innerHTML = '<i class="fas fa-times-circle text-red-600 mr-2"></i> មានបញ្ហា';
-            resultContent.innerHTML = `<p class="text-red-600">${message}</p>`;
-            resultBox.classList.remove('hidden');
-        }
-
-        // Gemini API Implementation with Exponential Backoff and Abort Signal
-        async function fetchGeminiAPI(payload) {
-            // Check for user-entered API key, otherwise fallback to embedded apiKey
-            const activeApiKey = localStorage.getItem('gemini_api_key') || apiKey;
-
-            if (!activeApiKey) {
-                throw new Error("មិនទាន់មាន API Key ទេ។ ប្រសិនបើលោកគ្រូដំណើរការក្រៅ Canvas សូមចុចលើរូបកង់ធ្មេញ (ការកំណត់) នៅខាងស្តាំផ្នែកខាងលើ ដើម្បីបញ្ចូល Gemini API Key របស់អ្នក។");
-            }
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeApiKey}`;
-            const maxRetries = 3; // Reduced to prevent too long waiting
-            const delays = [1000, 2000, 4000];
-
-            abortController = new AbortController();
-            const signal = abortController.signal;
-
-            for (let i = 0; i <= maxRetries; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                        signal: signal
-                    });
-
-                    if (!response.ok) {
-                        const errData = await response.json().catch(() => ({}));
-                        const errMsg = errData.error?.message || `HTTP error! status: ${response.status}`;
-                        throw new Error(errMsg);
-                    }
-
-                    const data = await response.json();
-                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនអាចទាញយកការវិភាគបានទេ។";
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        throw new Error("ការវិភាគត្រូវបានបោះបង់ដោយអ្នកប្រើប្រាស់។");
-                    }
-                    if (i === maxRetries) {
-                        console.error("API Call Failed after retries:", error);
-                        throw new Error(`មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធបានទេ៖ ${error.message}`);
-                    }
-                    // Wait before retrying (Exponential Backoff)
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(resolve, delays[i]);
-                        signal.addEventListener('abort', () => {
-                            clearTimeout(timeout);
-                            reject(new DOMException("Aborted", "AbortError"));
-                        });
-                    });
-                }
-            }
-        }
-
-        // Text Analysis Logic
-        async function analyzeText() {
-            const textInput = document.getElementById('newsInput').value.trim();
-            if (!textInput) {
-                alert("សូមបញ្ចូលអត្ថបទព័ត៌មានជាមុនសិន!");
-                return;
-            }
-
-            showLoading();
-
-            const prompt = `អ្នកគឺជាអ្នកជំនាញផ្ទៀងផ្ទាត់ព័ត៌មាន (Fact-checker) ដ៏ពូកែមួយរូប។ 
-សូមជួយវិភាគអត្ថបទខាងក្រោមនេះ ថាតើវាទំនងជាព័ត៌មានពិត (Real News) ឬ ព័ត៌មានក្លែងក្លាយ (Fake News/Misinformation)។ 
-សូមរៀបរាប់ជាភាសាខ្មែរឱ្យបានច្បាស់លាស់ ដោយបែងចែកជាចំណុចៗដូចជា៖
-១. ការវាយតម្លៃរួម (តើទំនងជាពិត ឬក្លែងក្លាយ)
-២. ចំណុចគួរឱ្យសង្ស័យ (ឧ. ការប្រើភាសាញុះញង់, គ្មានប្រភពច្បាស់លាស់, ការសន្យាហួសហេតុ)
-៣. ដំបូន្មាន (តើអ្នកអានគួរធ្វើយ៉ាងណាដើម្បីផ្ទៀងផ្ទាត់បន្ថែម)
-
-អត្ថបទ៖ "${textInput}"`;
-
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: {
-                    parts: [{ text: "ឆ្លើយតបជាភាសាខ្មែរប្រកបដោយវិជ្ជាជីវៈ និងងាយយល់សម្រាប់សិស្សានុសិស្ស។" }]
-                }
+        // AI Probability update logic based on user checklist input
+        function updateAIProbability() {
+            let score = 0;
+            const points = {
+                'chk-fingers': 30,  // Hand issues are huge in AI
+                'chk-bg': 20,       // Warped BG elements
+                'chk-symmetry': 15, // Asymmetric earrings/glasses
+                'chk-skin': 15,     // Plasticy textures
+                'chk-text': 20      // Unreadable text inside image
             };
 
-            try {
-                const resultText = await fetchGeminiAPI(payload);
-                displayResult(resultText);
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Image Analysis Logic
-        async function analyzeImage() {
-            if (!base64ImageData) {
-                alert("សូមបង្ហោះរូបភាពជាមុនសិន!");
-                return;
-            }
-
-            showLoading();
-
-            const prompt = `អ្នកគឺជាអ្នកជំនាញខាងស៊ើបអង្កេតរូបភាពឌីជីថល។ 
-សូមពិនិត្យមើលរូបភាពនេះយ៉ាងល្អិតល្អន់ ហើយប្រាប់ថាតើវាជារូបភាពពិតប្រាកដ ឬជារូបភាពដែលបង្កើតឡើងដោយបញ្ញាសិប្បនិម្មិត (AI Generated Image)?
-សូមពន្យល់ជាភាសាខ្មែរ ដោយផ្តោតលើចំណុចដូចជា៖
-១. ការសន្និដ្ឋានរួម
-២. ចំណុចសម្គាល់ (ឧ. ទម្រង់ម្រាមដៃ, ផ្ទៃខាងក្រោយរញ៉េរញ៉ៃ, ពន្លឺស្រមោលមិនសមហេតុផល, អក្សរមិនច្បាស់លាស់)
-៣. ភាគរយដែលអ្នកជឿជាក់។`;
-
-            const payload = {
-                contents: [
-                    { 
-                        role: "user", 
-                        parts: [
-                            { text: prompt }, 
-                            { inlineData: { mimeType: imageMimeType, data: base64ImageData } }
-                        ] 
-                    }
-                ],
-                systemInstruction: {
-                    parts: [{ text: "ឆ្លើយតបជាភាសាខ្មែរប្រកបដោយវិជ្ជាជីវៈ និងផ្តល់ហេតុផលច្បាស់លាស់។" }]
+            for (let id in points) {
+                if (document.getElementById(id).checked) {
+                    score += points[id];
                 }
-            };
+            }
 
-            try {
-                const resultText = await fetchGeminiAPI(payload);
-                displayResult(resultText);
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                hideLoading();
+            const bar = document.getElementById('probabilityBar');
+            const txt = document.getElementById('probabilityText');
+            const interpretation = document.getElementById('aiInterpretation');
+
+            bar.style.width = score + "%";
+            txt.textContent = score + "%";
+
+            if (score >= 70) {
+                interpretation.className = "text-sm font-bold text-red-600";
+                interpretation.innerHTML = "⚠️ លទ្ធភាពខ្ពស់បំផុតជារូបភាព AI! កំហុសរចនាសម្ព័ន្ធម្រាមដៃ ឬផ្ទៃខាងក្រោយជាសញ្ញាបញ្ជាក់យ៉ាងច្បាស់អំពីការបង្កើតដោយកុំព្យូទ័រ។";
+            } else if (score >= 40) {
+                interpretation.className = "text-sm font-bold text-yellow-600";
+                interpretation.innerHTML = "⚡ រូបភាពគួរឱ្យសង្ស័យ! មានលក្ខណៈកាត់ត ឬកែប្រែដោយប្រើប្រាស់កម្មវិធីជំនួយខ្លះៗ។";
+            } else if (score > 0) {
+                interpretation.className = "text-sm font-bold text-blue-600";
+                interpretation.innerHTML = "✨ ទំនងជារូបភាពពិតធម្មជាតិ! រូបភាពមិនសូវមានចំណុចឆ្គង ឬកំហុសបច្ចេកទេសរបស់ AI ឡើយ។";
+            } else {
+                interpretation.className = "text-sm text-gray-500 font-semibold";
+                interpretation.innerHTML = "សូមចុចចំណុចសង្កេតខាងលើដើម្បីមើលការវិភាគ";
             }
         }
     </script>
