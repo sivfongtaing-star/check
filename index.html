@@ -1,503 +1,343 @@
-import React, { useState, useRef } from 'react';
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធវិភាគព័ត៌មាន និងរូបភាព AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap');
+        body {
+            font-family: 'Battambang', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .title-font {
+            font-family: 'Moul', serif;
+        }
+        .loader {
+            border-top-color: #3b82f6;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Custom scrollbar for result box */
+        .result-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .result-content::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .result-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .result-content::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
 
-// បង្កើត Function ដើម្បីទាញយក API Key ដោយសុវត្ថិភាព 
-// ជៀសវាងកំហុសពេល Compile លើ Target Environment ចាស់ៗ (ដូចជា es2015)
-const getApiKey = () => {
-  try {
-    // ប្រើប្រាស់វិធីសាស្ត្រដោះស្រាយបញ្ហាដើម្បីកុំឱ្យ Bundler (ដូចជា esbuild) ឆែកឃើញពាក្យ 'import.meta' ផ្ទាល់នៅពេល Compile
-    const meta = Function('return import.meta')();
-    return meta?.env?.VITE_GEMINI_API_KEY || "";
-  } catch (e) {
-    try {
-      // ករណីជំនួស (Fallback) សម្រាប់ប្រព័ន្ធចាស់ៗ ឬ Webpack/Node.js
-      return process.env.VITE_GEMINI_API_KEY || "";
-    } catch (err) {
-      return "";
-    }
-  }
-};
-
-const apiKey = getApiKey();
-
-// មុខងារហៅទៅកាន់ Gemini API ជាមួយនឹងការសាកល្បងឡើងវិញ (Exponential Backoff)
-const fetchWithRetry = async (url, options, maxRetries = 5) => {
-  const delays = [1000, 2000, 4000, 8000, 16000];
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, delays[i]));
-    }
-  }
-};
-
-// មុខងារវិភាគទិន្នន័យតាមរយៈ Gemini API (រក្សាទុកនូវទម្រង់ទិន្នន័យមានរចនាសម្ព័ន្ធ JSON)
-const analyzeWithGemini = async (promptText, base64Image = null, isTextAnalysis = true) => {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-  
-  const parts = [{ text: promptText }];
-  
-  if (base64Image) {
-    const base64Data = base64Image.split(',')[1];
-    const mimeType = base64Image.split(';')[0].split(':')[1];
-    parts.push({
-      inlineData: {
-        mimeType: mimeType,
-        data: base64Data
-      }
-    });
-  }
-
-  const systemInstruction = isTextAnalysis 
-    ? "អ្នកគឺជាអ្នកជំនាញត្រួតពិនិត្យព័ត៌មានពិត ឬក្លែងក្លាយនៅកម្ពុជា។ សូមវិភាគអត្ថបទនេះដោយប្រុងប្រយ័ត្ន។" 
-    : "អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព (Digital Forensics)។ សូមពិនិត្យរកមើលកំហុស ឬភាពមិនប្រក្រតីដែលបញ្ជាក់ថារូបភាពនេះបង្កើតដោយ AI (ដូចជា ម្រាមដៃខុសប្រក្រតី, អក្សរមិនច្បាស់, ពន្លឺមិនស៊ីគ្នា)។";
-
-  const payload = {
-    contents: [{ parts: parts }],
-    systemInstruction: { parts: [{ text: systemInstruction }] },
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "OBJECT",
-        properties: {
-          classification: { 
-            type: "STRING", 
-            description: isTextAnalysis 
-              ? "MUST BE exactly 'real', 'fake', or 'suspicious'" 
-              : "MUST BE exactly 'real', 'ai_generated', or 'suspicious'" 
-          },
-          confidence_score: { 
-            type: "INTEGER", 
-            description: "Score from 0 to 100 representing confidence in the classification" 
-          },
-          analysis_reasoning: { 
-            type: "STRING", 
-            description: "Detailed reasoning in Khmer language explaining why it is classified this way." 
-          }
-        },
-        required: ["classification", "confidence_score", "analysis_reasoning"]
-      }
-    }
-  };
-
-  const result = await fetchWithRetry(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textResponse) throw new Error("មិនមានការឆ្លើយតបពី AI");
-  
-  const cleanedText = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-  return JSON.parse(cleanedText);
-};
-
-// កម្មវិធីចម្បង (App Component)
-export default function App() {
-  const [activeTab, setActiveTab] = useState('text');
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 antialiased py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-100">
-        
-        {/* បឋមកថា (Header) */}
-        <div className="bg-gradient-to-r from-blue-700 to-indigo-800 p-6 sm:p-8 text-center text-white">
-          <div className="inline-flex p-3 bg-white/10 rounded-xl mb-3 backdrop-blur-sm">
-            <svg className="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-wide">ប្រព័ន្ធបែងចែកព័ត៌មាន និងរូបភាព AI</h1>
-          <p className="mt-2 text-blue-100 text-sm sm:text-base font-light">
-            ឧបករណ៍ជំនួយស្មារតីសម្រាប់ថ្នាក់រៀន និងការអប់រំឌីជីថលនៅក្នុងប្រទេសកម្ពុជា
-          </p>
-        </div>
-
-        {/* របារប្តូរផ្នែក (Tabs) */}
-        <div className="flex border-b border-slate-200 bg-slate-50">
-          <button
-            onClick={() => setActiveTab('text')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 px-4 font-semibold text-sm sm:text-base transition-all duration-200 ${
-              activeTab === 'text'
-                ? 'bg-white text-blue-600 border-b-2 border-blue-600'
-                : 'text-slate-500 hover:bg-slate-100 hover:text-blue-500'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            វិភាគព័ត៌មាន (Fake News)
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('image')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 px-4 font-semibold text-sm sm:text-base transition-all duration-200 ${
-              activeTab === 'image'
-                ? 'bg-white text-blue-600 border-b-2 border-blue-600'
-                : 'text-slate-500 hover:bg-slate-100 hover:text-blue-500'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            វិភាគរូបភាព (AI Image)
-          </button>
-        </div>
-
-        {/* ផ្ទៃបង្ហាញមាតិកា */}
-        <div className="p-6 sm:p-8">
-          {activeTab === 'text' ? <TextAnalyzer /> : <ImageAnalyzer />}
-        </div>
-
-        {/* ព័ត៌មានបន្ថែមសម្រាប់សិស្ស-គ្រូ */}
-        <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-400 italic">
-            ចំណាំ៖ ប្រព័ន្ធនេះប្រើប្រាស់បញ្ញាសិប្បនិម្មិត Gemini ក្នុងការវិភាគ។ លទ្ធផលអាចមានលម្អៀងក្នុងករណីខ្លះ។ សូមបង្រៀនសិស្សឱ្យចេះផ្ទៀងផ្ទាត់ជាមួយប្រភពផ្លូវការបន្ថែម។
-          </p>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
-// ផ្នែកទី១៖ វិភាគអត្ថបទព័ត៌មាន (TextAnalyzer Component)
-function TextAnalyzer() {
-  const [text, setText] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-
-  const sampleFakeNews = "ដំណឹងបន្ទាន់! ក្រសួងអប់រំបានប្រកាសថានឹងផ្តល់អាហារូបករណ៍ និងថវិកាឧបត្ថម្ភ ១០០ដុល្លារ ដល់សិស្សគ្រប់រូបនៅថ្ងៃស្អែកនេះ។ សូមចុចលើតំណភ្ជាប់ (link) នេះដើម្បីចុះឈ្មោះទទួលប្រាក់ជាបន្ទាន់ បើមិនមានការចុះឈ្មោះទេ លោកអ្នកនឹងបាត់បង់សិទ្ធិជាអចិន្ត្រៃយ៍។";
-
-  const handleAnalyze = async () => {
-    if (!text.trim()) {
-      setError("សូមបញ្ចូលអត្ថបទព័ត៌មានមុននឹងធ្វើការវិភាគ។");
-      return;
-    }
-    setError('');
-    setLoading(true);
-    setResult(null);
-
-    try {
-      const prompt = `សូមវិភាគអត្ថបទព័ត៌មានខាងក្រោមថាតើវាជាព័ត៌មានពិត (real), ព័ត៌មានក្លែងក្លាយ (fake) ឬគួរឱ្យសង្ស័យ (suspicious)។ អត្ថបទ៖ "${text}"`;
-      const response = await analyzeWithGemini(prompt, null, true);
-      setResult(response);
-    } catch (err) {
-      setError("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI ឬគណនីរបស់អ្នកពុំទាន់បានកំណត់។");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex justify-between items-center mb-2">
-          <label className="block text-slate-700 font-semibold text-lg">បញ្ចូលអត្ថបទព័ត៌មានដែលសង្ស័យ៖</label>
-          <button 
-            type="button"
-            onClick={() => { setText(sampleFakeNews); setError(''); }}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1"
-          >
-            📋 ប្រើប្រាស់អត្ថបទគំរូ
-          </button>
-        </div>
-        <textarea
-          rows="6"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          className="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none shadow-sm text-slate-700"
-          placeholder="ឧទាហរណ៍៖ ចែករំលែកតៗគ្នា! ការញ៉ាំទឹកអំបិលក្តៅៗអាចសម្លាប់វីរុសបានទាំងស្រុង..."
-        />
-      </div>
-
-      {error && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-sm flex items-center gap-2">
-          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span>{error}</span>
-        </div>
-      )}
-
-      <button
-        onClick={handleAnalyze}
-        disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            កំពុងដំណើរការវិភាគដោយ AI...
-          </>
-        ) : (
-          <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            ចាប់ផ្តើមវិភាគអត្ថបទ
-          </>
-        )}
-      </button>
-
-      {result && <ResultCard result={result} type="text" />}
-    </div>
-  );
-}
-
-// ផ្នែកទី២៖ វិភាគរូបភាព (ImageAnalyzer Component)
-function ImageAnalyzer() {
-  const [imagePreview, setImagePreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const fileInputRef = useRef(null);
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError("ទំហំរូបភាពធំពេក (អនុញ្ញាតត្រឹមតែ 5MB)។");
-        return;
-      }
-      setError('');
-      setResult(null);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const clearImage = (e) => {
-    e.stopPropagation();
-    setImagePreview(null);
-    setResult(null);
-    setError('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const handleAnalyze = async () => {
-    if (!imagePreview) {
-      setError("សូមជ្រើសរើសរូបភាពមុននឹងធ្វើការវិភាគ។");
-      return;
-    }
-    setError('');
-    setLoading(true);
-    setResult(null);
-
-    try {
-      const prompt = `សូមវិភាគរូបភាពនេះ ថាតើវាជារូបភាពថតពិតប្រាកដ (real), ជារូបភាពបង្កើតដោយ AI (ai_generated) ឬគួរឱ្យសង្ស័យមានការកាត់ត (suspicious)។ សូមរកមើលកំហុសរបស់ AI ដូចជាទម្រង់មុខ ដៃជើង ខុសប្រក្រតី ឬអក្សរមិនច្បាស់។`;
-      const response = await analyzeWithGemini(prompt, imagePreview, false);
-      setResult(response);
-    } catch (err) {
-      setError("មានបញ្ហាក្នុងការភ្ជាប់ទៅកាន់ប្រព័ន្ធ AI ឬទំហំរូបភាពធំពេក។");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-slate-700 font-semibold text-lg mb-2">បញ្ចូលរូបភាពដែលសង្ស័យ៖</label>
-        
-        <div 
-          onClick={() => !imagePreview && fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 ${
-            imagePreview ? 'border-blue-300 bg-blue-50/20' : 'border-slate-300 hover:border-blue-500 bg-slate-50'
-          }`}
-        >
-          <input 
-            type="file" 
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            accept="image/*"
-            className="hidden"
-          />
-
-          {imagePreview ? (
-            <div className="relative inline-block max-w-full">
-              <img 
-                src={imagePreview} 
-                alt="រូបភាពត្រូវវិភាគ" 
-                className="max-h-80 mx-auto rounded-lg shadow-md object-contain"
-              />
-              <button
-                onClick={clearImage}
-                className="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white rounded-full p-2 shadow-lg transition-colors"
-                title="លុបរូបភាពចេញ"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-center space-x-4">
+                <i class="fas fa-shield-halved text-4xl"></i>
+                <div>
+                    <h1 class="text-2xl md:text-3xl title-font text-center">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
+                    <p class="text-blue-200 text-sm md:text-base text-center mt-2">ឧបករណ៍ជំនួយអប់រំសម្រាប់បែងចែកព័ត៌មានក្លែងក្លាយ និងរូបភាព AI</p>
+                </div>
             </div>
-          ) : (
-            <div className="space-y-2 py-4">
-              <svg className="w-12 h-12 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <p className="text-slate-600 font-medium">ចុចត្រង់នេះដើម្បីជ្រើសរើសរូបភាព</p>
-              <p className="text-xs text-slate-400">គាំទ្រទម្រង់ PNG, JPG, WEBP (ទំហំធំបំផុត 5MB)</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-300 mb-6 bg-white rounded-t-lg overflow-hidden shadow-sm">
+            <button onclick="switchTab('text')" id="tab-text" class="flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-2 border-blue-600 transition duration-300">
+                <i class="fas fa-file-lines mr-2"></i> វិភាគអត្ថបទព័ត៌មាន
+            </button>
+            <button onclick="switchTab('image')" id="tab-image" class="flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-300">
+                <i class="fas fa-image mr-2"></i> វិភាគរូបភាព
+            </button>
+        </div>
+
+        <!-- Content Areas -->
+        <div class="bg-white rounded-b-lg shadow-md p-6">
+            
+            <!-- Text Analysis Section -->
+            <div id="section-text" class="block">
+                <label for="newsInput" class="block text-gray-700 font-bold mb-2">សូមបញ្ចូលអត្ថបទព័ត៌មាន ឬតំណរភ្ជាប់ (Link) ដែលអ្នកសង្ស័យទីនេះ៖</label>
+                <textarea id="newsInput" rows="6" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="ឧទាហរណ៍៖ មានការចែករំលែកថា ការផឹកទឹកក្តៅលាយក្រូចឆ្មាអាចព្យាបាលជំងឺគ្រប់ប្រភេទ..."></textarea>
+                
+                <button onclick="analyzeText()" id="btn-analyze-text" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex justify-center items-center">
+                    <i class="fas fa-search mr-2"></i> ចាប់ផ្តើមវិភាគអត្ថបទ
+                </button>
             </div>
-          )}
+
+            <!-- Image Analysis Section -->
+            <div id="section-image" class="hidden">
+                <label class="block text-gray-700 font-bold mb-2">សូមបង្ហោះរូបភាពដែលអ្នកចង់ត្រួតពិនិត្យ៖</label>
+                
+                <div class="flex items-center justify-center w-full mt-2">
+                    <label for="imageInput" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6" id="upload-prompt">
+                            <i class="fas fa-cloud-arrow-up text-4xl text-gray-400 mb-3"></i>
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">ចុចទីនេះដើម្បីបង្ហោះ</span> ឬទាញទម្លាក់រូបភាព (Drag & Drop)</p>
+                            <p class="text-xs text-gray-500">គាំទ្រឯកសារ: PNG, JPG, JPEG</p>
+                        </div>
+                        <img id="imagePreview" src="" alt="Image Preview" class="hidden max-h-60 rounded-lg object-contain p-2">
+                    </label>
+                    <input id="imageInput" type="file" class="hidden" accept="image/png, image/jpeg, image/jpg" onchange="previewImage(event)" />
+                </div>
+                
+                <button onclick="analyzeImage()" id="btn-analyze-image" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-robot mr-2"></i> ចាប់ផ្តើមវិភាគរូបភាព
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="hidden mt-8 flex flex-col items-center justify-center">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+                <p class="text-blue-600 font-semibold animate-pulse">ប្រព័ន្ធកំពុងធ្វើការវិភាគ សូមរង់ចាំបន្តិច...</p>
+            </div>
+
+            <!-- Result Section -->
+            <div id="resultBox" class="hidden mt-8 border rounded-lg overflow-hidden shadow-sm">
+                <div id="resultHeader" class="bg-gray-100 px-4 py-3 border-b flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800"><i class="fas fa-clipboard-check text-green-600 mr-2"></i> លទ្ធផលនៃការវិភាគ</h3>
+                    <button onclick="closeResult()" class="text-gray-500 hover:text-red-500"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="resultContent" class="p-6 bg-white text-gray-700 leading-relaxed result-content max-h-96 overflow-y-auto whitespace-pre-line">
+                    <!-- Result will appear here -->
+                </div>
+            </div>
+
         </div>
-      </div>
+    </main>
 
-      {error && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-sm flex items-center gap-2">
-          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span>{error}</span>
-        </div>
-      )}
+    <footer class="text-center text-gray-500 text-sm mt-8 pb-8">
+        <p>បង្កើតឡើងសម្រាប់គោលបំណងអប់រំនៅប្រទេសកម្ពុជា &copy; 2026</p>
+    </footer>
 
-      <button
-        onClick={handleAnalyze}
-        disabled={loading || !imagePreview}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            កំពុងដំណើរការវិភាគរូបភាពដោយ AI...
-          </>
-        ) : (
-          <>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            ចាប់ផ្តើមវិភាគរូបភាព
-          </>
-        )}
-      </button>
+    <script>
+        // API Key given by the execution environment
+        const apiKey = ""; 
 
-      {result && <ResultCard result={result} type="image" />}
-    </div>
-  );
-}
+        // State variables
+        let currentTab = 'text';
+        let base64ImageData = null;
+        let imageMimeType = null;
 
-// ផ្នែកទី៣៖ កាតបង្ហាញលទ្ធផល (ResultCard Component)
-function ResultCard({ result, type }) {
-  const getStatusInfo = () => {
-    const cls = result.classification.toLowerCase();
-    
-    if (cls === 'fake') {
-      return {
-        label: 'ព័ត៌មានក្លែងក្លាយ (Fake News)',
-        color: 'text-red-700',
-        bg: 'bg-red-50',
-        border: 'border-red-200',
-        barColor: 'bg-red-600',
-        icon: (
-          <div className="p-3 bg-red-100 rounded-full text-red-600">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-        )
-      };
-    } else if (cls === 'ai_generated') {
-      return {
-        label: 'រូបភាពបង្កើតដោយ AI (AI Generated)',
-        color: 'text-orange-700',
-        bg: 'bg-orange-50',
-        border: 'border-orange-200',
-        barColor: 'bg-orange-600',
-        icon: (
-          <div className="p-3 bg-orange-100 rounded-full text-orange-600">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-        )
-      };
-    } else if (cls === 'suspicious') {
-      return {
-        label: 'មានភាពស្រពិចស្រពិល ឬកាត់ត (Suspicious)',
-        color: 'text-yellow-700',
-        bg: 'bg-yellow-50',
-        border: 'border-yellow-200',
-        barColor: 'bg-yellow-500',
-        icon: (
-          <div className="p-3 bg-yellow-100 rounded-full text-yellow-600">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        )
-      };
-    } else {
-      return {
-        label: type === 'text' ? 'ព័ត៌មានគួរឱ្យទុកចិត្ត (Real)' : 'រូបភាពថតពិតប្រាកដ (Real)',
-        color: 'text-green-700',
-        bg: 'bg-green-50',
-        border: 'border-green-200',
-        barColor: 'bg-green-600',
-        icon: (
-          <div className="p-3 bg-green-100 rounded-full text-green-600">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-        )
-      };
-    }
-  };
+        // UI Functions
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Tab styling
+            document.getElementById('tab-text').className = tab === 'text' 
+                ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-2 border-blue-600 transition duration-300' 
+                : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-300 border-b border-transparent';
+            
+            document.getElementById('tab-image').className = tab === 'image' 
+                ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-2 border-blue-600 transition duration-300' 
+                : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-300 border-b border-transparent';
 
-  const status = getStatusInfo();
+            // Section visibility
+            document.getElementById('section-text').style.display = tab === 'text' ? 'block' : 'none';
+            document.getElementById('section-image').style.display = tab === 'image' ? 'block' : 'none';
+            
+            // Hide result and loading when switching tabs
+            document.getElementById('resultBox').classList.add('hidden');
+            document.getElementById('loading').classList.add('hidden');
+        }
 
-  return (
-    <div className={`p-6 rounded-xl border ${status.bg} ${status.border} shadow-sm space-y-4 transition-all duration-300`}>
-      <div className="flex flex-col sm:flex-row items-center gap-4 border-b border-slate-200/60 pb-4">
-        {status.icon}
-        <div className="text-center sm:text-left">
-          <h4 className={`text-xl font-bold ${status.color}`}>{status.label}</h4>
-          <p className="text-xs text-slate-500 mt-1">ការវិភាគដោយប្រព័ន្ធបញ្ញាសិប្បនិម្មិត Gemini</p>
-        </div>
-      </div>
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-      {/* របារបង្ហាញទំនុកចិត្ត */}
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm font-medium text-slate-700">
-          <span>កម្រិតភាពជឿជាក់លើការវិភាគ៖</span>
-          <span>{result.confidence_score}%</span>
-        </div>
-        <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-          <div 
-            className={`${status.barColor} h-3 rounded-full transition-all duration-1000`} 
-            style={{ width: `${result.confidence_score}%` }}
-          />
-        </div>
-      </div>
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('imagePreview');
+                const uploadPrompt = document.getElementById('upload-prompt');
+                const btnAnalyze = document.getElementById('btn-analyze-image');
 
-      {/* ការពន្យល់លម្អិត */}
-      <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-inner">
-        <h5 className="font-bold text-slate-800 text-sm mb-2 flex items-center gap-1">
-          💡 ការពន្យល់លម្អិតពីប្រព័ន្ធ៖
-        </h5>
-        <p className="text-slate-600 text-sm leading-relaxed text-justify whitespace-pre-line">
-          {result.analysis_reasoning}
-        </p>
-      </div>
-    </div>
-  );
-}
+                imgPreview.src = e.target.result;
+                imgPreview.classList.remove('hidden');
+                uploadPrompt.classList.add('hidden');
+                
+                // Extract base64 data and mime type
+                const resultStr = e.target.result;
+                imageMimeType = resultStr.split(';')[0].split(':')[1];
+                base64ImageData = resultStr.split(',')[1];
+
+                btnAnalyze.disabled = false;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function closeResult() {
+            document.getElementById('resultBox').classList.add('hidden');
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('resultBox').classList.add('hidden');
+            document.getElementById('btn-analyze-text').disabled = true;
+            document.getElementById('btn-analyze-image').disabled = true;
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('btn-analyze-text').disabled = false;
+            document.getElementById('btn-analyze-image').disabled = false;
+        }
+
+        function displayResult(text) {
+            const resultBox = document.getElementById('resultBox');
+            const resultContent = document.getElementById('resultContent');
+            const resultHeader = document.getElementById('resultHeader');
+
+            // Simple formatting: make **text** bold
+            const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-800">$1</strong>');
+            
+            resultContent.innerHTML = formattedText;
+            resultBox.classList.remove('hidden');
+
+            // Determine if it looks highly fake or real based on keywords (simple heuristic for UI color)
+            if(text.includes('ក្លែងក្លាយ') || text.includes('បង្កើតដោយ AI') || text.includes('សង្ស័យ')) {
+                resultHeader.className = "bg-red-50 px-4 py-3 border-b border-red-200 flex justify-between items-center";
+                resultHeader.querySelector('h3').innerHTML = '<i class="fas fa-exclamation-circle text-red-600 mr-2"></i> រកឃើញចំណុចសង្ស័យ';
+            } else {
+                resultHeader.className = "bg-green-50 px-4 py-3 border-b border-green-200 flex justify-between items-center";
+                resultHeader.querySelector('h3').innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i> លទ្ធផលនៃការវិភាគ';
+            }
+        }
+
+        function showError(message) {
+            const resultContent = document.getElementById('resultContent');
+            const resultBox = document.getElementById('resultBox');
+            const resultHeader = document.getElementById('resultHeader');
+
+            resultHeader.className = "bg-red-100 px-4 py-3 border-b border-red-300 flex justify-between items-center";
+            resultHeader.querySelector('h3').innerHTML = '<i class="fas fa-times-circle text-red-600 mr-2"></i> មានបញ្ហា';
+            resultContent.innerHTML = `<p class="text-red-600">${message}</p>`;
+            resultBox.classList.remove('hidden');
+        }
+
+        // Gemini API Implementation with Exponential Backoff
+        async function fetchGeminiAPI(payload) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const maxRetries = 5;
+            const delays = [1000, 2000, 4000, 8000, 16000];
+
+            for (let i = 0; i <= maxRetries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនអាចទាញយកការវិភាគបានទេ។";
+                } catch (error) {
+                    if (i === maxRetries) {
+                        console.error("API Call Failed after retries:", error);
+                        throw new Error("ប្រព័ន្ធមិនអាចដំណើរការបានទេពេលនេះ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។");
+                    }
+                    // Wait before retrying (Exponential Backoff)
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        // Text Analysis Logic
+        async function analyzeText() {
+            const textInput = document.getElementById('newsInput').value.trim();
+            if (!textInput) {
+                alert("សូមបញ្ចូលអត្ថបទព័ត៌មានជាមុនសិន!");
+                return;
+            }
+
+            showLoading();
+
+            const prompt = `អ្នកគឺជាអ្នកជំនាញផ្ទៀងផ្ទាត់ព័ត៌មាន (Fact-checker) ដ៏ពូកែមួយរូប។ 
+សូមជួយវិភាគអត្ថបទខាងក្រោមនេះ ថាតើវាទំនងជាព័ត៌មានពិត (Real News) ឬ ព័ត៌មានក្លែងក្លាយ (Fake News/Misinformation)។ 
+សូមរៀបរាប់ជាភាសាខ្មែរឱ្យបានច្បាស់លាស់ ដោយបែងចែកជាចំណុចៗដូចជា៖
+១. ការវាយតម្លៃរួម (តើទំនងជាពិត ឬក្លែងក្លាយ)
+២. ចំណុចគួរឱ្យសង្ស័យ (ឧ. ការប្រើភាសាញុះញង់, គ្មានប្រភពច្បាស់លាស់, ការសន្យាហួសហេតុ)
+៣. ដំបូន្មាន (តើអ្នកអានគួរធ្វើយ៉ាងណាដើម្បីផ្ទៀងផ្ទាត់បន្ថែម)
+
+អត្ថបទ៖ "${textInput}"`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "ឆ្លើយតបជាភាសាខ្មែរប្រកបដោយវិជ្ជាជីវៈ និងងាយយល់សម្រាប់សិស្សានុសិស្ស។" }]
+                }
+            };
+
+            try {
+                const resultText = await fetchGeminiAPI(payload);
+                displayResult(resultText);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Image Analysis Logic
+        async function analyzeImage() {
+            if (!base64ImageData) {
+                alert("សូមបង្ហោះរូបភាពជាមុនសិន!");
+                return;
+            }
+
+            showLoading();
+
+            const prompt = `អ្នកគឺជាអ្នកជំនាញខាងស៊ើបអង្កេតរូបភាពឌីជីថល។ 
+សូមពិនិត្យមើលរូបភាពនេះយ៉ាងល្អិតល្អន់ ហើយប្រាប់ថាតើវាជារូបភាពពិតប្រាកដ ឬជារូបភាពដែលបង្កើតឡើងដោយបញ្ញាសិប្បនិម្មិត (AI Generated Image)?
+សូមពន្យល់ជាភាសាខ្មែរ ដោយផ្តោតលើចំណុចដូចជា៖
+១. ការសន្និដ្ឋានរួម
+២. ចំណុចសម្គាល់ (ឧ. ទម្រង់ម្រាមដៃ, ផ្ទៃខាងក្រោយរញ៉េរញ៉ៃ, ពន្លឺស្រមោលមិនសមហេតុផល, អក្សរមិនច្បាស់លាស់)
+៣. ភាគរយដែលអ្នកជឿជាក់។`;
+
+            const payload = {
+                contents: [
+                    { 
+                        role: "user", 
+                        parts: [
+                            { text: prompt }, 
+                            { inlineData: { mimeType: imageMimeType, data: base64ImageData } }
+                        ] 
+                    }
+                ],
+                systemInstruction: {
+                    parts: [{ text: "ឆ្លើយតបជាភាសាខ្មែរប្រកបដោយវិជ្ជាជីវៈ និងផ្តល់ហេតុផលច្បាស់លាស់។" }]
+                }
+            };
+
+            try {
+                const resultText = await fetchGeminiAPI(payload);
+                displayResult(resultText);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+    </script>
+</body>
+</html>
