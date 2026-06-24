@@ -45,14 +45,16 @@
 
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-6">
-            <div class="flex items-center justify-center space-x-4">
-                <i class="fas fa-shield-halved text-4xl"></i>
-                <div>
-                    <h1 class="text-2xl md:text-3xl title-font text-center">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
-                    <p class="text-blue-200 text-sm md:text-base text-center mt-2">ឧបករណ៍ជំនួយអប់រំសម្រាប់បែងចែកព័ត៌មានក្លែងក្លាយ និងរូបភាព AI</p>
-                </div>
+        <div class="container mx-auto px-4 py-6 relative">
+            <div class="flex flex-col items-center justify-center text-center">
+                <i class="fas fa-shield-halved text-4xl mb-2"></i>
+                <h1 class="text-2xl md:text-3xl title-font">ប្រព័ន្ធផ្ទៀងផ្ទាត់ព័ត៌មាន និងរូបភាព</h1>
+                <p class="text-blue-200 text-sm md:text-base mt-2">ឧបករណ៍ជំនួយអប់រំសម្រាប់បែងចែកព័ត៌មានក្លែងក្លាយ និងរូបភាព AI</p>
             </div>
+            <!-- Settings Button -->
+            <button onclick="toggleSettingsModal()" class="absolute top-6 right-4 text-white hover:text-blue-200 text-2xl transition focus:outline-none" title="ការកំណត់ API Key">
+                <i class="fas fa-cog"></i>
+            </button>
         </div>
     </header>
 
@@ -104,9 +106,13 @@
             </div>
 
             <!-- Loading Indicator -->
-            <div id="loading" class="hidden mt-8 flex flex-col items-center justify-center">
+            <div id="loading" class="hidden mt-8 flex flex-col items-center justify-center bg-blue-50 p-6 rounded-lg border border-blue-100">
                 <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-                <p class="text-blue-600 font-semibold animate-pulse">ប្រព័ន្ធកំពុងធ្វើការវិភាគ សូមរង់ចាំបន្តិច...</p>
+                <p class="text-blue-600 font-semibold animate-pulse text-center">ប្រព័ន្ធកំពុងធ្វើការវិភាគ សូមរង់ចាំបន្តិច...</p>
+                <p class="text-gray-500 text-xs text-center mt-1">ការវិភាគអាចប្រើពេលពី ៥ ទៅ ១៥ វិនាទី</p>
+                <button onclick="cancelAnalysis()" class="mt-4 px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 text-sm font-semibold rounded-lg transition duration-200">
+                    <i class="fas fa-circle-xmark mr-1"></i> បោះបង់ការវិភាគ
+                </button>
             </div>
 
             <!-- Result Section -->
@@ -123,6 +129,36 @@
         </div>
     </main>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button onclick="toggleSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4">
+                <i class="fas fa-key text-yellow-500 mr-2"></i> កំណត់ API Key ផ្ទាល់ខ្លួន
+            </h3>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+                ប្រសិនបើលោកគ្រូដំណើរការកម្មវិធីនេះនៅលើទូរសព្ទ ឬកុំព្យូទ័រផ្ទាល់ខ្លួន (ក្រៅបរិស្ថាន Canvas) លោកគ្រូត្រូវបញ្ចូល <strong>Gemini API Key</strong> ដើម្បីឱ្យប្រព័ន្ធ AI ដំណើរការបាន។
+            </p>
+            <div class="mb-4">
+                <label for="userApiKey" class="block text-gray-700 text-sm font-bold mb-2">Gemini API Key៖</label>
+                <input id="userApiKey" type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="AIzaSy...">
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="saveApiKey()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    រក្សាទុក
+                </button>
+                <button onclick="clearApiKey()" class="bg-red-100 hover:bg-red-200 text-red-600 font-bold py-2 px-4 rounded-lg transition duration-200">
+                    លុបចោល
+                </button>
+            </div>
+            <p class="text-xs text-gray-400 mt-3 text-center">
+                * កូដនេះនឹងត្រូវរក្សាទុកដោយសុវត្ថិភាពនៅក្នុងកម្មវិធីរុករករបស់អ្នក (Local Storage)។
+            </p>
+        </div>
+    </div>
+
     <footer class="text-center text-gray-500 text-sm mt-8 pb-8">
         <p>បង្កើតឡើងសម្រាប់គោលបំណងអប់រំនៅប្រទេសកម្ពុជា &copy; 2026</p>
     </footer>
@@ -135,6 +171,15 @@
         let currentTab = 'text';
         let base64ImageData = null;
         let imageMimeType = null;
+        let abortController = null;
+
+        // Initialize Settings Input on Load
+        window.onload = function() {
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if (savedKey) {
+                document.getElementById('userApiKey').value = savedKey;
+            }
+        };
 
         // UI Functions
         function switchTab(tab) {
@@ -199,6 +244,38 @@
             document.getElementById('btn-analyze-image').disabled = false;
         }
 
+        // Abort analysis function
+        function cancelAnalysis() {
+            if (abortController) {
+                abortController.abort();
+            }
+            hideLoading();
+        }
+
+        // Settings Modal Functions
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function saveApiKey() {
+            const userKey = document.getElementById('userApiKey').value.trim();
+            if (userKey) {
+                localStorage.setItem('gemini_api_key', userKey);
+                alert("រក្សាទុក API Key ទទួលបានជោគជ័យ!");
+                toggleSettingsModal();
+            } else {
+                alert("សូមបញ្ចូល API Key មុននឹងរក្សាទុក!");
+            }
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('gemini_api_key');
+            document.getElementById('userApiKey').value = "";
+            alert("បានលុប API Key រួចរាល់!");
+            toggleSettingsModal();
+        }
+
         function displayResult(text) {
             const resultBox = document.getElementById('resultBox');
             const resultContent = document.getElementById('resultContent');
@@ -231,33 +308,55 @@
             resultBox.classList.remove('hidden');
         }
 
-        // Gemini API Implementation with Exponential Backoff
+        // Gemini API Implementation with Exponential Backoff and Abort Signal
         async function fetchGeminiAPI(payload) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const maxRetries = 5;
-            const delays = [1000, 2000, 4000, 8000, 16000];
+            // Check for user-entered API key, otherwise fallback to embedded apiKey
+            const activeApiKey = localStorage.getItem('gemini_api_key') || apiKey;
+
+            if (!activeApiKey) {
+                throw new Error("មិនទាន់មាន API Key ទេ។ ប្រសិនបើលោកគ្រូដំណើរការក្រៅ Canvas សូមចុចលើរូបកង់ធ្មេញ (ការកំណត់) នៅខាងស្តាំផ្នែកខាងលើ ដើម្បីបញ្ចូល Gemini API Key របស់អ្នក។");
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeApiKey}`;
+            const maxRetries = 3; // Reduced to prevent too long waiting
+            const delays = [1000, 2000, 4000];
+
+            abortController = new AbortController();
+            const signal = abortController.signal;
 
             for (let i = 0; i <= maxRetries; i++) {
                 try {
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(payload),
+                        signal: signal
                     });
 
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        const errData = await response.json().catch(() => ({}));
+                        const errMsg = errData.error?.message || `HTTP error! status: ${response.status}`;
+                        throw new Error(errMsg);
                     }
 
                     const data = await response.json();
                     return data.candidates?.[0]?.content?.parts?.[0]?.text || "មិនអាចទាញយកការវិភាគបានទេ។";
                 } catch (error) {
+                    if (error.name === 'AbortError') {
+                        throw new Error("ការវិភាគត្រូវបានបោះបង់ដោយអ្នកប្រើប្រាស់។");
+                    }
                     if (i === maxRetries) {
                         console.error("API Call Failed after retries:", error);
-                        throw new Error("ប្រព័ន្ធមិនអាចដំណើរការបានទេពេលនេះ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ។");
+                        throw new Error(`មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធបានទេ៖ ${error.message}`);
                     }
                     // Wait before retrying (Exponential Backoff)
-                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(resolve, delays[i]);
+                        signal.addEventListener('abort', () => {
+                            clearTimeout(timeout);
+                            reject(new DOMException("Aborted", "AbortError"));
+                        });
+                    });
                 }
             }
         }
