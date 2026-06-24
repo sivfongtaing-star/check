@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ShieldCheck, AlertTriangle, Image as ImageIcon, FileText, Upload, CheckCircle, Info, Loader2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ShieldCheck, AlertTriangle, Image as ImageIcon, FileText, Upload, CheckCircle, Info, Loader2, FileCode2, Trash2 } from 'lucide-react';
 
 // API Key នឹងត្រូវបានផ្តល់ដោយប្រព័ន្ធដោយស្វ័យប្រវត្តិ
 const apiKey = ""; 
 
-// មុខងារសម្រាប់ធ្វើការហៅ API ជាមួយការចុះខ្សោយតាមលំដាប់ (Exponential Backoff) ក្នុងករណីបរាជ័យ
+// មុខងារសម្រាប់ធ្វើការហៅ API ជាមួយការចុះខ្សោយតាមលំដាប់ (Exponential Backoff) 
 const fetchWithRetry = async (url, options, maxRetries = 5) => {
   const delays = [1000, 2000, 4000, 8000, 16000];
   for (let i = 0; i < maxRetries; i++) {
@@ -28,7 +28,6 @@ const analyzeWithGemini = async (promptText, base64Image = null, isTextAnalysis 
   const parts = [{ text: promptText }];
   
   if (base64Image) {
-    // ដកយកក្បាល (data:image/jpeg;base64,) ចេញ
     const base64Data = base64Image.split(',')[1];
     const mimeType = base64Image.split(';')[0].split(':')[1];
     parts.push({
@@ -77,7 +76,10 @@ const analyzeWithGemini = async (promptText, base64Image = null, isTextAnalysis 
   const textResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!textResponse) throw new Error("មិនមានការឆ្លើយតបពី AI");
   
-  return JSON.parse(textResponse);
+  // ការពារកុំឱ្យ Error ពេល AI ឆ្លើយតបមានជាប់សញ្ញា ```json
+  const cleanedText = textResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+  
+  return JSON.parse(cleanedText);
 };
 
 
@@ -87,26 +89,24 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* ផ្នែកក្បាល (Header) */}
-      <header className="bg-blue-800 text-white shadow-md">
+      <header className="bg-blue-800 text-white shadow-md sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center gap-3">
             <ShieldCheck className="w-8 h-8 text-blue-300" />
             <h1 className="text-2xl font-bold">ប្រព័ន្ធបែងចែកព័ត៌មាន និងរូបភាព AI</h1>
           </div>
-          <p className="text-blue-200 mt-2 md:mt-0 text-sm">គម្រោងសម្រាប់វិស័យអប់រំនៅកម្ពុជា</p>
+          <p className="text-blue-200 mt-2 md:mt-0 text-sm bg-blue-900 px-3 py-1 rounded-full border border-blue-700">សម្រាប់វិស័យអប់រំនៅកម្ពុជា</p>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
-        {/* ប៊ូតុងរុករក (Tabs) */}
-        <div className="flex bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+        <div className="flex bg-white rounded-xl shadow-sm overflow-hidden mb-8 border border-gray-100">
           <button
             onClick={() => setActiveTab('text')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-4 font-semibold transition-all duration-200 ${
               activeTab === 'text' 
-                ? 'bg-blue-600 text-white' 
-                : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-blue-600 text-white shadow-inner' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
             }`}
           >
             <FileText className="w-5 h-5" />
@@ -114,10 +114,10 @@ export default function App() {
           </button>
           <button
             onClick={() => setActiveTab('image')}
-            className={`flex-1 flex items-center justify-center gap-2 py-4 font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-4 font-semibold transition-all duration-200 ${
               activeTab === 'image' 
-                ? 'bg-blue-600 text-white' 
-                : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-blue-600 text-white shadow-inner' 
+                : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
             }`}
           >
             <ImageIcon className="w-5 h-5" />
@@ -125,8 +125,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* ផ្នែកបង្ហាញខ្លឹមសារតាម Tab */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
           {activeTab === 'text' ? <TextAnalyzer /> : <ImageAnalyzer />}
         </div>
       </main>
@@ -140,6 +139,8 @@ function TextAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+
+  const sampleFakeNews = "ដំណឹងបន្ទាន់! ក្រសួងបានប្រកាសថានឹងផ្តល់ប្រាក់ឧបត្ថម្ភ ១០០ដុល្លារ ដល់ប្រជាជនគ្រប់រូបនៅថ្ងៃស្អែកនេះ។ សូមចុចលីងនេះដើម្បីចុះឈ្មោះទទួលប្រាក់ជាបន្ទាន់ បើមិនដូច្នេះទេអ្នកនឹងបាត់បង់ឱកាស។";
 
   const handleAnalyze = async () => {
     if (!text.trim()) {
@@ -165,28 +166,40 @@ function TextAnalyzer() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">ពិនិត្យអត្ថបទព័ត៌មាន</h2>
-        <p className="text-gray-600">សូមចម្លងអត្ថបទព័ត៌មានដែលលោកអ្នកសង្ស័យ ហើយដាក់ចូលក្នុងប្រអប់ខាងក្រោម។</p>
+    <div className="space-y-5 animate-fade-in">
+      <div className="flex justify-between items-end">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 mb-1">ពិនិត្យអត្ថបទព័ត៌មាន</h2>
+          <p className="text-gray-500 text-sm">សូមចម្លងអត្ថបទព័ត៌មានដែលលោកអ្នកសង្ស័យ ហើយដាក់ចូលក្នុងប្រអប់ខាងក្រោម។</p>
+        </div>
+        <button 
+          onClick={() => setText(sampleFakeNews)}
+          className="text-sm flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
+        >
+          <FileCode2 className="w-4 h-4" /> អត្ថបទគំរូ
+        </button>
       </div>
 
       <textarea
-        className="w-full h-48 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700"
+        className="w-full h-40 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 bg-gray-50 hover:bg-white transition"
         placeholder="បញ្ចូលអត្ថបទព័ត៌មាននៅទីនេះ..."
         value={text}
         onChange={(e) => setText(e.target.value)}
       ></textarea>
 
-      {error && <p className="text-red-500 text-sm flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> {error}</p>}
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5" /> {error}
+        </div>
+      )}
 
       <button
         onClick={handleAnalyze}
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-xl transition flex justify-center items-center gap-2"
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3.5 px-6 rounded-xl transition flex justify-center items-center gap-2 shadow-sm"
       >
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-        {loading ? 'កំពុងវិភាគអត្ថបទ...' : 'ចាប់ផ្តើមវិភាគ'}
+        {loading ? 'កំពុងដំណើរការវិភាគដោយ AI...' : 'ចាប់ផ្តើមវិភាគអត្ថបទ'}
       </button>
 
       {result && <ResultCard result={result} type="text" />}
@@ -222,6 +235,15 @@ function ImageAnalyzer() {
     }
   };
 
+  const clearImage = (e) => {
+    e.stopPropagation();
+    setImageFile(null);
+    setImagePreview(null);
+    setResult(null);
+    setError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleAnalyze = async () => {
     if (!imagePreview) {
       setError("សូមជ្រើសរើសរូបភាពមុននឹងធ្វើការវិភាគ។");
@@ -245,16 +267,17 @@ function ImageAnalyzer() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 animate-fade-in">
       <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">ពិនិត្យរូបភាព</h2>
-        <p className="text-gray-600">សូមបញ្ចូលរូបភាពដែលអ្នកចង់ដឹងថា វាត្រូវបានបង្កើតដោយបញ្ញាសិប្បនិម្មិត (AI) ឬអត់។</p>
+        <h2 className="text-xl font-bold text-gray-800 mb-1">ពិនិត្យរូបភាព</h2>
+        <p className="text-gray-500 text-sm">សូមបញ្ចូលរូបភាពដែលអ្នកចង់ដឹងថា វាត្រូវបានបង្កើតដោយបញ្ញាសិប្បនិម្មិត (AI) ឬអត់។</p>
       </div>
 
-      {/* កន្លែងបញ្ចូលរូបភាព */}
       <div 
-        className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition cursor-pointer"
-        onClick={() => fileInputRef.current?.click()}
+        className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition cursor-pointer ${
+          imagePreview ? 'border-blue-300 bg-blue-50/30' : 'border-gray-300 hover:bg-gray-50 hover:border-blue-400'
+        }`}
+        onClick={() => !imagePreview && fileInputRef.current?.click()}
       >
         <input 
           type="file" 
@@ -265,30 +288,47 @@ function ImageAnalyzer() {
         />
         
         {imagePreview ? (
-          <div className="relative w-full max-w-sm">
-             <img src={imagePreview} alt="Preview" className="rounded-lg max-h-64 mx-auto object-contain" />
-             <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition flex items-center justify-center rounded-lg">
-                <p className="text-white font-semibold">ចុចដើម្បីប្តូររូបភាព</p>
+          <div className="relative w-full max-w-sm group">
+             <img src={imagePreview} alt="Preview" className="rounded-lg max-h-72 mx-auto object-contain shadow-sm border border-gray-200 bg-white" />
+             <div className="mt-4 flex gap-3 justify-center">
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition"
+                >
+                  ប្តូររូបភាព
+                </button>
+                <button 
+                  onClick={clearImage}
+                  className="px-4 py-2 bg-white border border-red-200 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 shadow-sm transition flex items-center gap-1"
+                >
+                  <Trash2 className="w-4 h-4" /> លុបចោល
+                </button>
              </div>
           </div>
         ) : (
-          <>
-            <Upload className="w-12 h-12 text-gray-400 mb-4" />
-            <p className="text-gray-700 font-semibold mb-1">ចុចទីនេះដើម្បីជ្រើសរើសរូបភាព</p>
+          <div className="py-6">
+            <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Upload className="w-8 h-8 text-blue-500" />
+            </div>
+            <p className="text-gray-800 font-bold mb-1">ចុចទីនេះដើម្បីជ្រើសរើសរូបភាព</p>
             <p className="text-gray-500 text-sm">គាំទ្រទម្រង់: JPG, PNG, WEBP (អតិបរមា 5MB)</p>
-          </>
+          </div>
         )}
       </div>
 
-      {error && <p className="text-red-500 text-sm flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> {error}</p>}
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5" /> {error}
+        </div>
+      )}
 
       <button
         onClick={handleAnalyze}
         disabled={loading || !imagePreview}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-xl transition flex justify-center items-center gap-2"
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-3.5 px-6 rounded-xl transition flex justify-center items-center gap-2 shadow-sm"
       >
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
-        {loading ? 'កំពុងវិភាគរូបភាព...' : 'ចាប់ផ្តើមវិភាគ'}
+        {loading ? 'កំពុងដំណើរការវិភាគដោយ AI...' : 'ចាប់ផ្តើមវិភាគរូបភាព'}
       </button>
 
       {result && <ResultCard result={result} type="image" />}
@@ -302,35 +342,35 @@ function ResultCard({ result, type }) {
     const cls = result.classification.toLowerCase();
     if (cls === 'fake') {
       return {
-        label: 'ព័ត៌មានក្លែងក្លាយ',
+        label: 'នេះគឺជាព័ត៌មានក្លែងក្លាយ!',
         color: 'text-red-600',
         bg: 'bg-red-50',
-        border: 'border-red-200',
-        icon: <AlertTriangle className="w-8 h-8 text-red-600" />
+        border: 'border-red-300',
+        icon: <AlertTriangle className="w-10 h-10 text-red-600" />
       };
     } else if (cls === 'ai_generated') {
       return {
-        label: 'រូបភាពបង្កើតដោយ AI',
+        label: 'រូបភាពនេះបង្កើតដោយ AI!',
         color: 'text-red-600',
         bg: 'bg-red-50',
-        border: 'border-red-200',
-        icon: <AlertTriangle className="w-8 h-8 text-red-600" />
+        border: 'border-red-300',
+        icon: <AlertTriangle className="w-10 h-10 text-red-600" />
       };
     } else if (cls === 'suspicious') {
       return {
-        label: 'គួរឱ្យសង្ស័យ',
+        label: 'គួរឱ្យសង្ស័យ (មិនច្បាស់លាស់)',
         color: 'text-yellow-600',
         bg: 'bg-yellow-50',
-        border: 'border-yellow-200',
-        icon: <Info className="w-8 h-8 text-yellow-600" />
+        border: 'border-yellow-300',
+        icon: <Info className="w-10 h-10 text-yellow-600" />
       };
     } else {
       return {
-        label: type === 'text' ? 'ព័ត៌មានពិត (គួរឱ្យទុកចិត្ត)' : 'រូបភាពថតពិតប្រាកដ',
+        label: type === 'text' ? 'ព័ត៌មាននេះហាក់ដូចជាពិតប្រាកដ' : 'នេះជារូបភាពថតពិតៗ',
         color: 'text-green-600',
         bg: 'bg-green-50',
-        border: 'border-green-200',
-        icon: <CheckCircle className="w-8 h-8 text-green-600" />
+        border: 'border-green-300',
+        icon: <CheckCircle className="w-10 h-10 text-green-600" />
       };
     }
   };
@@ -338,23 +378,30 @@ function ResultCard({ result, type }) {
   const status = getStatusInfo();
 
   return (
-    <div className={`mt-8 p-6 rounded-xl border ${status.bg} ${status.border} animate-fade-in`}>
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
-        <div className="p-3 bg-white rounded-full shadow-sm">
+    <div className={`mt-8 p-6 rounded-2xl border-2 ${status.bg} ${status.border} shadow-sm animate-fade-in`}>
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
+        <div className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex-shrink-0">
           {status.icon}
         </div>
-        <div className="flex-1 text-center md:text-left">
-          <h3 className={`text-2xl font-bold ${status.color} mb-1`}>
+        <div className="flex-1 text-center md:text-left w-full">
+          <h3 className={`text-2xl font-bold ${status.color} mb-2`}>
             {status.label}
           </h3>
-          <p className="text-gray-700 font-medium mb-4">
-            កម្រិតជឿជាក់នៃការវិភាគ៖ <span className="font-bold">{result.confidence_score}%</span>
-          </p>
-          <div className="bg-white bg-opacity-60 rounded-lg p-4 text-gray-800 text-sm leading-relaxed border border-gray-100 text-left">
-            <h4 className="font-bold mb-2 flex items-center gap-2">
-              <Info className="w-4 h-4 text-blue-500" /> ហេតុផលនៃការវាយតម្លៃ៖
+          
+          <div className="flex flex-col sm:flex-row gap-4 mb-5 items-center md:items-start">
+             <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
+                <span className="text-gray-600 text-sm font-medium">កម្រិតជឿជាក់ (Confidence):</span>
+                <span className={`font-bold text-lg ${status.color}`}>{result.confidence_score}%</span>
+             </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-5 text-gray-800 text-sm leading-relaxed border border-gray-200 shadow-sm text-left">
+            <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-base">
+              <Info className="w-5 h-5 text-blue-500" /> ហេតុផលនៃការវាយតម្លៃ (Analysis Reasoning)៖
             </h4>
-            <p className="whitespace-pre-wrap">{result.analysis_reasoning}</p>
+            <div className="text-gray-700 whitespace-pre-wrap pl-7">
+               {result.analysis_reasoning}
+            </div>
           </div>
         </div>
       </div>
