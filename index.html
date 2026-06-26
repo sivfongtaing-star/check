@@ -13,6 +13,7 @@
             <h2 class="text-xl font-bold mb-4">១. ការកំណត់ API Key</h2>
             <input type="password" id="apiKeyInput" placeholder="បញ្ចូល AIza... នៅទីនេះ" class="w-full p-2 border mb-4">
             <button id="saveKeyBtn" class="bg-green-600 text-white px-4 py-2 rounded w-full">រក្សាទុក Key</button>
+            <p class="text-xs text-red-500 mt-2">*សូមប្រាកដថា API Key របស់អ្នកនៅមានសុពលភាព (Active) ក្នុង Google AI Studio។</p>
         </div>
 
         <hr>
@@ -43,7 +44,7 @@
         });
 
         // មុខងារជំនួយក្នុងការហៅ API
-        async function callGemini(payload, isImage = false) {
+        async function callGemini(payload) {
             const key = localStorage.getItem('gemini_key');
             if(!key) throw new Error("សូមបញ្ចូល API Key ក្នុងប្រអប់ខាងលើ!");
 
@@ -57,7 +58,9 @@
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error?.message || "មានកំហុសក្នុងការតភ្ជាប់ទៅកាន់ Google AI");
+                // បង្ហាញសារកំហុសជាក់លាក់ពី API
+                const errMsg = errorData.error?.message || "មានកំហុសមិនស្គាល់មួយ។";
+                throw new Error("API Key មិនត្រឹមត្រូវ ឬមានបញ្ហា៖ " + errMsg);
             }
 
             const data = await response.json();
