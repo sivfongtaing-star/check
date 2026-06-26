@@ -44,8 +44,12 @@
                 <i class="fas fa-brain text-4xl text-blue-400"></i>
                 <h1 class="text-2xl md:text-3xl title-font text-yellow-400">មន្ទីរពិសោធន៍វិភាគព័ត៌មាន AI</h1>
             </div>
-            <p class="text-blue-100 text-sm md:text-base font-light">បំពាក់ដោយប្រព័ន្ធបញ្ញាសិប្បនិម្មិត វិភាគអត្ថន័យ និងរូបភាពស៊ីជម្រៅ (ស្វ័យប្រវត្តិ)</p>
+            <p class="text-blue-100 text-sm md:text-base font-light">បំពាក់ដោយប្រព័ន្ធបញ្ញាសិប្បនិម្មិត វិភាគអត្ថន័យ និងរូបភាពស៊ីជម្រៅ</p>
         </div>
+        <!-- Settings Button -->
+        <button onclick="toggleSettingsModal()" class="absolute top-6 right-4 md:right-8 text-white hover:text-yellow-400 text-2xl transition focus:outline-none" title="ការកំណត់ API Key">
+            <i class="fas fa-cog"></i>
+        </button>
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
@@ -64,9 +68,9 @@
             <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                 <div class="flex items-center space-x-2 mb-3">
                     <span class="p-2 bg-blue-100 text-blue-700 rounded-lg"><i class="fas fa-network-wired text-xl"></i></span>
-                    <h3 class="text-lg font-bold text-gray-800">ប្រព័ន្ធ AI វិភាគអត្ថន័យ និងចេតនា</h3>
+                    <h3 class="text-lg font-bold text-gray-800">ប្រព័ន្ធ AI វិភាគអត្ថន័យ និងចេតនា (Semantic AI Analyzer)</h3>
                 </div>
-                <p class="text-gray-500 text-sm mb-4">បញ្ចូលអត្ថបទទីនេះ ប្រព័ន្ធ AI នឹងអានដើម្បីយល់ពីអត្ថន័យ ចេតនា និងភាពមិនប្រក្រតី៖</p>
+                <p class="text-gray-500 text-sm mb-4">បញ្ចូលអត្ថបទទីនេះ ប្រព័ន្ធ AI នឹងអានដើម្បីយល់ពីអត្ថន័យ ចេតនា និងភាពមិនប្រក្រតី មិនមែនគ្រាន់តែរកមើលពាក្យខុសត្រូវនោះទេ៖</p>
                 
                 <textarea id="newsInput" rows="7" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-base leading-relaxed bg-slate-50" placeholder="បញ្ចូលអត្ថបទដែលលោកអ្នកចង់ឱ្យ AI វិភាគ..."></textarea>
                 
@@ -171,15 +175,106 @@
 
     </main>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative">
+            <button onclick="toggleSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center">
+                <i class="fas fa-key text-yellow-500 mr-2"></i> ការកំណត់ API Key
+            </h3>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+                ដើម្បីឱ្យប្រព័ន្ធបញ្ញាសិប្បនិម្មិត (AI) វិភាគអត្ថន័យបានស៊ីជម្រៅ សូមបញ្ចូល <strong>Gemini API Key</strong> ផ្ទាល់ខ្លួនរបស់អ្នកនៅទីនេះ។
+            </p>
+            <div class="mb-4">
+                <label for="userApiKey" class="block text-gray-700 text-sm font-bold mb-2">បញ្ចូល API Key ទីនេះ៖</label>
+                <input id="userApiKey" type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="AIzaSy...">
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="saveApiKey()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    រក្សាទុក
+                </button>
+                <button onclick="clearApiKey()" class="bg-red-100 hover:bg-red-200 text-red-600 font-bold py-2 px-4 rounded-lg transition duration-200">
+                    លុបចោល
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer class="bg-slate-900 text-slate-400 text-center py-6 text-xs border-t border-slate-800">
         <p class="font-light">មន្ទីរពិសោធន៍ AI បង្កើតឡើងសម្រាប់វិស័យអប់រំនៅកម្ពុជា &copy; 2026</p>
     </footer>
 
-    <script>
-        // បរិស្ថាន Canvas នឹងបំពេញ API Key នៅទីនេះដោយស្វ័យប្រវត្តិ។ មិនបាច់ដាក់កូដប្រឆាំងវាទេ!
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Global Firebase Configuration
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
         const apiKey = ""; 
         let base64ImageData = null;
         let imageMimeType = null;
+        let globalApiKey = "";
+
+        // Authentication State Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("Authenticated successfully as", user.uid);
+                // Load shared API key from Firestore using the proper 6-segment path
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        globalApiKey = docSnap.data().apiKey || "";
+                        if (globalApiKey && globalApiKey !== "AQ") {
+                            const input = document.getElementById('userApiKey');
+                            if (input) input.value = globalApiKey;
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error loading key from Firestore:", err);
+                }
+            }
+        });
+
+        // Initialize Authentication on startup
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Auth init error, retrying anonymous:", e);
+                try {
+                    await signInAnonymously(auth);
+                } catch (anonErr) {
+                    console.error("Auth completely failed:", anonErr);
+                }
+            }
+        };
+        initAuth();
+
+        window.onload = function() {
+            // Clean up invalid temporary key "AQ" to prevent authentication blockages
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if (savedKey === "AQ" || savedKey === "null" || savedKey === "undefined") {
+                localStorage.removeItem('gemini_api_key');
+            }
+            
+            const activeKey = localStorage.getItem('gemini_api_key');
+            if (activeKey) {
+                document.getElementById('userApiKey').value = activeKey;
+            }
+        };
 
         function switchTab(tab) {
             document.getElementById('tab-text').className = tab === 'text' ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-600 transition duration-200' : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-200 border-b-4 border-transparent';
@@ -188,9 +283,71 @@
             document.getElementById('section-image').className = tab === 'image' ? 'block space-y-6' : 'hidden';
         }
 
-        // Helper to call Gemini AI (with Exponential Backoff for reliability)
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.toggle('hidden');
+        }
+
+        async function saveApiKey() {
+            const userKey = document.getElementById('userApiKey').value.trim();
+            if (userKey && userKey.startsWith("AIza")) {
+                localStorage.setItem('gemini_api_key', userKey);
+                globalApiKey = userKey;
+                
+                try {
+                    if (auth.currentUser) {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+                        await setDoc(docRef, { apiKey: userKey });
+                        alert("រក្សាទុក API Key ទទួលបានជោគជ័យ និងបានចែករំលែកទៅកាន់អ្នកគ្រប់គ្នារួចរាល់!");
+                    } else {
+                        alert("រក្សាទុក API Key ក្នុងកុំព្យូទ័រនេះទទួលបានជោគជ័យ (មិនអាចចែករំលែកទៅកាន់អ្នកដទៃបានទេ ដោយសារប្រព័ន្ធមិនទាន់ភ្ជាប់)។");
+                    }
+                    toggleSettingsModal();
+                } catch (error) {
+                    console.error("Error saving key to Firestore:", error);
+                    alert("រក្សាទុកកូដក្នុងម៉ាស៊ីនរួចរាល់ ប៉ុន្តែមានបញ្ហាក្នុងការចែករំលែក៖ " + error.message);
+                    toggleSettingsModal();
+                }
+            } else {
+                alert("សូមបញ្ចូល API Key ដែលត្រឹមត្រូវ (ចាប់ផ្តើមដោយអក្សរ AIza...)!");
+            }
+        }
+
+        async function clearApiKey() {
+            localStorage.removeItem('gemini_api_key');
+            document.getElementById('userApiKey').value = "";
+            globalApiKey = "";
+            try {
+                if (auth.currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+                    await setDoc(docRef, { apiKey: "" });
+                }
+            } catch (e) {
+                console.error("Error clearing shared key:", e);
+            }
+            alert("បានលុប API Key រួចរាល់។");
+            toggleSettingsModal();
+        }
+
+        // Helper to call Gemini AI with proper priority and retry backup
         async function fetchGeminiAI(payload) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const savedKey = localStorage.getItem('gemini_api_key');
+            const isValidGeminiKey = (key) => key && key.trim().startsWith("AIza") && key.trim().length > 15;
+
+            // Prioritize: Injected > Firestore Global > LocalStorage
+            let activeKey = apiKey;
+            if (!isValidGeminiKey(activeKey)) {
+                activeKey = globalApiKey;
+            }
+            if (!isValidGeminiKey(activeKey)) {
+                activeKey = savedKey;
+            }
+
+            if (!isValidGeminiKey(activeKey)) {
+                throw new Error("API_KEY_MISSING");
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`;
             const maxRetries = 5;
             const delays = [1000, 2000, 4000, 8000, 16000];
 
@@ -220,6 +377,7 @@
                     
                     return JSON.parse(cleanText.trim());
                 } catch (error) {
+                    if (error.message === "API_KEY_MISSING") throw error;
                     if (i === maxRetries) throw error;
                     await new Promise(resolve => setTimeout(resolve, delays[i]));
                 }
@@ -230,16 +388,22 @@
             let errorMsg = error.message;
             let title = "ប្រព័ន្ធ AI មានបញ្ហាក្នុងការដំណើរការ";
             
+            if (errorMsg === "API_KEY_MISSING" || errorMsg.includes("API key not valid") || errorMsg.includes("unregistered callers")) {
+                title = "សូមបញ្ជូល API Key ដើម្បីប្រើប្រាស់ AI";
+                errorMsg = "ប្រព័ន្ធរកមិនឃើញកូនសោរ (API Key) ត្រឹមត្រូវដើម្បីភ្ជាប់ទៅកាន់ Google AI ឡើយ។ សូមចុចលើរូប ⚙️ (កង់ធ្មេញ) នៅខាងស្តាំខាងលើ ដើម្បីបញ្ចូល API Key ដែលទទួលបានពី Google AI Studio។";
+            } else if (errorMsg.includes("Unexpected token") || errorMsg.includes("JSON")) {
+                errorMsg = "AI ឆ្លើយតបមកខុសទម្រង់ទិន្នន័យ (JSON) សូមសាកល្បងចុចវិភាគម្តងទៀត។";
+            }
+
             document.getElementById(elementId).innerHTML = `
                 <div class="p-4 bg-red-50 rounded-lg border border-red-200">
                     <p class="text-red-700 font-bold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i> ${title}</p>
                     <p class="text-sm text-red-600">${errorMsg}</p>
-                    <p class="text-xs text-gray-500 mt-2">សូមសាកល្បងចុចប៊ូតុងដំណើរការម្តងទៀត។</p>
                 </div>
             `;
         }
 
-        // --- TEXT ANALYSIS ---
+        // --- TRUE AI TEXT ANALYSIS ---
         async function advancedScanText() {
             const text = document.getElementById('newsInput').value.trim();
             if (!text) {
@@ -322,13 +486,16 @@
                 reportDiv.scrollIntoView({ behavior: 'smooth' });
 
             } catch (error) {
-                console.error("AI Error:", error);
+                console.error("AI Error Details:", error);
                 displayError('diagnosisDetails', error);
+                
+                // Hide meters on error
                 ['emotional', 'scientific', 'financial', 'format'].forEach(id => {
                     document.getElementById(`meter-${id}`).style.width = "0%";
                     document.getElementById(`label-${id}`).textContent = "0%";
                 });
                 document.getElementById('actionAdvice').innerHTML = "";
+                
                 reportDiv.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
@@ -337,7 +504,7 @@
             }
         }
 
-        // --- IMAGE ANALYSIS ---
+        // --- TRUE AI IMAGE ANALYSIS ---
         function handleImageSelection(event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -431,7 +598,11 @@
             base64ImageData = null;
         }
 
+        // Bind module level functions to window scope for inline HTML event handling
         window.switchTab = switchTab;
+        window.toggleSettingsModal = toggleSettingsModal;
+        window.saveApiKey = saveApiKey;
+        window.clearApiKey = clearApiKey;
         window.advancedScanText = advancedScanText;
         window.handleImageSelection = handleImageSelection;
         window.startImageScanning = startImageScanning;
