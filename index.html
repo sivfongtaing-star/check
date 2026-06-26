@@ -8,97 +8,605 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap');
-        body { font-family: 'Battambang', sans-serif; background-color: #f1f5f9; }
-        .title-font { font-family: 'Moul', serif; }
+        body {
+            font-family: 'Battambang', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .title-font {
+            font-family: 'Moul', serif;
+        }
+        @keyframes scan {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        .scanner-line {
+            height: 4px;
+            background: linear-gradient(to bottom, transparent, #ef4444, transparent);
+            position: absolute;
+            width: 100%;
+            animation: scan 3s infinite linear;
+        }
+        .loader-pulse {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
     </style>
 </head>
 <body class="min-h-screen text-gray-800 flex flex-col justify-between">
 
     <header class="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white shadow-xl py-6 border-b-4 border-blue-500 relative">
         <div class="container mx-auto px-4 text-center">
-            <h1 class="text-2xl md:text-3xl title-font text-yellow-400">មន្ទីរពិសោធន៍វិភាគព័ត៌មាន AI</h1>
+            <div class="inline-flex items-center justify-center space-x-3 mb-2">
+                <i class="fas fa-brain text-4xl text-blue-400"></i>
+                <h1 class="text-2xl md:text-3xl title-font text-yellow-400">មន្ទីរពិសោធន៍វិភាគព័ត៌មាន AI</h1>
+            </div>
+            <p class="text-blue-100 text-sm md:text-base font-light">បំពាក់ដោយប្រព័ន្ធបញ្ញាសិប្បនិម្មិត វិភាគអត្ថន័យ និងរូបភាពស៊ីជម្រៅ</p>
         </div>
-        <button onclick="alert('ការកំណត់៖ API Key កំពុងដំណើរការដោយ AIzaSyCdS...')" class="absolute top-6 right-8 text-white hover:text-yellow-400 text-2xl"><i class="fas fa-cog"></i></button>
+        <!-- Settings Button -->
+        <button onclick="toggleSettingsModal()" class="absolute top-6 right-4 md:right-8 text-white hover:text-yellow-400 text-2xl transition focus:outline-none" title="ការកំណត់ API Key">
+            <i class="fas fa-cog"></i>
+        </button>
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-4xl flex-grow">
-        <div class="flex border-b border-gray-300 mb-6 bg-white rounded-t-xl shadow-md">
-            <button onclick="switchTab('text')" id="tab-text" class="flex-1 py-4 font-bold text-blue-600 border-b-4 border-blue-600">វិភាគអត្ថបទ</button>
-            <button onclick="switchTab('image')" id="tab-image" class="flex-1 py-4 font-bold text-gray-500 border-b-4 border-transparent">ស៊ើបអង្កេតរូបភាព</button>
+        
+        <div class="flex border-b border-gray-300 mb-6 bg-white rounded-t-xl overflow-hidden shadow-md">
+            <button onclick="switchTab('text')" id="tab-text" class="flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-600 transition duration-200">
+                <i class="fas fa-file-shield mr-2"></i> វិភាគអត្ថបទព័ត៌មាន
+            </button>
+            <button onclick="switchTab('image')" id="tab-image" class="flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-200 border-b-4 border-transparent">
+                <i class="fas fa-fingerprint mr-2"></i> ស៊ើបអង្កេតរូបភាព AI
+            </button>
         </div>
 
+        <!-- Section: TEXT ANALYSIS -->
         <div id="section-text" class="space-y-6">
-            <textarea id="newsInput" rows="7" class="w-full p-4 border rounded-lg" placeholder="បញ្ចូលអត្ថបទនៅទីនេះ..."></textarea>
-            <button onclick="advancedScanText()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">ដំណើរការវិភាគ</button>
-            <div id="forensicReport" class="hidden p-6 bg-white border rounded-xl shadow-sm">
-                <h4 class="font-bold text-lg mb-2 text-blue-900">លទ្ធផលវិភាគ៖</h4>
-                <div id="diagnosisDetails" class="text-gray-700"></div>
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div class="flex items-center space-x-2 mb-3">
+                    <span class="p-2 bg-blue-100 text-blue-700 rounded-lg"><i class="fas fa-network-wired text-xl"></i></span>
+                    <h3 class="text-lg font-bold text-gray-800">ប្រព័ន្ធ AI វិភាគអត្ថន័យ និងចេតនា (Semantic AI Analyzer)</h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">បញ្ចូលអត្ថបទទីនេះ ប្រព័ន្ធ AI នឹងអានដើម្បីយល់ពីអត្ថន័យ ចេតនា និងភាពមិនប្រក្រតី មិនមែនគ្រាន់តែរកមើលពាក្យខុសត្រូវនោះទេ៖</p>
+                
+                <textarea id="newsInput" rows="7" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-base leading-relaxed bg-slate-50" placeholder="បញ្ចូលអត្ថបទដែលលោកអ្នកចង់ឱ្យ AI វិភាគ..."></textarea>
+                
+                <button id="btn-analyze-text" onclick="advancedScanText()" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-lg transition duration-200 flex justify-center items-center text-base shadow-lg shadow-blue-100">
+                    <i class="fas fa-robot mr-2" id="scan-icon"></i> ដំណើរការបញ្ញាសិប្បនិម្មិត
+                </button>
+
+                <!-- Forensic Report Section -->
+                <div id="forensicReport" class="hidden mt-8 border rounded-xl overflow-hidden shadow-inner bg-slate-50">
+                    <div id="reportHeader" class="px-6 py-4 border-b flex justify-between items-center text-white">
+                        <h4 class="font-bold text-lg flex items-center"><i class="fas fa-file-medical-alt mr-2"></i> របាយការណ៍វិភាគអត្ថន័យដោយ AI</h4>
+                        <span id="riskLabel" class="px-3 py-1 rounded-full text-xs font-bold uppercase"></span>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <!-- Score meters populated by AI -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded-lg border">
+                                <span class="text-xs text-gray-500 font-bold block mb-1">១. កម្រិតភាសាជម្រុញអារម្មណ៍</span>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div id="meter-emotional" class="h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                                <span id="label-emotional" class="text-xs font-bold mt-1 block text-right">0%</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border">
+                                <span class="text-xs text-gray-500 font-bold block mb-1">២. ការអះអាងគ្មានមូលដ្ឋាន</span>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div id="meter-scientific" class="h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                                <span id="label-scientific" class="text-xs font-bold mt-1 block text-right">0%</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border">
+                                <span class="text-xs text-gray-500 font-bold block mb-1">៣. សញ្ញានៃការឆបោក</span>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div id="meter-financial" class="h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                                <span id="label-financial" class="text-xs font-bold mt-1 block text-right">0%</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border">
+                                <span class="text-xs text-gray-500 font-bold block mb-1">៤. ទម្រង់អត្ថបទគួរឱ្យសង្ស័យ</span>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div id="meter-format" class="h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                                <span id="label-format" class="text-xs font-bold mt-1 block text-right">0%</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-lg border border-gray-200 space-y-3">
+                            <h5 class="font-bold text-gray-800 border-b pb-2 text-sm md:text-base"><i class="fas fa-clipboard-check text-blue-600 mr-2"></i> ការវាយតម្លៃស៊ីជម្រៅពីប្រព័ន្ធ AI៖</h5>
+                            <div id="diagnosisDetails" class="space-y-2 text-sm text-gray-700 leading-relaxed text-slate-700"></div>
+                        </div>
+
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h5 class="font-bold text-blue-900 text-sm flex items-center mb-2"><i class="fas fa-lightbulb text-yellow-500 mr-2"></i> ដំបូន្មានសម្រាប់សិស្ស៖</h5>
+                            <ul class="list-disc list-inside text-sm text-blue-800 space-y-1" id="actionAdvice"></ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- Section: IMAGE ANALYSIS -->
         <div id="section-image" class="hidden space-y-6">
-            <input type="file" id="imageLoader" class="hidden" onchange="handleImageSelection(event)">
-            <div class="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-blue-400" onclick="document.getElementById('imageLoader').click()">
-                <p class="text-gray-600">ចុចទីនេះដើម្បីបង្ហោះរូបភាព</p>
-                <img id="localImgPreview" class="hidden mx-auto mt-4 max-h-64 rounded">
+            <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div class="flex items-center space-x-2 mb-3">
+                    <span class="p-2 bg-indigo-100 text-indigo-700 rounded-lg"><i class="fas fa-camera-retro text-xl"></i></span>
+                    <h3 class="text-lg font-bold text-gray-800">ប្រព័ន្ធ AI ស្កេនរូបភាព (Visual AI Analyzer)</h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">សូមបង្ហោះរូបភាពដែលលោកគ្រូសង្ស័យ AI នឹងស្កេនភីកសែល (Pixels) ដើម្បីបញ្ជាក់ថាជារូបពិត ឬរូបបង្កើតដោយកុំព្យូទ័រ៖</p>
+
+                <div class="relative flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-lg p-6 bg-slate-50 hover:bg-slate-100 cursor-pointer transition mb-6 overflow-hidden" id="upload-container" onclick="document.getElementById('imageLoader').click()">
+                    <input type="file" id="imageLoader" class="hidden" accept="image/*" onchange="handleImageSelection(event)">
+                    <div id="imgPlaceholder" class="text-center py-6">
+                        <i class="fas fa-file-import text-5xl text-gray-400 mb-3"></i>
+                        <p class="text-sm text-gray-500 font-semibold">ចុចទីនេះដើម្បីបង្ហោះរូបភាព</p>
+                    </div>
+                    <div id="laserScanner" class="scanner-line hidden"></div>
+                    <img id="localImgPreview" class="hidden max-h-96 rounded-lg shadow-md border z-10" alt="Preview">
+                </div>
+
+                <div class="flex space-x-3 mb-6">
+                    <button id="btn-scan-img" onclick="startImageScanning()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fas fa-eye mr-2" id="img-scan-icon"></i> ឱ្យ AI ស្កេនរូបភាពនេះ
+                    </button>
+                    <button onclick="resetImageAnalyzer()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg transition duration-200 text-sm">
+                        សំអាត
+                    </button>
+                </div>
+
+                <div id="imageDiagnosticReport" class="hidden border rounded-xl overflow-hidden bg-slate-50 p-6 space-y-6">
+                    <h4 class="font-bold text-gray-800 border-b pb-3 text-base md:text-lg flex items-center justify-between">
+                        <div><i class="fas fa-microscope text-indigo-600 mr-2"></i> លទ្ធផលវិភាគរូបភាពដោយ AI</div>
+                        <span id="imgRiskLabel" class="px-3 py-1 rounded-full text-xs font-bold text-white uppercase"></span>
+                    </h4>
+                    
+                    <div class="bg-white p-5 rounded-lg border border-gray-200">
+                        <p id="imgDiagnosisDetails" class="text-sm text-gray-700 leading-relaxed space-y-2"></p>
+                    </div>
+                </div>
             </div>
-            <button onclick="startImageScanning()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">ឱ្យ AI ស្កេនរូបភាព</button>
-            <div id="imageResult" class="hidden p-6 bg-white border rounded-xl shadow-sm text-gray-700"></div>
         </div>
+
     </main>
 
-    <script>
-        const GLOBAL_API_KEY = "AIzaSyCdS-sveuqN9gmlzWUrbdpfhnIcVp2QoQc";
-        
-        function switchTab(tab) {
-            document.getElementById('section-text').classList.toggle('hidden', tab !== 'text');
-            document.getElementById('section-image').classList.toggle('hidden', tab !== 'image');
-            document.getElementById('tab-text').classList.toggle('border-blue-600', tab === 'text');
-            document.getElementById('tab-image').classList.toggle('border-blue-600', tab === 'image');
-        }
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative">
+            <button onclick="toggleSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center">
+                <i class="fas fa-key text-yellow-500 mr-2"></i> ការកំណត់ API Key
+            </h3>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+                ដើម្បីឱ្យប្រព័ន្ធបញ្ញាសិប្បនិម្មិត (AI) វិភាគអត្ថន័យបានស៊ីជម្រៅ សូមបញ្ចូល <strong>Gemini API Key</strong> ផ្ទាល់ខ្លួនរបស់អ្នកនៅទីនេះ។
+            </p>
+            <div class="mb-4">
+                <label for="userApiKey" class="block text-gray-700 text-sm font-bold mb-2">បញ្ចូល API Key ទីនេះ៖</label>
+                <input id="userApiKey" type="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="AIzaSy...">
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="saveApiKey()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    រក្សាទុក
+                </button>
+                <button onclick="clearApiKey()" class="bg-red-100 hover:bg-red-200 text-red-600 font-bold py-2 px-4 rounded-lg transition duration-200">
+                    លុបចោល
+                </button>
+            </div>
+        </div>
+    </div>
 
-        function handleImageSelection(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = document.getElementById('localImgPreview');
-                img.src = event.target.result;
-                img.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
+    <footer class="bg-slate-900 text-slate-400 text-center py-6 text-xs border-t border-slate-800">
+        <p class="font-light">មន្ទីរពិសោធន៍ AI បង្កើតឡើងសម្រាប់វិស័យអប់រំនៅកម្ពុជា &copy; 2026</p>
+    </footer>
 
-        async function advancedScanText() {
-            const text = document.getElementById('newsInput').value;
-            if (!text) return alert("សូមបញ្ចូលអត្ថបទ!");
-            
-            const display = document.getElementById('diagnosisDetails');
-            display.innerText = "កំពុងវិភាគ... សូមរង់ចាំបន្តិច...";
-            document.getElementById('forensicReport').classList.remove('hidden');
-            
-            try {
-                // ប្រើម៉ូដែល gemini-1.5-flash ដែលមានស្ថេរភាពជាង
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GLOBAL_API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "វិភាគអត្ថបទនេះជាភាសាខ្មែរថាពិតឬមិនពិត៖ " + text }] }] })
-                });
-                const data = await response.json();
-                
-                if (data.candidates && data.candidates[0]) {
-                    display.innerText = data.candidates[0].content.parts[0].text;
-                } else {
-                    display.innerText = "កំហុស៖ " + JSON.stringify(data.error);
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Global Firebase Configuration
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        const apiKey = ""; 
+        let base64ImageData = null;
+        let imageMimeType = null;
+        let globalApiKey = "";
+
+        // Authentication State Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("Authenticated successfully as", user.uid);
+                // Load shared API key from Firestore using the proper 6-segment path
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        globalApiKey = docSnap.data().apiKey || "";
+                        if (globalApiKey && globalApiKey !== "AQ") {
+                            const input = document.getElementById('userApiKey');
+                            if (input) input.value = globalApiKey;
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error loading key from Firestore:", err);
                 }
-            } catch (err) {
-                display.innerText = "មានបញ្ហា៖ មិនអាចភ្ជាប់ទៅកាន់ AI បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ឬ API Key។";
+            }
+        });
+
+        // Initialize Authentication on startup
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Auth init error, retrying anonymous:", e);
+                try {
+                    await signInAnonymously(auth);
+                } catch (anonErr) {
+                    console.error("Auth completely failed:", anonErr);
+                }
+            }
+        };
+        initAuth();
+
+        window.onload = function() {
+            // Clean up invalid temporary key "AQ" to prevent authentication blockages
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if (savedKey === "AQ" || savedKey === "null" || savedKey === "undefined") {
+                localStorage.removeItem('gemini_api_key');
+            }
+            
+            const activeKey = localStorage.getItem('gemini_api_key');
+            if (activeKey) {
+                document.getElementById('userApiKey').value = activeKey;
+            }
+        };
+
+        function switchTab(tab) {
+            document.getElementById('tab-text').className = tab === 'text' ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-600 transition duration-200' : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-200 border-b-4 border-transparent';
+            document.getElementById('tab-image').className = tab === 'image' ? 'flex-1 py-4 text-center font-bold text-blue-600 bg-blue-50 border-b-4 border-blue-600 transition duration-200' : 'flex-1 py-4 text-center font-bold text-gray-500 hover:bg-gray-50 transition duration-200 border-b-4 border-transparent';
+            document.getElementById('section-text').className = tab === 'text' ? 'block space-y-6' : 'hidden';
+            document.getElementById('section-image').className = tab === 'image' ? 'block space-y-6' : 'hidden';
+        }
+
+        function toggleSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.toggle('hidden');
+        }
+
+        async function saveApiKey() {
+            const userKey = document.getElementById('userApiKey').value.trim();
+            if (userKey && userKey.startsWith("AIza")) {
+                localStorage.setItem('gemini_api_key', userKey);
+                globalApiKey = userKey;
+                
+                try {
+                    if (auth.currentUser) {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+                        await setDoc(docRef, { apiKey: userKey });
+                        alert("រក្សាទុក API Key ទទួលបានជោគជ័យ និងបានចែករំលែកទៅកាន់អ្នកគ្រប់គ្នារួចរាល់!");
+                    } else {
+                        alert("រក្សាទុក API Key ក្នុងកុំព្យូទ័រនេះទទួលបានជោគជ័យ (មិនអាចចែករំលែកទៅកាន់អ្នកដទៃបានទេ ដោយសារប្រព័ន្ធមិនទាន់ភ្ជាប់)។");
+                    }
+                    toggleSettingsModal();
+                } catch (error) {
+                    console.error("Error saving key to Firestore:", error);
+                    alert("រក្សាទុកកូដក្នុងម៉ាស៊ីនរួចរាល់ ប៉ុន្តែមានបញ្ហាក្នុងការចែករំលែក៖ " + error.message);
+                    toggleSettingsModal();
+                }
+            } else {
+                alert("សូមបញ្ចូល API Key ដែលត្រឹមត្រូវ (ចាប់ផ្តើមដោយអក្សរ AIza...)!");
             }
         }
 
-        async function startImageScanning() {
-            alert("មុខងារវិភាគរូបភាពកំពុងត្រូវបានកែសម្រួលសម្រាប់ភាពរលូន...");
+        async function clearApiKey() {
+            localStorage.removeItem('gemini_api_key');
+            document.getElementById('userApiKey').value = "";
+            globalApiKey = "";
+            try {
+                if (auth.currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'config');
+                    await setDoc(docRef, { apiKey: "" });
+                }
+            } catch (e) {
+                console.error("Error clearing shared key:", e);
+            }
+            alert("បានលុប API Key រួចរាល់។");
+            toggleSettingsModal();
         }
+
+        // Helper to call Gemini AI with proper priority and retry backup
+        async function fetchGeminiAI(payload) {
+            const savedKey = localStorage.getItem('gemini_api_key');
+            const isValidGeminiKey = (key) => key && key.trim().startsWith("AIza") && key.trim().length > 15;
+
+            // Prioritize: Injected > Firestore Global > LocalStorage
+            let activeKey = apiKey;
+            if (!isValidGeminiKey(activeKey)) {
+                activeKey = globalApiKey;
+            }
+            if (!isValidGeminiKey(activeKey)) {
+                activeKey = savedKey;
+            }
+
+            if (!isValidGeminiKey(activeKey)) {
+                throw new Error("API_KEY_MISSING");
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${activeKey}`;
+            const maxRetries = 5;
+            const delays = [1000, 2000, 4000, 8000, 16000];
+
+            for (let i = 0; i <= maxRetries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.error?.message || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!textResult) {
+                        throw new Error("គ្មានលទ្ធផលត្រឡប់មកវិញពីប្រព័ន្ធ AI ឡើយ។");
+                    }
+
+                    let cleanText = textResult.trim();
+                    if (cleanText.startsWith("```json")) cleanText = cleanText.substring(7);
+                    else if (cleanText.startsWith("```")) cleanText = cleanText.substring(3);
+                    if (cleanText.endsWith("```")) cleanText = cleanText.slice(0, -3);
+                    
+                    return JSON.parse(cleanText.trim());
+                } catch (error) {
+                    if (error.message === "API_KEY_MISSING") throw error;
+                    if (i === maxRetries) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        function displayError(elementId, error) {
+            let errorMsg = error.message;
+            let title = "ប្រព័ន្ធ AI មានបញ្ហាក្នុងការដំណើរការ";
+            
+            if (errorMsg === "API_KEY_MISSING" || errorMsg.includes("API key not valid") || errorMsg.includes("unregistered callers")) {
+                title = "សូមបញ្ជូល API Key ដើម្បីប្រើប្រាស់ AI";
+                errorMsg = "ប្រព័ន្ធរកមិនឃើញកូនសោរ (API Key) ត្រឹមត្រូវដើម្បីភ្ជាប់ទៅកាន់ Google AI ឡើយ។ សូមចុចលើរូប ⚙️ (កង់ធ្មេញ) នៅខាងស្តាំខាងលើ ដើម្បីបញ្ចូល API Key ដែលទទួលបានពី Google AI Studio។";
+            } else if (errorMsg.includes("Unexpected token") || errorMsg.includes("JSON")) {
+                errorMsg = "AI ឆ្លើយតបមកខុសទម្រង់ទិន្នន័យ (JSON) សូមសាកល្បងចុចវិភាគម្តងទៀត។";
+            }
+
+            document.getElementById(elementId).innerHTML = `
+                <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                    <p class="text-red-700 font-bold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i> ${title}</p>
+                    <p class="text-sm text-red-600">${errorMsg}</p>
+                </div>
+            `;
+        }
+
+        // --- TRUE AI TEXT ANALYSIS ---
+        async function advancedScanText() {
+            const text = document.getElementById('newsInput').value.trim();
+            if (!text) {
+                alert("សូមបញ្ចូលអត្ថបទជាមុនសិន!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-analyze-text');
+            const icon = document.getElementById('scan-icon');
+            const reportDiv = document.getElementById('forensicReport');
+
+            btn.disabled = true;
+            icon.className = "fas fa-spinner fa-spin mr-2 text-yellow-300";
+            btn.classList.add("loader-pulse");
+            reportDiv.classList.add('hidden');
+
+            const prompt = `អ្នកគឺជាអ្នកស៊ើបអង្កេតអត្ថបទឌីជីថលដ៏ជំនាញ។ សូមវិភាគអត្ថន័យ និងចេតនានៃអត្ថបទខាងក្រោម (មិនមែនគ្រាន់តែមើលពាក្យខុសត្រូវទេ)។
+            វាយតម្លៃពី ០ ទៅ ១០០ លើ៤ចំណុច៖
+            1. ការប្រើភាសាជម្រុញអារម្មណ៍ឱ្យភ័យខ្លាច ឬរំភើប
+            2. ការអះអាងដែលគ្មានមូលដ្ឋានច្បាស់លាស់ ឬការធានាហួសហេតុ
+            3. សញ្ញានៃការឆបោក (បោកលុយ ឬបោកទិន្នន័យ)
+            4. ទម្រង់សរសេរសង្ស័យ (សញ្ញាឧទានច្រើន លីងមិនច្បាស់លាស់)
+
+            អត្ថបទ៖ "${text}"`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            emotional: { type: "INTEGER" },
+                            scientific: { type: "INTEGER" },
+                            financial: { type: "INTEGER" },
+                            format: { type: "INTEGER" },
+                            risk: { type: "STRING" },
+                            diagnosis: { type: "ARRAY", items: { type: "STRING" } },
+                            advice: { type: "ARRAY", items: { type: "STRING" } }
+                        },
+                        required: ["emotional", "scientific", "financial", "format", "risk", "diagnosis", "advice"]
+                    }
+                }
+            };
+
+            try {
+                const aiResult = await fetchGeminiAI(payload);
+                
+                document.getElementById('meter-emotional').style.width = aiResult.emotional + "%";
+                document.getElementById('meter-scientific').style.width = aiResult.scientific + "%";
+                document.getElementById('meter-financial').style.width = aiResult.financial + "%";
+                document.getElementById('meter-format').style.width = aiResult.format + "%";
+
+                document.getElementById('label-emotional').textContent = aiResult.emotional + "%";
+                document.getElementById('label-scientific').textContent = aiResult.scientific + "%";
+                document.getElementById('label-financial').textContent = aiResult.financial + "%";
+                document.getElementById('label-format').textContent = aiResult.format + "%";
+
+                const header = document.getElementById('reportHeader');
+                const riskLabel = document.getElementById('riskLabel');
+                
+                if (aiResult.risk.toLowerCase().includes("high")) {
+                    header.className = "px-6 py-4 border-b flex justify-between items-center text-white bg-red-600 border-red-700 rounded-t-xl";
+                    riskLabel.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-white text-red-600";
+                    riskLabel.textContent = "ហានិភ័យខ្ពស់ (High Risk)";
+                } else if (aiResult.risk.toLowerCase().includes("medium") || aiResult.risk.toLowerCase().includes("moderate")) {
+                    header.className = "px-6 py-4 border-b flex justify-between items-center text-white bg-yellow-500 border-yellow-600 rounded-t-xl";
+                    riskLabel.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-white text-yellow-600";
+                    riskLabel.textContent = "ហានិភ័យមធ្យម (Medium Risk)";
+                } else {
+                    header.className = "px-6 py-4 border-b flex justify-between items-center text-white bg-green-600 border-green-700 rounded-t-xl";
+                    riskLabel.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-white text-green-600";
+                    riskLabel.textContent = "ហានិភ័យទាប (Low Risk)";
+                }
+
+                document.getElementById('diagnosisDetails').innerHTML = aiResult.diagnosis.map(d => `<p>🔸 ${d}</p>`).join('');
+                document.getElementById('actionAdvice').innerHTML = aiResult.advice.map(a => `<li>${a}</li>`).join('');
+
+                reportDiv.classList.remove('hidden');
+                reportDiv.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                console.error("AI Error Details:", error);
+                displayError('diagnosisDetails', error);
+                
+                // Hide meters on error
+                ['emotional', 'scientific', 'financial', 'format'].forEach(id => {
+                    document.getElementById(`meter-${id}`).style.width = "0%";
+                    document.getElementById(`label-${id}`).textContent = "0%";
+                });
+                document.getElementById('actionAdvice').innerHTML = "";
+                
+                reportDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove("loader-pulse");
+                icon.className = "fas fa-robot mr-2";
+            }
+        }
+
+        // --- TRUE AI IMAGE ANALYSIS ---
+        function handleImageSelection(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('localImgPreview'); 
+                const placeholder = document.getElementById('imgPlaceholder');
+                img.src = e.target.result; 
+                img.classList.remove('hidden'); 
+                placeholder.classList.add('hidden');
+                
+                const resultStr = e.target.result;
+                imageMimeType = resultStr.split(';')[0].split(':')[1];
+                base64ImageData = resultStr.split(',')[1];
+                
+                document.getElementById('btn-scan-img').disabled = false;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        async function startImageScanning() {
+            if(!base64ImageData) return;
+
+            const scanner = document.getElementById('laserScanner');
+            const report = document.getElementById('imageDiagnosticReport');
+            const btnScan = document.getElementById('btn-scan-img');
+            const icon = document.getElementById('img-scan-icon');
+
+            scanner.classList.remove('hidden');
+            report.classList.add('hidden');
+            btnScan.disabled = true;
+            icon.className = "fas fa-spinner fa-spin mr-2";
+
+            const prompt = `អ្នកគឺជាអ្នកជំនាញវិភាគរូបភាព។ សូមពិនិត្យមើលរូបភាពនេះយ៉ាងលម្អិត ហើយវាយតម្លៃថាតើវាជារូបពិត ឬជារូប AI កាត់ត។`;
+
+            const payload = {
+                contents: [{ 
+                    role: "user", 
+                    parts: [
+                        { text: prompt }, 
+                        { inlineData: { mimeType: imageMimeType, data: base64ImageData } }
+                    ] 
+                }],
+                generationConfig: { 
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            is_ai_generated: { type: "BOOLEAN" },
+                            confidence_percentage: { type: "INTEGER" },
+                            analysis: { type: "ARRAY", items: { type: "STRING" } }
+                        },
+                        required: ["is_ai_generated", "confidence_percentage", "analysis"]
+                    }
+                }
+            };
+
+            try {
+                const aiResult = await fetchGeminiAI(payload);
+                
+                const riskLabel = document.getElementById('imgRiskLabel');
+                if (aiResult.is_ai_generated || aiResult.confidence_percentage >= 50) {
+                    riskLabel.className = "px-3 py-1 rounded-full text-xs font-bold text-white uppercase bg-red-600";
+                    riskLabel.innerHTML = `⚠️ រូបភាព AI (${aiResult.confidence_percentage}%)`;
+                } else {
+                    riskLabel.className = "px-3 py-1 rounded-full text-xs font-bold text-white uppercase bg-green-600";
+                    riskLabel.innerHTML = `✅ ទំនងជារូបភាពពិតធម្មជាតិ`;
+                }
+
+                document.getElementById('imgDiagnosisDetails').innerHTML = aiResult.analysis.map(a => `<p>🔹 ${a}</p>`).join('');
+                report.classList.remove('hidden');
+                report.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                console.error("AI Image Error:", error);
+                displayError('imgDiagnosisDetails', error);
+                document.getElementById('imgRiskLabel').innerHTML = "";
+                report.classList.remove('hidden');
+            } finally {
+                scanner.classList.add('hidden');
+                btnScan.disabled = false;
+                icon.className = "fas fa-eye mr-2";
+            }
+        }
+
+        function resetImageAnalyzer() {
+            document.getElementById('imageLoader').value = ""; 
+            document.getElementById('localImgPreview').classList.add('hidden');
+            document.getElementById('imgPlaceholder').classList.remove('hidden'); 
+            document.getElementById('imageDiagnosticReport').classList.add('hidden');
+            document.getElementById('btn-scan-img').disabled = true;
+            base64ImageData = null;
+        }
+
+        // Bind module level functions to window scope for inline HTML event handling
+        window.switchTab = switchTab;
+        window.toggleSettingsModal = toggleSettingsModal;
+        window.saveApiKey = saveApiKey;
+        window.clearApiKey = clearApiKey;
+        window.advancedScanText = advancedScanText;
+        window.handleImageSelection = handleImageSelection;
+        window.startImageScanning = startImageScanning;
+        window.resetImageAnalyzer = resetImageAnalyzer;
     </script>
 </body>
 </html>
