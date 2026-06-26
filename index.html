@@ -38,13 +38,13 @@
 </head>
 <body class="min-h-screen text-gray-800 flex flex-col justify-between">
 
-    <header class="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white shadow-xl py-6 border-b-4 border-blue-500">
+    <header class="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 text-white shadow-xl py-6 border-b-4 border-blue-500 relative">
         <div class="container mx-auto px-4 text-center">
             <div class="inline-flex items-center justify-center space-x-3 mb-2">
                 <i class="fas fa-brain text-4xl text-blue-400"></i>
                 <h1 class="text-2xl md:text-3xl title-font text-yellow-400">មន្ទីរពិសោធន៍វិភាគព័ត៌មាន AI</h1>
             </div>
-            <p class="text-blue-100 text-sm md:text-base font-light">បំពាក់ដោយប្រព័ន្ធបញ្ញាសិប្បនិម្មិត វិភាគអត្ថន័យ និងរូបភាពស៊ីជម្រៅ</p>
+            <p class="text-blue-100 text-sm md:text-base font-light">បំពាក់ដោយប្រព័ន្ធបញ្ញាសិប្បនិម្មិត វិភាគអត្ថន័យ និងរូបភាពស៊ីជម្រៅ (ស្វ័យប្រវត្តិ)</p>
         </div>
     </header>
 
@@ -64,9 +64,9 @@
             <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                 <div class="flex items-center space-x-2 mb-3">
                     <span class="p-2 bg-blue-100 text-blue-700 rounded-lg"><i class="fas fa-network-wired text-xl"></i></span>
-                    <h3 class="text-lg font-bold text-gray-800">ប្រព័ន្ធ AI វិភាគអត្ថន័យ និងចេតនា (Semantic AI Analyzer)</h3>
+                    <h3 class="text-lg font-bold text-gray-800">ប្រព័ន្ធ AI វិភាគអត្ថន័យ និងចេតនា</h3>
                 </div>
-                <p class="text-gray-500 text-sm mb-4">បញ្ចូលអត្ថបទទីនេះ ប្រព័ន្ធ AI នឹងអានដើម្បីយល់ពីអត្ថន័យ ចេតនា និងភាពមិនប្រក្រតី មិនមែនគ្រាន់តែរកមើលពាក្យខុសត្រូវនោះទេ៖</p>
+                <p class="text-gray-500 text-sm mb-4">បញ្ចូលអត្ថបទទីនេះ ប្រព័ន្ធ AI នឹងអានដើម្បីយល់ពីអត្ថន័យ ចេតនា និងភាពមិនប្រក្រតី៖</p>
                 
                 <textarea id="newsInput" rows="7" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-base leading-relaxed bg-slate-50" placeholder="បញ្ចូលអត្ថបទដែលលោកអ្នកចង់ឱ្យ AI វិភាគ..."></textarea>
                 
@@ -176,7 +176,7 @@
     </footer>
 
     <script>
-        // API Key injected by Canvas Environment
+        // បរិស្ថាន Canvas នឹងបំពេញ API Key នៅទីនេះដោយស្វ័យប្រវត្តិ។ មិនបាច់ដាក់កូដប្រឆាំងវាទេ!
         const apiKey = ""; 
         let base64ImageData = null;
         let imageMimeType = null;
@@ -188,7 +188,7 @@
             document.getElementById('section-image').className = tab === 'image' ? 'block space-y-6' : 'hidden';
         }
 
-        // Helper to call Gemini AI with Exponential Backoff
+        // Helper to call Gemini AI (with Exponential Backoff for reliability)
         async function fetchGeminiAI(payload) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const maxRetries = 5;
@@ -213,30 +213,33 @@
                         throw new Error("គ្មានលទ្ធផលត្រឡប់មកវិញពីប្រព័ន្ធ AI ឡើយ។");
                     }
 
-                    // Strict sanitization of JSON response from AI
                     let cleanText = textResult.trim();
-                    if (cleanText.startsWith("```json")) {
-                        cleanText = cleanText.substring(7);
-                    } else if (cleanText.startsWith("```")) {
-                        cleanText = cleanText.substring(3);
-                    }
-                    if (cleanText.endsWith("```")) {
-                        cleanText = cleanText.slice(0, -3);
-                    }
-                    cleanText = cleanText.trim();
-
-                    return JSON.parse(cleanText);
+                    if (cleanText.startsWith("```json")) cleanText = cleanText.substring(7);
+                    else if (cleanText.startsWith("```")) cleanText = cleanText.substring(3);
+                    if (cleanText.endsWith("```")) cleanText = cleanText.slice(0, -3);
+                    
+                    return JSON.parse(cleanText.trim());
                 } catch (error) {
-                    if (i === maxRetries) {
-                        throw error; // Propagate error if all retries fail
-                    }
-                    // Wait before retrying (Exponential Backoff)
+                    if (i === maxRetries) throw error;
                     await new Promise(resolve => setTimeout(resolve, delays[i]));
                 }
             }
         }
 
-        // --- TRUE AI TEXT ANALYSIS ---
+        function displayError(elementId, error) {
+            let errorMsg = error.message;
+            let title = "ប្រព័ន្ធ AI មានបញ្ហាក្នុងការដំណើរការ";
+            
+            document.getElementById(elementId).innerHTML = `
+                <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                    <p class="text-red-700 font-bold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i> ${title}</p>
+                    <p class="text-sm text-red-600">${errorMsg}</p>
+                    <p class="text-xs text-gray-500 mt-2">សូមសាកល្បងចុចប៊ូតុងដំណើរការម្តងទៀត។</p>
+                </div>
+            `;
+        }
+
+        // --- TEXT ANALYSIS ---
         async function advancedScanText() {
             const text = document.getElementById('newsInput').value.trim();
             if (!text) {
@@ -248,7 +251,6 @@
             const icon = document.getElementById('scan-icon');
             const reportDiv = document.getElementById('forensicReport');
 
-            // UI Loading state
             btn.disabled = true;
             icon.className = "fas fa-spinner fa-spin mr-2 text-yellow-300";
             btn.classList.add("loader-pulse");
@@ -275,14 +277,8 @@
                             financial: { type: "INTEGER" },
                             format: { type: "INTEGER" },
                             risk: { type: "STRING" },
-                            diagnosis: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                            },
-                            advice: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                            }
+                            diagnosis: { type: "ARRAY", items: { type: "STRING" } },
+                            advice: { type: "ARRAY", items: { type: "STRING" } }
                         },
                         required: ["emotional", "scientific", "financial", "format", "risk", "diagnosis", "advice"]
                     }
@@ -292,7 +288,6 @@
             try {
                 const aiResult = await fetchGeminiAI(payload);
                 
-                // Update UI with True AI Data
                 document.getElementById('meter-emotional').style.width = aiResult.emotional + "%";
                 document.getElementById('meter-scientific').style.width = aiResult.scientific + "%";
                 document.getElementById('meter-financial').style.width = aiResult.financial + "%";
@@ -303,7 +298,6 @@
                 document.getElementById('label-financial').textContent = aiResult.financial + "%";
                 document.getElementById('label-format').textContent = aiResult.format + "%";
 
-                // Set Header Color based on Risk
                 const header = document.getElementById('reportHeader');
                 const riskLabel = document.getElementById('riskLabel');
                 
@@ -321,7 +315,6 @@
                     riskLabel.textContent = "ហានិភ័យទាប (Low Risk)";
                 }
 
-                // Populate Diagnosis and Advice
                 document.getElementById('diagnosisDetails').innerHTML = aiResult.diagnosis.map(d => `<p>🔸 ${d}</p>`).join('');
                 document.getElementById('actionAdvice').innerHTML = aiResult.advice.map(a => `<li>${a}</li>`).join('');
 
@@ -329,14 +322,13 @@
                 reportDiv.scrollIntoView({ behavior: 'smooth' });
 
             } catch (error) {
-                console.error("AI Error Details:", error);
-                document.getElementById('diagnosisDetails').innerHTML = `
-                    <div class="p-4 bg-red-50 rounded-lg border border-red-200">
-                        <p class="text-red-700 font-bold mb-1"><i class="fas fa-exclamation-triangle mr-2"></i> ប្រព័ន្ធ AI មានបញ្ហាក្នុងការដំណើរការ៖</p>
-                        <p class="text-xs text-red-600">មូលហេតុ៖ ${error.message}</p>
-                        <p class="text-xs text-gray-500 mt-2">* សូមប្រាកដថា លោកគ្រូ/អ្នកគ្រូ កំពុងដំណើរការកម្មវិធីនេះនៅក្នុងប្រព័ន្ធ Canvas ដែលមានការតភ្ជាប់អ៊ីនធឺណិតធម្មតា។</p>
-                    </div>
-                `;
+                console.error("AI Error:", error);
+                displayError('diagnosisDetails', error);
+                ['emotional', 'scientific', 'financial', 'format'].forEach(id => {
+                    document.getElementById(`meter-${id}`).style.width = "0%";
+                    document.getElementById(`label-${id}`).textContent = "0%";
+                });
+                document.getElementById('actionAdvice').innerHTML = "";
                 reportDiv.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
@@ -345,7 +337,7 @@
             }
         }
 
-        // --- TRUE AI IMAGE ANALYSIS ---
+        // --- IMAGE ANALYSIS ---
         function handleImageSelection(event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -395,10 +387,7 @@
                         properties: {
                             is_ai_generated: { type: "BOOLEAN" },
                             confidence_percentage: { type: "INTEGER" },
-                            analysis: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                            }
+                            analysis: { type: "ARRAY", items: { type: "STRING" } }
                         },
                         required: ["is_ai_generated", "confidence_percentage", "analysis"]
                     }
@@ -423,12 +412,8 @@
 
             } catch (error) {
                 console.error("AI Image Error:", error);
-                document.getElementById('imgDiagnosisDetails').innerHTML = `
-                    <div class="p-2 text-red-600">
-                        <p class="font-bold">មិនអាចស្កេនរូបភាពបានទេ៖</p>
-                        <p class="text-xs">${error.message}</p>
-                    </div>
-                `;
+                displayError('imgDiagnosisDetails', error);
+                document.getElementById('imgRiskLabel').innerHTML = "";
                 report.classList.remove('hidden');
             } finally {
                 scanner.classList.add('hidden');
@@ -445,6 +430,12 @@
             document.getElementById('btn-scan-img').disabled = true;
             base64ImageData = null;
         }
+
+        window.switchTab = switchTab;
+        window.advancedScanText = advancedScanText;
+        window.handleImageSelection = handleImageSelection;
+        window.startImageScanning = startImageScanning;
+        window.resetImageAnalyzer = resetImageAnalyzer;
     </script>
 </body>
 </html>
